@@ -474,6 +474,8 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
     }
     if (!pairMixed) normalKeys.push(d.pair, d.pair);
     const fl = flushOf(normalKeys, sets.filter(s => s.mixed).length, pairMixed ? 1 : 0); if (fl) items.push(fl);
+    // 混一色／混眼混一色／混碰混一色：第一副三元刻不另計（已包含在混一色內）
+    if (fl && fl.name !== '清一色') { const di = items.findIndex(x => x.name === '三元刻'); if (di >= 0) items.splice(di, 1); }
     if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全大字', 3);
     if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷大字', 2);
     if (isConcealed && tsumo) add('不求人', 2);
@@ -725,8 +727,8 @@ zh: `  <h2>規則（目前實作）</h2>
   ${EG('牌面示例：吃碰槓、混碰、三元大槓', [X('吃','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('碰／槓','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('混碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('小字混刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('小字混眼','p1 s1|p2 m2|s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7–9 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
   <h3>番種（疊加，6 番封頂；0.5 番稱碎番）</h3>
   <ul>
-    <li><b>1 番（全番）</b>：三元刻（中、發、白任一組刻子，明碰或暗刻都算，每組可疊加）、平胡（全順子、無三元）、對對胡（混碰可）、混眼混一色（混一色，但眼是混眼）、混碰混一色（混一色，其中一刻為混碰；多於一刻混碰不可）</li>
-    <li><b>2 番</b>：混一色（不可混碰、小字混刻、混眼；不重複算斷一門）、不求人（門清加自摸，不重複算門清或自摸）、斷大字（整副手牌沒有 7–9）、三暗刻、七對子（可重複，如 8888 算兩對；可疊混一色、清一色；不可混眼；不重複算門清）</li>
+    <li><b>1 番（全番）</b>：三元刻（中、發、白任一組刻子，明碰或暗刻都算，每組可疊加）、平胡（全順子、無三元）、對對胡（混碰可）、混眼混一色（混一色，但眼是混眼；第一副三元刻不另計）、混碰混一色（混一色，其中一刻為混碰；多於一刻混碰不可；第一副三元刻不另計）</li>
+    <li><b>2 番</b>：混一色（不可混碰、小字混刻、混眼；不重複算斷一門；第一副三元刻不另計）、不求人（門清加自摸，不重複算門清或自摸）、斷大字（整副手牌沒有 7–9）、三暗刻、七對子（可重複，如 8888 算兩對；可疊混一色、清一色；不可混眼；不重複算門清）</li>
     <li><b>3 番</b>：小三元（不另計三元刻，手牌點值立刻 +30）、全大字（整副手牌只有 7–9；不重複算門清）、幺九順（同花色 123＋456＋789，其餘一組可順可碰、可不同花色）</li>
     <li><b>4 番</b>：清一色（不可混碰、混眼；不重複算斷一門無三元）、四暗刻、大三元（不另計三元刻，手牌點值立刻 +60）、門清幺九順（同幺九順但門清，手牌點值立刻 +30；不重複算門清）</li>
     <li><b>6 番（封頂）</b>：幺九龍（同花色 123＋456＋789＋中發白各一＋同花色或三元的眼，手牌點值立刻 +30）、門清幺九龍（同上但門清，手牌點值立刻 +90）、槓三元（中發白全槓，手牌點值立刻 +90）、天胡（莊家起手即胡）、地胡（閒家胡莊家打出的第一隻牌）、人胡（閒家第一次摸牌自摸，之前無人吃碰槓）。天胡、地胡、人胡只要牌型完成即可，不需另有番種。</li>
@@ -821,13 +823,13 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
         <li><b>Dragon triplet (三元刻)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
         <li><b>All Chows (平胡)</b>: all chows, no dragons.</li>
         <li><b>All Triplets (對對胡)</b>: 4 triplets + pair. Mixed pungs are allowed.</li>
-        <li><b>Mixed-Pair Half Flush (混眼混一色)</b>: a Half Flush whose pair is a mixed pair.</li>
-        <li><b>Mixed-Pung Half Flush (混碰混一色)</b>: a Half Flush where one of the triplets is a mixed pung. More than one mixed pung doesn’t count.</li>
+        <li><b>Mixed-Pair Half Flush (混眼混一色)</b>: a Half Flush whose pair is a mixed pair. The first dragon triplet isn’t counted separately.</li>
+        <li><b>Mixed-Pung Half Flush (混碰混一色)</b>: a Half Flush where one of the triplets is a mixed pung. More than one mixed pung doesn’t count. The first dragon triplet isn’t counted separately.</li>
       </ul>
     </li>
     <li><b>2 fan</b>
       <ul>
-        <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed pung, mixed triplet or mixed pair. Doesn’t also get Missing suit.</li>
+        <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed pung, mixed triplet or mixed pair. Doesn’t also get Missing suit. The first dragon triplet isn’t counted separately.</li>
         <li><b>Concealed Self-Draw (不求人)</b>: no calls and you win by drawing. Replaces Concealed and Self-draw.</li>
         <li><b>No Big (斷大字)</b>: no 7–9 anywhere in the hand.</li>
         <li><b>Three Concealed Triplets (三暗刻)</b></li>
@@ -1290,8 +1292,8 @@ function renderResult() {
   else d.querySelector('#nextBtn').onclick = () => setTimeout(play, 0);
 }
 const CHEAT_TIERS = [
-  [1, [['三元刻', '中／發／白刻子，明暗皆可，每組 +1', 'Red/Green/White triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼（混碰可）', '4 triplets + pair (mixed pung ok)'], ['混眼混一色', '混一色，眼是混眼', 'half flush with a mixed pair'], ['混碰混一色', '混一色，一刻是混碰', 'half flush with one mixed pung']]],
-  [2, [['混一色', '一門 + 三元（不含混碰／混眼）', 'one suit + dragons (no mixed)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['斷大字', '沒有 7–9', 'no 7–9'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['七對子', '7 對，可重複，不可混眼', '7 pairs, 8888 ok, no mixed pair']]],
+  [1, [['三元刻', '中／發／白刻子，明暗皆可，每組 +1', 'Red/Green/White triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼（混碰可）', '4 triplets + pair (mixed pung ok)'], ['混眼混一色', '混一色，眼是混眼（首副三元刻不另計）', 'half flush with a mixed pair (1st dragon triplet not counted)'], ['混碰混一色', '混一色，一刻是混碰（首副三元刻不另計）', 'half flush with one mixed pung (1st dragon triplet not counted)']]],
+  [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['斷大字', '沒有 7–9', 'no 7–9'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['七對子', '7 對，可重複，不可混眼', '7 pairs, 8888 ok, no mixed pair']]],
   [3, [['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['全大字', '全部 7–9', 'only 7–9'], ['幺九順', '同花 123·456·789 · 其餘任一組', 'same-suit 123·456·789 + any set']]],
   [4, [['清一色', '一門、無三元（不含混碰／混眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻', '4 concealed triplets'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
   [6, [['幺九龍', '同花 123·456·789 + 中發白 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '中發白全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer’s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]

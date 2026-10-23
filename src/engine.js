@@ -197,6 +197,8 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
     }
     if (!pairMixed) normalKeys.push(d.pair, d.pair);
     const fl = flushOf(normalKeys, sets.filter(s => s.mixed).length, pairMixed ? 1 : 0); if (fl) items.push(fl);
+    // 混一色／混眼混一色／混碰混一色：第一副三元刻不另計（已包含在混一色內）
+    if (fl && fl.name !== '清一色') { const di = items.findIndex(x => x.name === '三元刻'); if (di >= 0) items.splice(di, 1); }
     if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全大字', 3);
     if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷大字', 2);
     if (isConcealed && tsumo) add('不求人', 2);
