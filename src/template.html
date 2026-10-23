@@ -279,7 +279,7 @@ const L = (zh, en) => LANG === 'en' ? en : zh;
 const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Downstream', 'Across', 'Upstream'] };
 const NAMES = new Proxy({}, { get: (_, i) => SEAT[LANG][i] });
 /* ===== 線上房間狀態 / online room state (PeerJS, host-authoritative) ===== */
-const ROOM = { mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, rid: 0, handNo: 0, started: false, myName: '', conn: null, msg: '' };
+const ROOM = { mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, afk: {}, seen: {}, rid: 0, handNo: 0, started: false, myName: '', conn: null, msg: '' };
 let mySeat = 0;
 const online = () => ROOM.mode !== 'solo';
 const isHost = () => ROOM.mode === 'host';
@@ -290,7 +290,7 @@ const enTile = (sx, n) => sx === 'z' ? DRAGEN[n] : n + ' ' + (n === 1 || sx === 
 const tn = t => LANG === 'en' ? enTile(t.s, t.n) : tname(t);
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? enTile(k[0], +k.slice(1)) : kn(k);
-const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Chows','對對胡':'All Triplets','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','幺九龍':'Kowloon Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Chows','對對胡':'All Triplets','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','幺九龍':'Kowloon Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
 const yn = name => { if (LANG !== 'en') return name; const m = name.match(/^(.+?)(×\d+)?$/); return (YAKU_EN[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -327,7 +327,7 @@ zh: `  <h2>規則（目前實作）</h2>
     <li>3 番：清一色（不可含混碰、小字混刻、混眼）、小三元（不另計中發白刻，手牌點值立刻 +30）、幺九順（同花色 123＋456＋789，其餘一組可順可碰、可不同花色）</li>
     <li>4 番：大三元（不另計中發白刻，手牌點值立刻 +60）、四暗刻、幺九龍（同花色 123＋456＋789＋中發白各一＋同花色或三元的眼，手牌點值立刻 +50）</li>
     <li>暗刻：暗槓算暗刻；榮和時靠胡牌完成的刻子算明刻，但榮胡進眼（胡牌放進眼）不毀暗刻。</li>
-    <li>半番（碎番）：只有碎番、沒有全番不能胡；須已有 1 番才可追加，兩個半番不能起和。包括：槓（每次）、三元大補槓、門清、自摸（只給有鳴牌的手牌，已含在門清加自摸）、斷一門無三元（筒索萬缺一門且沒有中發白）、胡小字（胡的那張是 1–3）。</li>
+    <li>半番（碎番）：只有碎番、沒有全番不能胡；須已有 1 番才可追加，兩個半番不能起和。包括：槓（每次）、三元大補槓、門清、自摸（只給有鳴牌的手牌，已含在門清加自摸）、槓上自摸（槓後補牌自摸，與自摸及槓重疊，合共追加 1.5 番）、斷一門無三元（筒索萬缺一門且沒有中發白）、胡小字（胡的那張是 1–3）。</li>
     <li>門清加自摸已包含門清與自摸；全大字不計門清。</li>
     <li>總番數取整數部分，所以 1+0.5+0.5＝2 番。</li>
     <li>倍數：1 番 ×1、2 番 ×2、3 番 ×3、4 番 ×4。得分 = 全手牌點值總和（含已鳴的牌，扣除混碰被要的那張）× 倍數。</li>
@@ -452,6 +452,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     <li><b>Concealed (門清)</b>: no calls.</li>
     <li><b>Self-draw (自摸)</b>: open hands only. Concealed Self-Draw already includes it.</li>
     <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons.</li>
+    <li><b>Kong self-draw (槓上自摸)</b>: you win by self-draw on the replacement tile drawn after a kong. It stacks with Self-draw and Kong, so a win like that adds 1½ fan in total.</li>
     <li><b>Win on a small tile (胡小字)</b>: the winning tile is a 1–3.</li>
     <li>Concealed Self-Draw already includes Concealed and Self-draw; All Big gets no Concealed bonus.</li>
   </ul>
@@ -730,7 +731,7 @@ function askRemote(seat, msg, ms, map, fallback) {
     const conn = ROOM.conns[seat]; if (!conn || !conn.open) { res(fallback()); return; }
     const rid = ++ROOM.rid;
     const fin = v => { clearTimeout(tm); delete ROOM.pending[rid]; res(v); };
-    const tm = setTimeout(() => fin(fallback()), ms);
+    const tm = setTimeout(() => { ROOM.afk[seat] = true; fin(fallback()); }, ROOM.afk[seat] ? 4000 : ms);
     ROOM.pending[rid] = { seat, fin, map, fallback };
     try { conn.send(Object.assign({ rid }, msg)); } catch (e) { fin(fallback()); }
   });
@@ -877,7 +878,7 @@ const CHEAT_TIERS = [
   [3, [['清一色', '一門、無中發白', 'one suit, no dragons'], ['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['幺九順', '同花 123·456·789 · 其餘任一組', 'same-suit 123·456·789 + any set']]],
   [4, [['大三元', '中發白全刻 · +60', 'all 3 dragon triplets · +60'], ['四暗刻', '4 組暗刻', '4 concealed triplets'], ['幺九龍', '同花 123·456·789 + 中發白 + 眼 · +50', 'same-suit 123·456·789 + Red·Green·White + pair · +50']]]
 ];
-const CHEAT_MINOR = [['槓', '每次', 'each kong'], ['三元大補槓', '補第 5 張中發白', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['斷一門無三元', '缺一門、無中發白', 'a suit missing, no dragons'], ['胡小字', '胡牌是 1–3', 'winning tile is 1–3']];
+const CHEAT_MINOR = [['槓', '每次', 'each kong'], ['三元大補槓', '補第 5 張中發白', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['槓上自摸', '槓後補牌自摸（連自摸、槓共 +1.5）', 'self-draw on the kong replacement (with kong + self-draw: +1½)'], ['斷一門無三元', '缺一門、無中發白', 'a suit missing, no dragons'], ['胡小字', '胡牌是 1–3', 'winning tile is 1–3']];
 /* 速查表即時狀態：依你目前的鳴牌／手牌標示「✓ 目前支持」或「灰色 = 已不可能」 */
 function cheatStates() {
   const st = {}; if (!G) return st;
@@ -1007,7 +1008,8 @@ function setMsg(zh, en) { ROOM.msg = zh ? L(zh, en) : ''; renderLobby(); }
 
 function toSolo(keepMsg) {
   try { ROOM.peer && ROOM.peer.destroy(); } catch (e) {}
-  Object.assign(ROOM, { mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, started: false, conn: null });
+  clearInterval(ROOM.wd); clearInterval(ROOM.ping);
+  Object.assign(ROOM, { afk: {}, seen: {}, mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, started: false, conn: null });
   if (!keepMsg) ROOM.msg = '';
   mySeat = 0; scores = [0, 0, 0, 0]; dealer = 0; UI.mode = null; UI.cancelClaim = null;
   $('#newBtn').style.display = ''; updateOnlineBtn(); renderLobby();
@@ -1024,6 +1026,7 @@ async function createRoom() {
       ROOM.kind = ['host', 'open', 'open', 'open']; ROOM.names = [ROOM.myName, '', '', '']; mySeat = 0; G = null; ROOM.msg = '';
       scores = [0, 0, 0, 0]; dealer = 0; clearActions(); updateOnlineBtn(); renderLobby();
       peer.on('connection', hostConn);
+      clearInterval(ROOM.wd); ROOM.wd = setInterval(() => { for (const k in ROOM.conns) { const c = ROOM.conns[k]; if (c && Date.now() - (ROOM.seen[k] || 0) > 15000) c.gone && c.gone(); } }, 4000);
     });
     peer.on('error', e => {
       if (e.type === 'unavailable-id' && n < 5) { try { peer.destroy(); } catch (x) {} tryOpen(n + 1); return; }
@@ -1035,15 +1038,17 @@ async function createRoom() {
 function hostConn(conn) {
   conn.on('data', m => {
     if (!m || typeof m !== 'object') return;
+    if (conn.seat != null) ROOM.seen[conn.seat] = Date.now();
+    if (m.t === 'ping') return;
     if (m.t === 'hello') {
       if (ROOM.started || conn.seat != null) { if (ROOM.started) { conn.send({ t: 'full', why: 'started' }); setTimeout(() => conn.close(), 300); } return; }
       const seat = [1, 2, 3].find(i => ROOM.kind[i] === 'open');
       if (seat == null) { conn.send({ t: 'full', why: 'full' }); setTimeout(() => conn.close(), 300); return; }
-      conn.seat = seat; ROOM.conns[seat] = conn; ROOM.kind[seat] = 'human';
+      conn.seat = seat; ROOM.conns[seat] = conn; ROOM.kind[seat] = 'human'; ROOM.seen[seat] = Date.now(); ROOM.afk[seat] = false;
       ROOM.names[seat] = cleanName(m.name) || L('玩家', 'Player') + seat; sendLobby(); renderLobby();
     } else if (m.t === 'act') {
       const p = ROOM.pending[m.rid];
-      if (p && conn.seat === p.seat) p.fin(p.map(m.a));
+      if (p && conn.seat === p.seat) { ROOM.afk[p.seat] = false; p.fin(p.map(m.a)); }
     }
   });
   const gone = () => {
@@ -1054,7 +1059,7 @@ function hostConn(conn) {
     Object.values(ROOM.pending).filter(p => p.seat === seat).forEach(p => p.fin(p.fallback()));
     sendLobby(); renderLobby(); if (G) render();
   };
-  conn.on('close', gone); conn.on('error', gone);
+  conn.gone = gone; conn.on('close', gone); conn.on('error', gone);
 }
 function sendLobby() {
   for (const k in ROOM.conns) { const c = ROOM.conns[k]; if (c && c.open) c.send({ t: 'lobby', code: ROOM.code, kind: ROOM.kind, names: ROOM.names, you: +k, started: ROOM.started }); }
@@ -1075,7 +1080,7 @@ async function joinRoom() {
   peer.on('error', e => fail(e.type === 'peer-unavailable' ? '找不到這個房間' : '連線失敗', e.type === 'peer-unavailable' ? 'Room not found.' : 'Connection failed.'));
   peer.on('open', () => {
     const conn = peer.connect('kowloon-' + code, { reliable: true, serialization: 'json' });
-    conn.on('open', () => conn.send({ t: 'hello', name: ROOM.myName }));
+    conn.on('open', () => { conn.send({ t: 'hello', name: ROOM.myName }); clearInterval(ROOM.ping); ROOM.ping = setInterval(() => { try { conn.send({ t: 'ping' }); } catch (e) {} }, 4000); });
     conn.on('data', m => guestMsg(m, conn, peer, () => { joined = true; clearTimeout(to); }, code));
     conn.on('close', () => { if (ROOM.mode === 'guest') { try { peer.destroy(); } catch (e) {} ROOM.msg = L('房主已離開房間。', 'The host left the room.'); toSolo(true); $('#lobby').showModal(); } });
   });

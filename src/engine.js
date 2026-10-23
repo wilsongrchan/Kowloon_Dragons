@@ -73,7 +73,7 @@ function decomps(c0, need) {
 }
 
 /* ---- score a complete 14-tile hand ---- */
-function evaluateHand(melds, concealed, tsumo, winTile) {
+function evaluateHand(melds, concealed, tsumo, winTile, kongDraw) {
   const allTiles = concealed.slice(); melds.forEach(m => allTiles.push(...m.tiles));
   let pts = 0;
   concealed.forEach(t => pts += val(t));
@@ -139,6 +139,7 @@ function evaluateHand(melds, concealed, tsumo, winTile) {
       if (kongs) halves.push({ name: '槓×' + kongs, fan: 0.5 * kongs });
       const bigs = melds.filter(m => m.big).length;
       if (bigs) halves.push({ name: '三元大補槓×' + bigs, fan: 0.5 * bigs });
+      if (tsumo && kongDraw) halves.push({ name: '槓上自摸', fan: 0.5 }); // 槓後補牌自摸：與自摸、槓重疊，合計追加 1.5 番
       const quanDa = items.some(i => i.name === '全大字');
       // 門清加自摸 已包含門清與自摸；全大字 不重複算門清
       if (isConcealed) { if (!tsumo && !quanDa) halves.push({ name: '門清', fan: 0.5 }); }
@@ -167,13 +168,13 @@ function newGame(dealer = 0) {
 function drawTile(g, seat, replacement) {
   if (!g.wall.length) return null;
   const t = replacement ? g.wall.shift() : g.wall.pop();
-  g.hands[seat].push(t); g.lastDraw = t;
+  g.hands[seat].push(t); g.lastDraw = t; g.lastDrawRep = !!replacement;
   return t;
 }
 function selfOptions(g, seat, noWin) {
   const h = g.hands[seat], ms = g.melds[seat];
   let win = null;
-  if (!noWin) { const ev = evaluateHand(ms, h, true, g.lastDraw); if (ev.ok) win = ev; }
+  if (!noWin) { const ev = evaluateHand(ms, h, true, g.lastDraw, g.lastDrawRep); if (ev.ok) win = ev; }
   const kongs = []; const c = counts(h);
   for (const k in c) {
     const hon = k[0] === 'z', n = +k[1];

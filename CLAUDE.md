@@ -27,7 +27,7 @@ Hand 13, win 14: 4 sets + pair.
 - 3番: 清一色, 小三元 (no extra 中發白刻; hand tile sum +30 before multiplier), 幺九順 (same suit 123+456+789; remaining set chow or pong, any suit; pair any)
 - 4番: 大三元 (no extra 中發白刻; hand tile sum +60 before multiplier), 四暗刻, 幺九龍 (same suit 123+456+789 + one each of 中發白 + a pair of a same-suit number or a dragon, i.e. that tile type has 3 copies; hand tile sum +50 before multiplier -> 380-436 pts)
 - 暗刻: ankan counts as concealed; on ron, the triplet completed by the winning tile counts as open, BUT 榮胡進眼 doesn't ruin concealed triplets (if the winning tile can sit in the pair or a chow, the triplet stays concealed).
-- Half fan 碎番 (+0.5, need >=1 real fan first): 槓 (each), 三元大補槓, 門清, 斷一門無三元 (missing one of 筒/索/萬 AND no 中發白), 自摸 (only open hands; 門清加自摸 already includes it), 胡小字 (winning tile is a 小字 1-3)
+- Half fan 碎番 (+0.5, need >=1 real fan first): 槓上自摸 (self-draw on the replacement tile after a kong; stacks with 自摸 and 槓, so +1.5 in total; engine: g.lastDrawRep -> evaluateHand kongDraw), 槓 (each), 三元大補槓, 門清, 斷一門無三元 (missing one of 筒/索/萬 AND no 中發白), 自摸 (only open hands; 門清加自摸 already includes it), 胡小字 (winning tile is a 小字 1-3)
 - 無混吃無混碰 was DELETED as a 碎番 by Wilson (no longer exists).
 - 門清加自摸 already includes 門清; 全大字 does not get 門清 half.
 
