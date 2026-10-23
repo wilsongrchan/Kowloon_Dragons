@@ -22,7 +22,7 @@ Hand 13, win 14: 4 sets + pair.
 - 一番起胡 (needs >=1 fan from real conditions; two half-fans alone cannot win).
 - FINAL RULE SET (Wilson, 2026-10-23): cap 6 fan, multiplier = fan (x1..x6). Score = (hand tile points + instant bonus) x multiplier.
 - Fan = floor(total incl. halves) so 1+0.5+0.5 = 2; need >=1 full fan from real conditions (halves alone can't win).
-- 1番: 三元刻 (each, stackable; open pung or concealed triplet), 平胡 (all chows, no dragons), 對對胡 (彩碰 ok), 彩眼混一色 (half OR full flush whose pair is a 彩眼, one tile of the pair must be the main suit; first 三元刻 not counted), 彩碰混一色 (half OR full flush with exactly ONE 彩碰, one tile of it must be the main suit; more not allowed; first 三元刻 not counted)
+- 1番: 三元刻 (each, stackable; open pung or concealed triplet), 平胡 (all chows, no dragons), 對對胡 (彩碰 ok), 彩眼混一色 (half OR full flush whose pair is a 彩眼, at least one tile of the pair must be the main suit; first 三元刻 not counted), 彩碰混一色 (half OR full flush with exactly ONE 彩碰, at least one tile of it must be the main suit (e.g. 2p 2p 2m in a p hand); more not allowed; first 三元刻 not counted)
 - 2番: 混一色 (no 彩碰/彩刻/彩眼; no 斷一門; first 三元刻 not counted — the 1st dragon triplet is absorbed, 2nd/3rd still count), 不求人 (concealed + tsumo; replaces 門清/自摸), 斷大字 (no 7-9), 三暗刻, 七對子 (7 pairs, 8888 = two pairs, may stack 混一色/清一色, NO mixed pair, fully concealed, no 門清 half)
 - 3番: 小三元 (+30 hand pts), 全大字 (all 7-9; no 門清 half), 幺九順 (same suit 123+456+789; remaining set chow or pung any suit; pair any; open hand)
 - 4番: 清一色 (no mixed; no 斷一門無三元), 四暗刻, 大三元 (+60), 門清幺九順 (concealed 幺九順, +30, no 門清 half)

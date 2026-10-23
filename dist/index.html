@@ -986,8 +986,8 @@ const JA_EXACT = {
   '小 S': '小 S', '中 M': '中 M', '大 L': '大 L',
   /* cheat sheet: descriptions & reasons */
   '紅中／發財／白板刻子，明暗皆可，每組 +1': '白・發・中の刻子。明暗どちらも可、1組ごとに +1', '全順子、無三元': '順子のみ・三元牌なし',
-  '4 刻 + 眼（彩碰可）': '刻子4組＋雀頭（彩ポン可）', '混一色或清一色，眼是彩眼，其中一張為主色（首副三元刻不另計）': '混一色／清一色で雀頭が彩雀頭、1枚は主色（最初の三元刻は別計算しない）',
-  '混一色或清一色，一刻是彩碰，其中一張為主色（首副三元刻不另計）': '混一色／清一色で刻子の1つが彩ポン、1枚は主色（最初の三元刻は別計算しない）',
+  '4 刻 + 眼（彩碰可）': '刻子4組＋雀頭（彩ポン可）', '混一色或清一色，眼是彩眼，至少一張為主色（首副三元刻不另計）': '混一色／清一色で雀頭が彩雀頭、主色1枚以上（最初の三元刻は別計算しない）',
+  '混一色或清一色，一刻是彩碰，至少一張為主色（首副三元刻不另計）': '混一色／清一色で刻子の1つが彩ポン、主色1枚以上（最初の三元刻は別計算しない）',
   '一門 + 三元（首副三元刻不另計）': '1色＋三元牌（最初の三元刻は別計算しない）', '無鳴牌、自摸': '副露なし・ツモ', '沒有 7–9': '7〜9を含まない',
   '3 組暗刻': '暗刻3組', '7 對，可重複，不可彩眼': '7対（同じ牌4枚＝2対も可）、彩雀頭は不可',
   '2 刻 + 1 眼 · +30': '刻子2＋雀頭1 ・ +30', '全部 7–9': 'すべて7〜9', '同花 123·456·789 · 其餘任一組': '同色123・456・789 ＋ 残り1組は何でも',
@@ -1122,7 +1122,7 @@ const EXGEN = {
   '平胡': () => [exRch(), exRch(), exRch(), exRch(), exRpr()],
   '對對胡': () => [exRpg(), exRpg(), exRpg(), exRpg(), exRpr()],
   '彩眼混一色': () => { const x = exPick(EXS), o = exPick(EXS.filter(q => q !== x)), n = 1 + exR(3); return [`${x}${n} ${o}${n}`, exRch(x), exRch(x), exR(2) ? exDpg() : exSet(x), exSet(x)]; },
-  '彩碰混一色': () => { const x = exPick(EXS), n = 1 + exR(3), o = EXS.filter(q => q !== x); return [`${x}${n} ${o[0]}${n} ${o[1]}${n}`, exRch(x), exRch(x), exR(2) ? exDpg() : exRch(x), exR(3) ? exRpr(x) : exPick(['z1 z1', 'z2 z2', 'z3 z3'])]; },
+  '彩碰混一色': () => { const x = exPick(EXS), n = 1 + exR(3), o = EXS.filter(q => q !== x); return [exR(2) ? `${x}${n} ${o[0]}${n} ${o[1]}${n}` : `${x}${n} ${x}${n} ${exPick(o)}${n}`, exRch(x), exRch(x), exR(2) ? exDpg() : exRch(x), exR(3) ? exRpr(x) : exPick(['z1 z1', 'z2 z2', 'z3 z3'])]; },
   '混一色': () => { const x = exPick(EXS); return [exSet(x), exSet(x), exR(2) ? exDpg() : exSet(x), exDpg(), exR(2) ? exRpr(x) : 'z' + (1 + exR(3)) + ' z' + (1 + exR(3))]; },
   '斷大字': () => [exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRpg(undefined, 3, 6), exRpr(undefined, 2, 6)],
   '三暗刻': () => [exRpg(), exRpg(), exRpg(), exRch(), exRpr()],
@@ -1201,8 +1201,8 @@ zh: `  <h2>規則（目前實作）</h2>
         <li><b>三元刻</b>：紅中、發財、白板任一組刻子，明碰或暗刻都算，每組可疊加。</li>
         <li><b>平胡</b>：全順子、無三元。</li>
         <li><b>對對胡</b>：4 刻 + 眼，彩碰可。</li>
-        <li><b>彩眼混一色</b>：混一色或清一色，眼是彩眼，彩眼其中一張必須是主色；第一副三元刻不另計。</li>
-        <li><b>彩碰混一色</b>：混一色或清一色中其中一刻為彩碰，彩碰中其中一張必須是主色；多於一刻彩碰不可；第一副三元刻不另計。</li>
+        <li><b>彩眼混一色</b>：混一色或清一色，眼是彩眼，彩眼中至少有一張是主色；第一副三元刻不另計。</li>
+        <li><b>彩碰混一色</b>：混一色或清一色中其中一刻為彩碰，彩碰中至少有一張是主色（例如 2筒2筒2萬 在筒子手牌）；多於一刻彩碰不可；第一副三元刻不另計。</li>
       </ul>
     </li>
     <li><b>2 番</b>
@@ -1349,8 +1349,8 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
         <li><b>Dragon triplet (三元刻)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
         <li><b>All Chows (平胡)</b>: all chows, no dragons.</li>
         <li><b>All Triplets (對對胡)</b>: 4 triplets + pair. Mixed pungs are allowed.</li>
-        <li><b>Mixed-Pair Half Flush (彩眼混一色)</b>: a Half Flush or Full Flush whose pair is a mixed pair; one tile of the mixed pair must be the main suit. The first dragon triplet isn’t counted separately.</li>
-        <li><b>Mixed-Pung Half Flush (彩碰混一色)</b>: a Half Flush or Full Flush where one of the triplets is a mixed pung; one tile of the mixed pung must be the main suit. More than one mixed pung doesn’t count. The first dragon triplet isn’t counted separately.</li>
+        <li><b>Mixed-Pair Half Flush (彩眼混一色)</b>: a Half Flush or Full Flush whose pair is a mixed pair; at least one tile of the mixed pair must be the main suit. The first dragon triplet isn’t counted separately.</li>
+        <li><b>Mixed-Pung Half Flush (彩碰混一色)</b>: a Half Flush or Full Flush where one of the triplets is a mixed pung; at least one tile of the mixed pung must be the main suit (e.g. 2-Circle 2-Circle 2-Character in a Circles hand). More than one mixed pung doesn’t count. The first dragon triplet isn’t counted separately.</li>
       </ul>
     </li>
     <li><b>2 fan</b>
@@ -1451,8 +1451,8 @@ RULES_HTML.ja = `  <h2>ルール（現在の実装）</h2>
         <li><b>役牌（三元刻）</b>：白・發・中の刻子。明刻も暗刻も可、1組ごとに加算。</li>
         <li><b>平和</b>：順子のみ・三元牌なし。</li>
         <li><b>対々和</b>：刻子4組＋雀頭。彩ポン可。</li>
-        <li><b>彩雀頭混一色</b>：混一色または清一色で雀頭が彩雀頭。彩雀頭の1枚は主色であること。最初の三元刻は別計算しない。</li>
-        <li><b>彩ポン混一色</b>：混一色または清一色で刻子の1つが彩ポン。彩ポンの1枚は主色であること。2組以上は不可。最初の三元刻は別計算しない。</li>
+        <li><b>彩雀頭混一色</b>：混一色または清一色で雀頭が彩雀頭。彩雀頭に主色が1枚以上あること。最初の三元刻は別計算しない。</li>
+        <li><b>彩ポン混一色</b>：混一色または清一色で刻子の1つが彩ポン。彩ポンに主色が1枚以上あること（例：二筒二筒二萬 を筒子の手で）。2組以上は不可。最初の三元刻は別計算しない。</li>
       </ul>
     </li>
     <li><b>2翻</b>
@@ -2072,7 +2072,7 @@ function renderResult() {
   else d.querySelector('#nextBtn').onclick = () => setTimeout(play, 0);
 }
 const CHEAT_TIERS = [
-  [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed pung ok)'], ['彩眼混一色', '混一色或清一色，眼是彩眼，其中一張為主色（首副三元刻不另計）', 'half/full flush with a mixed pair, one tile in the main suit (1st dragon triplet not counted)'], ['彩碰混一色', '混一色或清一色，一刻是彩碰，其中一張為主色（首副三元刻不另計）', 'half/full flush with one mixed pung, one tile in the main suit (1st dragon triplet not counted)']]],
+  [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed pung ok)'], ['彩眼混一色', '混一色或清一色，眼是彩眼，至少一張為主色（首副三元刻不另計）', 'half/full flush with a mixed pair, at least one tile in the main suit (1st dragon triplet not counted)'], ['彩碰混一色', '混一色或清一色，一刻是彩碰，至少一張為主色（首副三元刻不另計）', 'half/full flush with one mixed pung, at least one tile in the main suit (1st dragon triplet not counted)']]],
   [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['斷大字', '沒有 7–9', 'no 7–9'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 8888 ok, no mixed pair']]],
   [3, [['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['全大字', '全部 7–9', 'only 7–9'], ['幺九順', '同花 123·456·789 · 其餘任一組', 'same-suit 123·456·789 + any set']]],
   [4, [['清一色', '一門、無三元（不含彩碰／彩眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻', '4 concealed triplets'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
