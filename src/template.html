@@ -206,17 +206,20 @@ header .meta{order:2}
 .cs p{margin:6px 0 0;color:var(--muted)}
 .cs p.lg{font-size:12px;margin:0 0 4px}
 .cs .okc{color:var(--gold);font-weight:700}
-.cs .outc{opacity:.5;text-decoration:line-through}
+.cs .outc{opacity:.5}
 .cs .r.ok{background:rgba(224,176,78,.18);border-radius:5px;padding:2px 5px;margin:0 -5px;border-bottom-color:transparent}
 .cs .r.ok b{color:var(--gold)}
 .cs .tick{font-style:normal;margin-left:2px}
 .cs .r.out{opacity:.38}
-.cs .r.out b{text-decoration:line-through}
 #cheatBtn{display:none}
 @media (max-width:1179px){#cheatBtn{display:inline-block}}
+#cheatGrip{display:none}
 @media (min-width:1180px){
-  .wrap{max-width:1260px}
-  .main{display:grid;grid-template-columns:minmax(0,900px) 330px;gap:16px;justify-content:center;align-items:start}
+  .wrap{max-width:calc(var(--cheatw,330px) + 985px)}
+  .main{display:grid;grid-template-columns:minmax(0,900px) 10px minmax(0,var(--cheatw,330px));gap:6px;justify-content:center;align-items:start}
+  #cheatGrip{display:block;align-self:stretch;cursor:col-resize;border-radius:5px;touch-action:none;position:relative;min-height:60px}
+  #cheatGrip::after{content:"";position:absolute;top:0;bottom:0;left:4px;width:2px;border-radius:2px;background:var(--pgm);opacity:.25;transition:opacity .15s}
+  #cheatGrip:hover::after,#cheatGrip.drag::after{opacity:.7;background:var(--gold)}
   #cheat{display:block;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
 }
 @media (prefers-reduced-motion: reduce){.tile.clk{transition:none}}
@@ -260,6 +263,7 @@ header .meta{order:2}
   </div>
   <details class="log"><summary id="logSum">牌局記錄</summary><ol id="log"></ol></details>
   </div>
+  <div id="cheatGrip" role="separator" aria-orientation="vertical" title="拖曳調整寬度 / drag to resize · double-click to reset"></div>
   <aside id="cheat" aria-label="cheat sheet"></aside>
   </div>
 </div>
@@ -1219,6 +1223,18 @@ $('#lobby').addEventListener('click', e => {
     sendLobby(); renderLobby();
   }
 });
+/* 速查表寬度可拖曳調整（桌面） */
+(() => {
+  const grip = $('#cheatGrip'), KEY = 'yjl-cheatw', MIN = 240, MAX = 640;
+  const set = w => { w = Math.max(MIN, Math.min(MAX, Math.round(w))); document.documentElement.style.setProperty('--cheatw', w + 'px'); return w; };
+  try { const w = +localStorage.getItem(KEY); if (w) set(w); } catch (e) {}
+  let drag = null;
+  grip.addEventListener('pointerdown', e => { drag = { x: e.clientX, w: $('#cheat').getBoundingClientRect().width }; grip.setPointerCapture(e.pointerId); grip.classList.add('drag'); e.preventDefault(); });
+  grip.addEventListener('pointermove', e => { if (drag) set(drag.w - (e.clientX - drag.x)); });
+  const end = () => { if (!drag) return; drag = null; grip.classList.remove('drag'); try { localStorage.setItem(KEY, parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cheatw')) || 330); } catch (e) {} };
+  grip.addEventListener('pointerup', end); grip.addEventListener('pointercancel', end);
+  grip.addEventListener('dblclick', () => { document.documentElement.style.removeProperty('--cheatw'); try { localStorage.removeItem(KEY); } catch (e) {} });
+})();
 $('#onlineBtn').onclick = () => { renderLobby(); $('#lobby').showModal(); };
 { const q = new URLSearchParams(location.search).get('room'); if (q) { setTimeout(() => { renderLobby(); const c = $('#lbCode'); if (c) c.value = q.toUpperCase(); $('#lobby').showModal(); }, 300); } }
 applyLang(); updateOnlineBtn(); play();
