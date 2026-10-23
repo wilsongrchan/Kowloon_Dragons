@@ -184,6 +184,13 @@ details.eg summary{cursor:pointer;color:var(--gold);font-size:calc(14px*var(--fs
 .reveal .row .tile{--u:9px}
 .pay{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-variant-numeric:tabular-nums}
 .pos{color:#8fd19e}.neg{color:#f0928b}
+.paytab{width:100%;max-width:360px;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.paytab th{font-weight:500;color:var(--muted);font-size:calc(12px*var(--fs,1));text-align:right;padding:2px 8px 4px}
+.paytab td{text-align:right;padding:4px 8px;border-top:1px solid var(--line)}
+.paytab th:first-child,.paytab td:first-child{text-align:left;padding-left:0}
+.paytab tr.win td:first-child{color:var(--gold);font-weight:700}
+.paytab td:nth-child(3){font-weight:700}
+.paynote{margin:4px 0 0;font-size:calc(12px*var(--fs,1));color:var(--muted)}
 @media (max-width:520px){
   .wrap{padding:10px 10px 32px}
   h1{font-size:calc(24px*var(--fs,1))}
@@ -932,7 +939,7 @@ const JA_EXACT = {
   '還沒輪到你': 'まだあなたの番ではありません', '　': '　', '分': '点', '＋': '＋', '（混）': '（彩）',
   '自摸': 'ツモ', '過': 'パス', '流局': '流局', '流局。': '流局です。', '本局結束。': 'この局は終了です。', '下一局': '次の局へ',
   '牌山摸完，沒有人胡牌。': '牌山がなくなり、誰も和了しませんでした。', '合計（取整、6 番封頂）': '合計（切り捨て・6翻で上限）',
-  '（自摸：每家付一份）': '（ツモ：各家が1人分ずつ払う）', '（出銃者付兩份）': '（放銃者が2人分払う）', '得分': '得点', '點': '点',
+  '自摸：每家付一份': 'ツモ：各家が1人分ずつ払う', '出銃者付兩份': '放銃者が2人分払う', '本局': '今局', '累計': '累計', '（自摸：每家付一份）': '（ツモ：各家が1人分ずつ払う）', '（出銃者付兩份）': '（放銃者が2人分払う）', '得分': '得点', '點': '点',
   '番種': '役', '結算': '精算', '各家手牌': '各家の手牌', '（胡牌）': '（和了）', '等待房主開始下一局…': 'ホストが次の局を始めるのを待っています…',
   '番種速查': '役一覧', '你目前已有': '現在成立している', '灰色': 'グレー', '＝已不可能': '＝もう成立しません',
   '碎番 +0.5': '無役翻 +0.5', '（要先有 1 番）': '（先に1翻が必要）', '可鳴的牌': '鳴ける牌', '吃': 'チー', '碰': 'ポン',
@@ -1525,7 +1532,7 @@ function meldEl(m, size) {
   m.tiles.forEach(t => {
     const e = tileEl(t, { [size]: true });
     if (!m.open) e.classList.add('dim');
-    if (m.mixed && t.id === m.claimed) e.style.opacity = .6;
+    if (m.mixed && t.id === m.claimed) { e.style.opacity = .6; e.querySelector('.v')?.remove(); }
     w.appendChild(e);
   });
   return w;
@@ -2039,11 +2046,12 @@ function renderResult() {
       ev.halves.map(i => `<span>${yn(i.name)}</span><span>+${F(i.fan)}</span>`).join('') +
       `<span class="tot">${L('合計（取整、6 番封頂）', 'Total (rounded down, capped at 6)')}</span><span class="tot">${F(ev.fan)} ×${ev.mult}</span>` +
       `<span>${L('全手點值' + (ev.bonus ? `（含${ev.bonusName}加分 +${ev.bonus}）` : ''), 'Hand tile points' + (ev.bonus ? ` (incl. +${ev.bonus} ${yn(ev.bonusName)} bonus)` : ''))}</span><span>${ev.tilePts}</span>`;
-    const pay = res.delta.map((v, i) => `<span>${WHO[i]} <b class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v > 0 ? '+' : ''}${v}</b>${L(`（累計 ${scores[i]}）`, ` (total ${scores[i]})`)}</span>`).join('');
+    const pay = `<table class="paytab"><thead><tr><th>${L('玩家', 'Player')}</th><th>${L('本局', 'This hand')}</th><th>${L('累計', 'Total')}</th></tr></thead><tbody>` +
+      res.delta.map((v, i) => `<tr${i === res.winner ? ' class="win"' : ''}><td>${WHO[i]}</td><td class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v > 0 ? '+' : ''}${v}</td><td>${scores[i]}</td></tr>`).join('') + '</tbody></table>';
     d.innerHTML = `<h2>${L(`${who}${res.tsumo ? '自摸' : '食胡'}！`, `${who} won by ${res.tsumo ? 'self-draw' : 'discard'}!`)}</h2><p style="margin:0;color:var(--muted)">${how}</p>
       <div class="hero"><small>${L('得分', 'Score')}</small><b>${ev.points}</b><span>${ev.tilePts} ${L('點', 'pts')} × ${ev.mult}</span></div>
       <h3>${L('番種', 'Fan breakdown')}</h3><div class="fanlist">${rows}</div>
-      <h3>${L('結算', 'Settlement')}${res.tsumo ? L('（自摸：每家付一份）', ' (self-draw: each pays one share)') : L('（出銃者付兩份）', ' (discarder pays two shares)')}</h3><div class="pay">${pay}</div>
+      <h3>${L('結算', 'Settlement')}</h3><div class="pay">${pay}</div><p class="paynote">${res.tsumo ? L('自摸：每家付一份', 'Self-draw: each pays one share') : L('出銃者付兩份', 'Discarder pays two shares')}</p>
       <h3>${L('各家手牌', 'All hands')}</h3><div class="reveal" id="rv"></div>${next}`;
     const rv = d.querySelector('#rv');
     for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, WHO[s] + (s === res.winner ? L('（胡牌）', ' (winner)') : '')));
