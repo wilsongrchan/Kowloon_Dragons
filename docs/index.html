@@ -502,9 +502,9 @@ const L = (zh, en) => LANG === 'en' ? en : zh;
 const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Right', 'Across', 'Left'] };
 const NAMES = new Proxy({}, { get: (_, i) => SEAT[LANG][i] });
 const SUITEN = { p: 'Circles', s: 'Bamboo', m: 'Characters' }, DRAGEN = { 1: 'Red Dragon', 2: 'Green Dragon', 3: 'White Dragon' };
-const tn = t => LANG === 'en' ? (t.s === 'z' ? HON[t.n] : t.n + SUITN[t.s]) : tname(t);
+const tn = t => LANG === 'en' ? (t.s === 'z' ? DRAGEN[t.n] : t.n + SUITN[t.s]) : tname(t);
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
-const knFull = k => LANG === 'en' ? (k[0] === 'z' ? DRAGEN[+k.slice(1)] + ' ' + HON[+k.slice(1)] : +k.slice(1) + SUITN[k[0]] + ' ' + SUITEN[k[0]]) : kn(k);
+const knFull = k => LANG === 'en' ? (k[0] === 'z' ? DRAGEN[+k.slice(1)] : +k.slice(1) + SUITN[k[0]] + ' ' + SUITEN[k[0]]) : kn(k);
 const YAKU_EN = {'中發白刻子':'Dragon triplet','平和':'All Chows','對對胡':'All Pungs','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Pungs','四暗刻':'Four Concealed Pungs','小三元':'Small Three Dragons','大三元':'Big Three Dragons','幺九順':'Yaojiu Straight','幺九龍':'Yaojiu Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
 const yn = name => { if (LANG !== 'en') return name; const m = name.match(/^(.+?)(×\d+)?$/); return (YAKU_EN[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const X = (label, spec) => `<div class="exrow"><span class="exl">${label}</span><span class="exs">` + spec.split('|').map(g =>
@@ -560,7 +560,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
   <h3>Tiles and points</h3>
   <ul>
     <li>Circles (筒), Bamboo (索), Characters (萬): 45 tiles each, with <b>n copies of number n</b>.</li>
-    <li>Dragons 中 發 白: 5 copies each. 150 tiles in total.</li>
+    <li>Dragons: Red (中), Green (發) and White (白), 5 copies each. 150 tiles in total.</li>
     <li>Point value = 10 − number: 1 = 9 pts … 9 = 1 pt. Dragons = 0. The small gold badge on a tile is its value.</li>
     <li>Small tiles = 1–3. Middle tiles = 4–6. Big tiles = 7–9.</li>
   </ul>
@@ -618,7 +618,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
   <ul>
     <li><b>1 fan</b>
       <ul>
-        <li><b>Dragon triplet (中發白刻子)</b>: each triplet of 中, 發 or 白 counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
+        <li><b>Dragon triplet (中發白刻子)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
         <li><b>All Chows (平和)</b>: all chows, no dragons, and the pair isn't a dragon.</li>
         <li><b>All Pungs (對對胡)</b>: 4 pungs + pair. Mixed pungs are allowed.</li>
       </ul>
@@ -643,7 +643,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
       <ul>
         <li><b>Big Three Dragons (大三元)</b>: triplets of all three dragons. Replaces the dragon triplet fan; hand points +40.</li>
         <li><b>Four Concealed Pungs (四暗刻)</b></li>
-        <li><b>Yaojiu Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of 中 發 白 + a pair of a same-suit number or a dragon. Hand points +40 (340–396 pts in total).</li>
+        <li><b>Yaojiu Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +40 (340–396 pts in total).</li>
       </ul>
     </li>
   </ul>
