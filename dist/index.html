@@ -1001,6 +1001,7 @@ const JA_EXACT = {
   '已有三元牌鳴牌': '三元牌の副露あり', '鳴牌三門齊': '副露が3色そろっている', '非三元鳴牌太多': '三元牌以外の副露が多すぎます', '鳴牌不合': '副露が合いません',
   '鳴牌不合（只可鳴 123、456，同花）': '副露が合いません（鳴けるのは同色の123・456のみ）', '鳴牌不合（只可鳴 123、456，同花，不能有碰槓）': '副露が合いません（同色の123・456のみ、ポン／カン不可）',
   '鳴牌不合（要紅中、發財、白板全槓）': '副露が合いません（白發中すべてカンが必要）', '已有鳴牌': 'すでに副露あり', '同花 123·234·345·456，只吃上家': '同色の123・234・345・456、上家からのみ',
+  '音效': '効果音', '背景音樂': 'BGM', '開': 'オン', '關': 'オフ',
   '意見回饋': 'フィードバック', '遊戲有問題或想法？告訴我！': 'バグやご意見があれば教えてください！', '類型': '種類', '錯誤': '不具合', '建議': 'ご提案', '其他': 'その他',
   '請描述你遇到的問題或想法…': '問題点やアイデアをご記入ください…', '聯絡方式（選填，方便回覆）': '連絡先（任意・返信用）',
   '會一併附上語言與裝置資訊，不會附上其他個人資料。': '言語と端末の情報が一緒に送信されます。それ以外の個人情報は送りません。',
@@ -1058,7 +1059,7 @@ function jaRuby(html) {
 }
 
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
-const PREF = { theme: 'auto', fs: 'm', script: 't' };
+const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; } catch (e) {}
 const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
@@ -2000,18 +2001,18 @@ async function play() {
     if (act.win) { finish(winResult(G, seat, true, null, opts.win)); return; }
     if (act.kong) {
       const kk = act.kong, ks = seat;
-      applyKong(G, seat, kk); log(() => L(`${WHO[ks]}${kk.big ? '大槓' : '槓'} ${kn(kk.k)}`, `${WHO[ks]} ${kk.big ? 'grand kong' : 'kong'} ${kn(kk.k)}`));
+      applyKong(G, seat, kk); sfxMeld('kong'); log(() => L(`${WHO[ks]}${kk.big ? '大槓' : '槓'} ${kn(kk.k)}`, `${WHO[ks]} ${kk.big ? 'grand kong' : 'kong'} ${kn(kk.k)}`));
       rep = true; UI.drawnId = null; continue;
     }
     const t = discardTile(G, seat, act.discard);
-    UI.drawnId = null; { const ds = seat; log(() => L(`${WHO[ds]}打 ${tn(t)}`, `${WHO[ds]} discards ${tn(t)}`)); } render();
+    UI.drawnId = null; SFX.place(); { const ds = seat; log(() => L(`${WHO[ds]}打 ${tn(t)}`, `${WHO[ds]} discards ${tn(t)}`)); } render();
     if (!fast()) await sleep(seat === 0 ? 250 : 350);
     const cl = await resolveClaims(seat, t);
     if (!alive()) return;
     if (cl.win) { G.hands[cl.seat].push(t); G.discards[seat].pop(); finish(winResult(G, cl.seat, false, seat, cl.ev)); return; }
     if (cl.claim) {
       applyClaim(G, cl.seat, cl.kind, cl.opt, t, seat);
-      const mm = G.melds[cl.seat][G.melds[cl.seat].length - 1];
+      const mm = G.melds[cl.seat][G.melds[cl.seat].length - 1]; sfxMeld(cl.kind);
       { const cs = cl.seat, ck = cl.kind, cm = mm.mixed; log(() => L(`${WHO[cs]}${KIND[ck][0]} ${tn(t)}${cm ? '（混）' : ''}`, `${WHO[cs]} ${KIND[ck][1].toLowerCase()} ${tn(t)}${cm ? ' (mixed)' : ''}`)); }
       seat = cl.seat; if (cl.kind === 'kong') rep = true; else needDraw = false;
       continue;
@@ -2421,6 +2422,8 @@ function guestMsg(m, conn, peer, markJoined, code) {
   if (m.t === 'state') {
     if (m.hn !== ROOM.handNo) { ROOM.handNo = m.hn; LOGS.length = 0; renderLog(); UI.manual = false; UI.order = []; UI.locks = []; UI.sel = null; UI.mode = null; $('#result').close?.(); clearActions(); }
     ROOM.names = m.names; mySeat = m.me; ROOM.started = true;
+    { const cnt = a => a.reduce((x, y) => x + y.length, 0), same = G && m.hn === ROOM.handNo && G.discards;
+      if (same) { const nm = cnt(m.melds) - cnt(G.melds); if (nm > 0) { const last = m.melds.flat().some(x => x.type === 'kong') && cnt(m.melds.map(a => a.filter(x => x.type === 'kong'))) > cnt(G.melds.map(a => a.filter(x => x.type === 'kong'))) ? 'kong' : 'pung'; sfxMeld(last); } else if (cnt(m.discards) > cnt(G.discards)) SFX.place(); } }
     G = { hands: m.hands, melds: m.melds, discards: m.discards, wall: { length: m.wall }, turn: m.turn, dealer: m.dealer, last: m.last };
     scores = m.scores; dealer = m.dealer;
     if ($('#lobby').open) $('#lobby').close();
@@ -2607,6 +2610,115 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#langBtn,#lnLang,#lbLang')) m.hidden = true;
 }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $('#langMenu'); if (m) m.hidden = true; } });
+/* ===== 背景音樂：Web Audio 即時合成（五聲音階、撥弦＋柔和長音），預設關閉 ===== */
+const MUSIC = (() => {
+  const SC = [0, 2, 4, 7, 9], BEAT = 0.4167, BARS = 9; // 9 小節 × 8 拍 × 0.4167 秒 ＝ 30 秒一圈
+  const freq = d => 293.66 * Math.pow(2, (SC[((d % 5) + 5) % 5] + 12 * Math.floor(d / 5)) / 12);
+  let ctx, master, wet, timer, nextT = 0, bar = 0, deg = 5, on = false, rng;
+  const seeded = () => { let a = 0x9e3779b9; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const impulse = c => { const n = Math.floor(c.sampleRate * 2.4), b = c.createBuffer(2, n, c.sampleRate); for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6); } return b; };
+  function build(c, dest) {
+    const m = c.createGain(); m.gain.value = 0; m.connect(dest);
+    const rv = c.createConvolver(); rv.buffer = impulse(c); const w = c.createGain(); w.gain.value = .5; rv.connect(w); w.connect(m);
+    return { m, rv };
+  }
+  // 古箏：Karplus-Strong 撥弦合成（噪音進延遲線＋低通回授），每個音高預先算好一次；有些音帶「滑音」（按弦）
+  const KS = new WeakMap();
+  function ksBuf(c, f) {
+    let m = KS.get(c); if (!m) KS.set(c, m = new Map());
+    const key = f.toFixed(2); if (m.has(key)) return m.get(key);
+    const sr = c.sampleRate, N = Math.max(2, Math.round(sr / f)), len = Math.floor(sr * 3.2), b = c.createBuffer(1, len, sr), y = b.getChannelData(0);
+    let a = 0x1234567 + N; const r = () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const decay = f < 200 ? .9985 : f < 400 ? .998 : .9972;
+    let prev = 0;
+    for (let i = 0; i < N; i++) { const w = r() * 2 - 1; prev = prev * .78 + w * .22; y[i] = prev * 1.6; }   // 稍為柔化的初始噪音＝不太刺耳的撥弦
+    for (let i = N; i < len; i++) y[i] = decay * (.5 * y[i - N] + .5 * y[i - N + 1 < i ? i - N + 1 : i - N]);
+    const o = { buf: b, base: sr / N }; m.set(key, o); return o;
+  }
+  function pluck(c, g, t, f, vel, dur, bend) {
+    const k = ksBuf(c, f), s = c.createBufferSource(), e = c.createGain();
+    s.buffer = k.buf; const pr = f / k.base;
+    if (bend) { s.playbackRate.setValueAtTime(pr * .944, t); s.playbackRate.exponentialRampToValueAtTime(pr, t + .09); } else s.playbackRate.value = pr;
+    const d = Math.max(dur, 1) * 1.1, lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = f < 200 ? 500 : 1700; lp.Q.value = .5;
+    e.gain.setValueAtTime(vel * 1.5, t); e.gain.setTargetAtTime(0.0001, t + d * .3, d * .2);
+    s.connect(lp); lp.connect(e); e.connect(g.m); e.connect(g.rv); s.start(t); s.stop(t + d + .3);
+  }
+  function pad(c, g, t, f, len, vel) {
+    const o = c.createOscillator(), e = c.createGain(); o.type = 'sine'; o.frequency.value = f;
+    e.gain.setValueAtTime(0.0001, t); e.gain.linearRampToValueAtTime(vel, t + len * .45); e.gain.linearRampToValueAtTime(0.0001, t + len);
+    o.connect(e); e.connect(g.m); e.connect(g.rv); o.start(t); o.stop(t + len + .05);
+  }
+  // 排下一小節（8 個八分音符）
+  function schedBar(c, g, t) {
+    if (bar % BARS === 0 || !rng) { deg = 5; rng = seeded(); }
+    const rnd = rng;
+    const roots = [0, 0, 2, 0, 0, 3, 2, 0, -2], r = roots[bar % BARS];
+    pluck(c, g, t, freq(r - 5), .03, 2.2);
+    if (bar % BARS % 2 === 0) { pad(c, g, t, freq(r), BEAT * 14, .035); pad(c, g, t, freq(r + 3), BEAT * 14, .025); }
+    for (let i = 0; i < 8; i++) {
+      if (rnd() < (i % 2 ? .42 : .74)) {
+        const st = rnd(); deg += st < .4 ? 1 : st < .7 ? -1 : st < .85 ? 2 : -2; deg = Math.max(1, Math.min(11, deg));
+        pluck(c, g, t + i * BEAT, freq(deg), .06 + rnd() * .03, 1.6, st >= .93);
+        if (rnd() < .12) pluck(c, g, t + i * BEAT + BEAT / 2, freq(deg + 1), .04, 1.2);
+      }
+    }
+    bar++;
+  }
+  function tick() { while (nextT < ctx.currentTime + 1.2) { schedBar(ctx, wet, nextT); nextT += BEAT * 8; } }
+  return {
+    start() {
+      if (on) return; on = true;
+      try {
+        if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); wet = build(ctx, ctx.destination); }
+        ctx.resume(); wet.m.gain.cancelScheduledValues(ctx.currentTime); wet.m.gain.setTargetAtTime(.8, ctx.currentTime, .6);
+        bar = 0; rng = null; nextT = ctx.currentTime + .2; tick(); timer = setInterval(tick, 250);
+      } catch (e) { on = false; }
+    },
+    stop() {
+      if (!on) return; on = false; clearInterval(timer);
+      try { wet.m.gain.setTargetAtTime(0, ctx.currentTime, .25); setTimeout(() => { if (!on) ctx.suspend(); }, 1200); } catch (e) {}
+    },
+    // 測試用：離線合成 sec 秒
+    async render(sec, rnd) { const oc = new OfflineAudioContext(2, 44100 * sec, 44100), g = build(oc, oc.destination); g.m.gain.value = .8; bar = 0; deg = 5; rng = null; for (let t = .2; t < sec; t += BEAT * 8) schedBar(oc, g, t); return oc.startRendering(); }
+  };
+})();
+/* ===== 音效：牌落在絨布桌上的悶響；碰、吃、槓各有聲（Web Audio 即時合成） ===== */
+const SFX = (() => {
+  let ctx, out, nb;
+  function init() {
+    if (ctx) return true;
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)(); out = ctx.createGain(); out.gain.value = .4; out.connect(ctx.destination);
+      nb = ctx.createBuffer(1, ctx.sampleRate * .2, ctx.sampleRate); const d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      return true;
+    } catch (e) { return false; }
+  }
+  // 牌敲在木門上：實心的「叩」——很短的硬點加上木頭共鳴（約 300–1700Hz，有分量、有空心感），餘音約 0.15 秒
+  function tok(t, vel, pitch) {
+    const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); n.buffer = nb; f.type = 'bandpass'; f.frequency.value = 2600 * pitch; f.Q.value = .7;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vel * .8, t + .0007); g.gain.exponentialRampToValueAtTime(0.0001, t + .014);
+    n.connect(f); f.connect(g); g.connect(out); n.start(t); n.stop(t + .04);
+    [[330, 1, .16, 1.25], [640, .75, .11, 1.1], [1010, .55, .08, 1], [1580, .35, .05, 1], [2300, .2, .035, 1]].forEach(([fr, a, d, bd]) => {
+      const o = ctx.createOscillator(), e = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(fr * pitch * bd, t); o.frequency.exponentialRampToValueAtTime(fr * pitch, t + .02);
+      e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(vel * a * .8, t + .0012); e.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(e); e.connect(out); o.start(t); o.stop(t + d + .02);
+    });
+  }
+  const run = fn => { if (PREF.sfx === 'off' || !init()) return; try { ctx.resume(); fn(ctx.currentTime + .005); } catch (e) {} };
+  return {
+    place() { run(t => tok(t, .5, 1)); },
+    chow() { run(t => { tok(t, .4, 1.08); tok(t + .13, .5, .98); }); },
+    pung() { run(t => { tok(t, .45, 1.05); tok(t + .11, .5, .98); tok(t + .22, .58, .9); }); },
+    kong() { run(t => { tok(t, .45, 1.05); tok(t + .1, .5, .98); tok(t + .2, .55, .92); tok(t + .33, .7, .75); }); },
+    // 測試用
+    async render(kind) { const oc = new OfflineAudioContext(1, 44100, 44100), sc = ctx, so = out, sn = nb; ctx = oc; out = oc.createGain(); out.connect(oc.destination); nb = oc.createBuffer(1, 8820, 44100); const d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const fn = { place: t => tok(t, .5, 1), pung: t => { tok(t, .5, 1); tok(t + .09, .55, .92); tok(t + .18, .6, .85); } }[kind]; fn(.01); const r = await oc.startRendering(); ctx = sc; out = so; nb = sn; return r; }
+  };
+})();
+const sfxMeld = k => k === 'chow' ? SFX.chow() : k === 'kong' ? SFX.kong() : SFX.pung();
+const musicApply = () => PREF.music !== 'off' ? MUSIC.start() : MUSIC.stop();
+document.addEventListener('visibilitychange', () => { if (PREF.music !== 'off') document.hidden ? MUSIC.stop() : MUSIC.start(); });
+document.addEventListener('pointerdown', () => { if (PREF.music !== 'off') MUSIC.start(); }, { once: true });
 function savePref() { try { for (const k in PREF) localStorage.setItem('yjl-' + k, PREF[k]); localStorage.setItem('yjl-lang', LANG); } catch (e) {} }
 function renderSettings() {
   const d = $('#setDlg'); if (!d) return;
@@ -2614,12 +2726,16 @@ function renderSettings() {
   d.innerHTML = `${XBTN()}<h2>${L('設定', 'Settings')}</h2>
     <h3>${L('外觀', 'Appearance')}</h3><div class="chips">${chip('theme', 'auto', '自動', 'Auto', PREF.theme === 'auto')}${chip('theme', 'light', '淺色', 'Light', PREF.theme === 'light')}${chip('theme', 'dark', '深色', 'Dark', PREF.theme === 'dark')}</div>
     <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小 S', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中 M', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大 L', 'Large', PREF.fs === 'l')}</div>
+    <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
+    <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
     <h3>${L('意見回饋', 'Feedback')}</h3><button type="button" class="btn sm" id="stFb">${L('意見回饋', 'Feedback')} …</button>`;
 }
 $('#setDlg').addEventListener('click', e => {
   const b = e.target.closest('button[data-set]'); if (!b) return;
   const [g, v] = b.dataset.set.split(':');
   if (g === 'theme' || g === 'fs') { PREF[g] = v; applyPrefs(); }
+  else if (g === 'sfx') { PREF.sfx = v; savePref(); renderSettings(); if (v === 'on') SFX.place(); }
+  else if (g === 'music') { PREF.music = v; musicApply(); renderSettings(); }
   else { LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't'; }
   savePref(); applyLang();
 });
