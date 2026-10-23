@@ -35,7 +35,7 @@ function decomps(c0, need) {
     if (sets.length > need) return;
     if (!pair && c[k] >= 2) { c[k] -= 2; rec(sets, k); c[k] += 2; }
     if (!pair && k[0] !== 'z' && +k.slice(1) <= 3) {
-      // 小字混眼：1-3 同數字、不同花色的兩張可以當眼（pair 寫成 'p1/s1'）
+      // 彩眼：1-3 同數字、不同花色的兩張可以當眼（pair 寫成 'p1/s1'）
       for (const s2 of ['p', 's', 'm']) {
         const k2 = s2 + k.slice(1);
         if (s2 === k[0] || !(c[k2] > 0)) continue;
@@ -45,7 +45,7 @@ function decomps(c0, need) {
     if (sets.length < need) {
       if (c[k] >= 3) { c[k] -= 3; sets.push({ type: 'pong', k }); rec(sets, pair); sets.pop(); c[k] += 3; }
       if (k[0] !== 'z' && +k.slice(1) <= 3) {
-        // 小字混刻：1-3 同數字、不同花色的三張可在手牌內自成刻子（全同花色的就是一般刻子）
+        // 彩刻：1-3 同數字、不同花色的三張可在手牌內自成刻子（全同花色的就是一般刻子）
         const nn = k.slice(1), ks3 = ['p', 's', 'm'].map(s => s + nn);
         c[k]--;
         for (let i = 0; i < 3; i++) for (let j = i; j < 3; j++) {
@@ -75,7 +75,7 @@ function decomps(c0, need) {
 /* ---- 新番種（Wilson 的最終清單）：封頂 6 番，倍數 = 番數 ---- */
 const CAP = 6;
 function sevenPairsShape(concealed) {
-  // 七對子：14 張全是對子（可重複，如 8888 算兩對）；不可混眼
+  // 七對子：14 張全是對子（可重複，如 8888 算兩對）；不可彩眼
   if (concealed.length !== 14) return null;
   const c = counts(concealed), pairs = [];
   for (const k of ORDER) {
@@ -85,13 +85,13 @@ function sevenPairsShape(concealed) {
   return pairs.length === 7 ? { pairs } : null;
 }
 function flushOf(normalKeys, mixedSets, mixedPairs) {
-  // 混一色／清一色（不可混碰混眼）；混眼混一色、混碰混一色（只有一個混的部份，其餘同一花色＋可有三元）各 1 番
+  // 混一色／清一色（不可彩碰彩眼）；彩眼混一色、彩碰混一色（只有一個混的部份，其餘同一花色＋可有三元）各 1 番
   const suits = new Set(normalKeys.filter(k => k[0] !== 'z').map(k => k[0]));
   const hon = normalKeys.some(k => k[0] === 'z');
   if (suits.size !== 1) return null;
   if (mixedSets === 0 && mixedPairs === 0) return hon ? { name: '混一色', fan: 2 } : { name: '清一色', fan: 4 };
-  if (mixedSets === 0 && mixedPairs === 1) return { name: '混眼混一色', fan: 1 };
-  if (mixedSets === 1 && mixedPairs === 0) return { name: '混碰混一色', fan: 1 };
+  if (mixedSets === 0 && mixedPairs === 1) return { name: '彩眼混一色', fan: 1 };
+  if (mixedSets === 1 && mixedPairs === 0) return { name: '彩碰混一色', fan: 1 };
   return null;
 }
 // special: null | '天胡'（莊家起手即胡）| '地胡'（閒家胡莊家第一隻打出的牌）| '人胡'（閒家第一次摸牌自摸，之前無人吃碰槓）
@@ -173,7 +173,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
     else for (let i = 0; i < dr; i++) add('三元刻', 1);
     if (sets.every(s => s.kind === 'chow') && !pairHon) add('平胡', 1);
     if (sets.every(s => s.kind === 'pong')) add('對對胡', 1);
-    // 暗刻：暗槓算暗刻；榮和時，靠胡牌完成的刻子算明刻；榮胡進眼（或胡牌可放進順子）不毀暗刻
+    // 暗刻：暗槓算暗刻；榮胡時，靠胡牌完成的刻子算明刻；榮胡進眼（或胡牌可放進順子）不毀暗刻
     let anko = melds.filter(m => m.type === 'kong' && !m.open).length;
     const winK = (!tsumo && winTile) ? winTile.k : null;
     const inChow = (ck, k) => ck[0] === k[0] && +k.slice(1) >= +ck.slice(1) && +k.slice(1) <= +ck.slice(1) + 2;
@@ -197,7 +197,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
     }
     if (!pairMixed) normalKeys.push(d.pair, d.pair);
     const fl = flushOf(normalKeys, sets.filter(s => s.mixed).length, pairMixed ? 1 : 0); if (fl) items.push(fl);
-    // 混一色／混眼混一色／混碰混一色：第一副三元刻不另計（已包含在混一色內）
+    // 混一色／彩眼混一色／彩碰混一色：第一副三元刻不另計（已包含在混一色內）
     if (fl && fl.name !== '清一色') { const di = items.findIndex(x => x.name === '三元刻'); if (di >= 0) items.splice(di, 1); }
     if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全大字', 3);
     if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷大字', 2);
