@@ -328,7 +328,7 @@ function evaluateHand(melds, concealed, tsumo, winTile) {
     let bonus = 0, bonusName = null;
     if (dr === 3) { add('大三元', 4); bonus = 40; bonusName = '大三元'; }
     else if (dr === 2 && pairHon && !dragonSets.some(s => s.k === d.pair)) { add('小三元', 3); bonus = 20; bonusName = '小三元'; }
-    else for (let i = 0; i < dr; i++) add('中發白刻子', 1);
+    else for (let i = 0; i < dr; i++) add('三元刻', 1);
     if (sets.every(s => s.kind === 'chow') && !(RULES.PAIR_HONOR_BREAKS_PINGHU && pairHon)) add('平和', 1);
     if (sets.every(s => s.kind === 'pong')) add('對對胡', 1);
     // 暗刻：暗槓算暗刻；榮和時，靠胡牌完成的刻子算明刻
@@ -548,7 +548,7 @@ const SUITEN = { p: 'Circles', s: 'Bamboo', m: 'Characters' }, DRAGEN = { 1: 'Re
 const tn = t => LANG === 'en' ? (t.s === 'z' ? DRAGEN[t.n] : t.n + SUITN[t.s]) : tname(t);
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? (k[0] === 'z' ? DRAGEN[+k.slice(1)] : +k.slice(1) + SUITN[k[0]] + ' ' + SUITEN[k[0]]) : kn(k);
-const YAKU_EN = {'中發白刻子':'Dragon triplet','平和':'All Chows','對對胡':'All Triplets','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','小三元':'Small Three Dragons','大三元':'Big Three Dragons','幺九順':'Yaojiu Straight','幺九龍':'Yaojiu Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平和':'All Chows','對對胡':'All Triplets','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','小三元':'Small Three Dragons','大三元':'Big Three Dragons','幺九順':'Yaojiu Straight','幺九龍':'Yaojiu Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
 const yn = name => { if (LANG !== 'en') return name; const m = name.match(/^(.+?)(×\d+)?$/); return (YAKU_EN[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -579,7 +579,7 @@ zh: `  <h2>規則（目前實作）</h2>
   ${EG('牌面示例：吃碰槓、混碰、三元大槓', [X('吃','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('碰／槓','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('混碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('小字混刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7–9 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
   <h3>番種（疊加，4 番封頂；0.5 番稱碎番）</h3>
   <ul>
-    <li>1 番（全番）：中發白刻子（每組可疊加）、平和（全順子、無中發白）、對對胡</li>
+    <li>1 番（全番）：三元刻（中、發、白任一組刻子，明碰或暗刻都算，每組可疊加）、平和（全順子、無中發白）、對對胡</li>
     <li>2 番：混一色、門清加自摸、全大字（全部 7–9 數牌）、斷大字（沒有 7–9 數牌）、三暗刻</li>
     <li>3 番：清一色、小三元（不另計中發白刻，手牌點值立刻 +20）、幺九順（同花色 123＋456＋789，其餘一組可順可碰、可不同花色）</li>
     <li>4 番：大三元（不另計中發白刻，手牌點值立刻 +40）、四暗刻、幺九龍（同花色 123＋456＋789＋中發白各一＋同花色或三元的眼，手牌點值立刻 +40）</li>
@@ -589,7 +589,7 @@ zh: `  <h2>規則（目前實作）</h2>
     <li>總番數取整數部分，所以 1+0.5+0.5＝2 番。</li>
     <li>倍數：1 番 ×1、2 番 ×2、3 番 ×3、4 番 ×4。得分 = 全手牌點值總和（含已鳴的牌，扣除混碰被要的那張）× 倍數。</li>
   </ul>
-  ${EG('牌面示例：番種', [X('1 番：中發白刻子','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 番：平和','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 番：對對胡','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 番：混一色','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 番：全大字','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 番：斷大字','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 番：三暗刻','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 番：清一色','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 番：小三元','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 番：幺九順','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 番：大三元','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 番：四暗刻','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 番：幺九龍','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
+  ${EG('牌面示例：番種', [X('1 番：三元刻','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 番：平和','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 番：對對胡','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 番：混一色','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 番：全大字','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 番：斷大字','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 番：三暗刻','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 番：清一色','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 番：小三元','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 番：幺九順','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 番：大三元','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 番：四暗刻','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 番：幺九龍','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
   <h3>付款（暫定）</h3>
   <ul><li>自摸：其餘三家各付一份。出銃：出銃者付兩份。</li></ul>
   <h3>操作</h3>
@@ -665,7 +665,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
   <ul>
     <li><b>1 fan</b>
       <ul>
-        <li><b>Dragon triplet (中發白刻子)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
+        <li><b>Dragon triplet (三元刻)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
         <li><b>All Chows (平和)</b>: all chows, no dragons, and the pair isn't a dragon.</li>
         <li><b>All Triplets (對對胡)</b>: 4 triplets + pair. Mixed pungs are allowed.</li>
       </ul>
@@ -1083,7 +1083,7 @@ function renderResult() {
   d.querySelector('#nextBtn').onclick = () => setTimeout(play, 0);
 }
 const CHEAT_TIERS = [
-  [1, [['中發白刻子', '每組中／發／白刻子 +1', 'each 中/發/白 triplet, +1 each'], ['平和', '全順子、無中發白', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼', '4 triplets + pair']]],
+  [1, [['三元刻', '中／發／白刻子，明暗皆可，每組 +1', 'Red/Green/White triplet, open or concealed, +1 each'], ['平和', '全順子、無中發白', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼', '4 triplets + pair']]],
   [2, [['混一色', '一門 + 中發白', 'one suit + dragons'], ['門清加自摸', '無鳴牌、自摸', 'no calls, self-draw'], ['全大字', '全部 7–9', 'only 7–9'], ['斷大字', '沒有 7–9', 'no 7–9'], ['三暗刻', '3 組暗刻', '3 concealed triplets']]],
   [3, [['清一色', '一門、無中發白', 'one suit, no dragons'], ['小三元', '2 刻 + 1 眼 · +20', '2 dragon triplets + pair · +20'], ['幺九順', '同花 123·456·789 · 其餘任一組', 'same-suit 123·456·789 + any set']]],
   [4, [['大三元', '中發白全刻 · +40', 'all 3 dragon triplets · +40'], ['四暗刻', '4 組暗刻', '4 concealed triplets'], ['幺九龍', '同花 123·456·789 + 中發白 + 眼 · +40', 'same-suit 123·456·789 + Red·Green·White + pair · +40']]]

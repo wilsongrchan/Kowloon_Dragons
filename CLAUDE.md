@@ -22,7 +22,7 @@ Hand 13, win 14: 4 sets + pair.
 - 一番起和 (needs >=1 fan from real conditions; two half-fans alone cannot win).
 - Multiplier on sum of all hand point values: 1番 x1, 2番 x2, 3番 x3, 4番(cap) x4 (linear).
 - Fan = floor(total incl. halves) so 1+0.5+0.5 = 2.
-- 1番: 中發白刻子(each, stackable), 平和 (all chows, no dragons), 對對胡(混碰 ok)
+- 1番: 三元刻(each, stackable), 平和 (all chows, no dragons), 對對胡(混碰 ok)
 - 2番: 混一色, 門清加自摸, 全大字(all tiles 7-9), 斷大字(no 7-9), 三暗刻
 - 3番: 清一色, 小三元 (no extra 中發白刻; hand tile sum +20 before multiplier), 幺九順 (same suit 123+456+789; remaining set chow or pong, any suit; pair any)
 - 4番: 大三元 (no extra 中發白刻; hand tile sum +40 before multiplier), 四暗刻, 幺九龍 (same suit 123+456+789 + one each of 中發白 + a pair of a same-suit number or a dragon, i.e. that tile type has 3 copies; hand tile sum +40 before multiplier -> 340-396 pts)
@@ -56,6 +56,6 @@ Prefer one change at a time, simulate before changing scoring, and keep Wilson's
 - Hover (desktop) or tap (phone, non-hand tiles) any tile -> tooltip with total copies / seen / remaining (seen = own hand + all discards + all melds). Tooltip element #tip.
 - Mobile checked at 390px width (no horizontal overflow, touch drag works). Tests used Playwright (python) + jsdom auto-play.
 - Bilingual UI (中文 default / English): `LANG`, `L(zh,en)`, `tn/kn/knFull` tile names, `yn` yaku-name map (YAKU_EN), `RULES_HTML.{zh,en}` rules dialog, header button #langBtn (remembers choice in localStorage 'yjl-lang'). English mode shows digits on tiles instead of 一二三. Log/status/claim buttons/result dialog are re-rendered on language switch. When changing any rule, update BOTH rules texts (RULES_HTML.zh and .en) and YAKU_EN if yaku names change.
-- Rules dialog has collapsed `<details class="eg">` tile examples built with `X(label, 'p1 s1 m1*|...')` (tile keys p/s/m1-9, z1-3; `*` = claimed tile, faded) and `EG(title, rows)`; update them when a hand definition changes. English name for 中發白刻子 is "Dragon triplet" (revealed pung or concealed triplet).
+- Rules dialog has collapsed `<details class="eg">` tile examples built with `X(label, 'p1 s1 m1*|...')` (tile keys p/s/m1-9, z1-3; `*` = claimed tile, faded) and `EG(title, rows)`; update them when a hand definition changes. English name for 三元刻 is "Dragon triplet" (revealed pung or concealed triplet).
 - Tiles are drawn in CSS (no images): big digit + suit icon (筒 = ring, 索 = stick, 萬 = 萬 character), dragons 中/發/白 (白 = blue frame); gold badge = point value. `faceHTML(suit, n, badge)` builds the face; the rules examples reuse it.
 - Cheat sheet (番種速查): sidebar `#cheat` on >=1180px, header button `#cheatBtn` -> `#cheatDlg` dialog below that. Content from `CHEAT_TIERS` / `CHEAT_MINOR` / `cheatHTML()` in template.html; update with rule changes (along with both rules texts).

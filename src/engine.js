@@ -102,7 +102,7 @@ function evaluateHand(melds, concealed, tsumo, winTile) {
     let bonus = 0, bonusName = null;
     if (dr === 3) { add('大三元', 4); bonus = 40; bonusName = '大三元'; }
     else if (dr === 2 && pairHon && !dragonSets.some(s => s.k === d.pair)) { add('小三元', 3); bonus = 20; bonusName = '小三元'; }
-    else for (let i = 0; i < dr; i++) add('中發白刻子', 1);
+    else for (let i = 0; i < dr; i++) add('三元刻', 1);
     if (sets.every(s => s.kind === 'chow') && !(RULES.PAIR_HONOR_BREAKS_PINGHU && pairHon)) add('平和', 1);
     if (sets.every(s => s.kind === 'pong')) add('對對胡', 1);
     // 暗刻：暗槓算暗刻；榮和時，靠胡牌完成的刻子算明刻
