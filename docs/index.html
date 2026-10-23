@@ -556,7 +556,7 @@ const SUITEN = { p: 'Circles', s: 'Bamboo', m: 'Characters' }, DRAGEN = { 1: 'Re
 const tn = t => LANG === 'en' ? (t.s === 'z' ? DRAGEN[t.n] : t.n + SUITN[t.s]) : tname(t);
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? (k[0] === 'z' ? DRAGEN[+k.slice(1)] : +k.slice(1) + SUITN[k[0]] + ' ' + SUITEN[k[0]]) : kn(k);
-const YAKU_EN = {'三元刻':'Dragon triplet','平和':'All Chows','對對胡':'All Triplets','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Yaojiu Straight','幺九龍':'Yaojiu Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平和':'All Chows','對對胡':'All Triplets','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','幺九龍':'Kowloon Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
 const yn = name => { if (LANG !== 'en') return name; const m = name.match(/^(.+?)(×\d+)?$/); return (YAKU_EN[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -691,18 +691,18 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
       <ul>
         <li><b>Full Flush (清一色)</b>: one suit only, no dragons.</li>
         <li><b>Small Dragons (小三元)</b>: two dragon triplets + a pair of the third. Replaces the dragon triplet fan; hand points +20.</li>
-        <li><b>Yaojiu Straight (幺九順)</b>: 123 + 456 + 789 in one suit. The remaining set is a chow or a triplet in any suit; the pair is anything.</li>
+        <li><b>Kowloon Straight (幺九順)</b>: 123 + 456 + 789 in one suit. The remaining set is a chow or a triplet in any suit; the pair is anything.</li>
       </ul>
     </li>
     <li><b>4 fan</b>
       <ul>
         <li><b>Great Dragons (大三元)</b>: triplets of all three dragons. Replaces the dragon triplet fan; hand points +40.</li>
         <li><b>Four Concealed Triplets (四暗刻)</b></li>
-        <li><b>Yaojiu Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +40 (340–396 pts in total).</li>
+        <li><b>Kowloon Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +40 (340–396 pts in total).</li>
       </ul>
     </li>
   </ul>
-  ${EG('Tile examples: winning hands', [X('1 fan: Dragon triplet','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 fan: All Chows','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 fan: All Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 fan: Half Flush','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 fan: All Big','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 fan: No Big','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 fan: Three Concealed Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 fan: Full Flush','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 fan: Small Dragons','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 fan: Yaojiu Straight','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 fan: Great Dragons','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 fan: Four Concealed Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 fan: Yaojiu Dragon','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
+  ${EG('Tile examples: winning hands', [X('1 fan: Dragon triplet','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 fan: All Chows','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 fan: All Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 fan: Half Flush','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 fan: All Big','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 fan: No Big','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 fan: Three Concealed Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 fan: Full Flush','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 fan: Small Dragons','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 fan: Kowloon Straight','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 fan: Great Dragons','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 fan: Four Concealed Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 fan: Kowloon Dragon','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
   <h3>Minor fans (碎番, ½ fan each)</h3>
   <ul>
     <li>Only added once you already have at least 1 full fan; two ½ fans alone can't win.</li>

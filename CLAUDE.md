@@ -1,6 +1,6 @@
 # 幺九龍 / Kowloon Dragons
 
-Names: Chinese title 幺九龍; English title **Kowloon Dragons** (九龍 = Kowloon = "nine dragons"), subtitle "a tile game from the mahjong family". It is NOT playable with a regular mahjong set (needs its own 150-tile set: n copies of number n, 5 of each dragon), so don't call it plain "Mahjong". The jackpot hand 幺九龍 is called **Yaojiu Dragon** in English to keep it distinct from the game name.
+Names: Chinese title 幺九龍; English title **Kowloon Dragons** (九龍 = Kowloon = "nine dragons"), subtitle "a tile game from the mahjong family". It is NOT playable with a regular mahjong set (needs its own 150-tile set: n copies of number n, 5 of each dragon), so don't call it plain "Mahjong". The jackpot hand 幺九龍 is called **Kowloon Dragon** (singular) in English, and 幺九順 **Kowloon Straight**; the game name stays plural "Kowloon Dragons".
 
 Wilson's self-designed mahjong-inspired game. Single-page test-play site: 1 human vs 3 simple bots.
 Wilson writes rules in Traditional Chinese; UI and rules text are Traditional Chinese. Keep game terms in Chinese.
