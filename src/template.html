@@ -158,6 +158,22 @@ details.eg summary{cursor:pointer;color:var(--gold);font-size:14px;font-weight:5
   .zone .melds{max-width:55%}
   dialog{padding:16px}
 }
+#cheat{display:none}
+.cs{background:var(--table);color:var(--text);border-radius:14px;padding:14px 14px 12px;font-size:13px;line-height:1.4}
+.cs h2{font:900 17px var(--face);margin:0 0 6px}
+.cs h3{font-size:12px;margin:10px 0 3px;color:var(--gold);letter-spacing:.04em}
+.cs h3 small{color:var(--muted);font-weight:400}
+.cs .r{display:flex;gap:8px;justify-content:space-between;padding:2px 0;border-bottom:1px dotted rgba(255,255,255,.1)}
+.cs .r b{color:var(--ivory);font-weight:700;white-space:nowrap}
+.cs .r span{color:var(--muted);text-align:right}
+.cs p{margin:6px 0 0;color:var(--muted)}
+#cheatBtn{display:none}
+@media (max-width:1179px){#cheatBtn{display:inline-block}}
+@media (min-width:1180px){
+  .wrap{max-width:1260px}
+  .main{display:grid;grid-template-columns:minmax(0,900px) 330px;gap:16px;justify-content:center;align-items:start}
+  #cheat{display:block;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+}
 @media (prefers-reduced-motion: reduce){.tile.clk{transition:none}}
 </style>
 </head>
@@ -168,10 +184,13 @@ details.eg summary{cursor:pointer;color:var(--gold);font-size:14px;font-weight:5
     <div class="meta">
       <span class="pill" id="wall">牌山 —</span>
       <button class="btn ghost" id="langBtn" type="button">English</button>
+      <button class="btn ghost" id="cheatBtn" type="button">速查</button>
       <button class="btn ghost" id="rulesBtn">規則設定</button>
       <button class="btn" id="newBtn">重新開局</button>
     </div>
   </header>
+  <div class="main">
+  <div class="col">
   <div class="table">
     <div id="opps"></div>
     <section class="seat" id="me">
@@ -194,11 +213,15 @@ details.eg summary{cursor:pointer;color:var(--gold);font-size:14px;font-weight:5
     </section>
   </div>
   <details class="log"><summary id="logSum">牌局記錄</summary><ol id="log"></ol></details>
+  </div>
+  <aside id="cheat" aria-label="cheat sheet"></aside>
+  </div>
 </div>
 
 <div id="tip" role="status"></div>
 <dialog id="result"></dialog>
 <dialog id="rules"></dialog>
+<dialog id="cheatDlg"></dialog>
 
 <script>
 /*__ENGINE__*/
@@ -747,6 +770,25 @@ function renderResult() {
   }
   d.querySelector('#nextBtn').onclick = () => setTimeout(play, 0);
 }
+const CHEAT_TIERS = [
+  [1, [['中發白刻子', '每組中／發／白刻子 +1', 'each 中/發/白 triplet, +1 each'], ['平和', '全順子、無中發白', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼', '4 triplets + pair']]],
+  [2, [['混一色', '一門 + 中發白', 'one suit + dragons'], ['門清加自摸', '無鳴牌、自摸', 'no calls, self-draw'], ['全大字', '全部 7–9', 'only 7–9'], ['斷大字', '沒有 7–9', 'no 7–9'], ['三暗刻', '3 組暗刻', '3 concealed triplets']]],
+  [3, [['清一色', '一門、無中發白', 'one suit, no dragons'], ['小三元', '2 刻 + 1 眼 · +20', '2 dragon triplets + pair · +20'], ['幺九順', '同花 123·456·789 · 其餘任一組', 'same-suit 123·456·789 + any set']]],
+  [4, [['大三元', '中發白全刻 · +40', 'all 3 dragon triplets · +40'], ['四暗刻', '4 組暗刻', '4 concealed triplets'], ['幺九龍', '同花 123·456·789 + 中發白 + 眼 · +40', 'same-suit 123·456·789 + Red·Green·White + pair · +40']]]
+];
+const CHEAT_MINOR = [['槓', '每次', 'each kong'], ['三元大補槓', '補第 5 張中發白', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['斷一門無三元', '缺一門、無中發白', 'a suit missing, no dragons'], ['胡小字', '胡牌是 1–3', 'winning tile is 1–3']];
+function cheatHTML() {
+  const row = (n, zh, en) => `<div class="r"><b>${yn(n)}</b><span>${L(zh, en)}</span></div>`;
+  return `<div class="cs"><h2>${L('番種速查', 'Fan cheat sheet')}</h2>` +
+    CHEAT_TIERS.map(([f, hs]) => `<h3>${L(f + ' 番 ×' + f, f + ' fan ×' + f)}</h3>` + hs.map(h => row(h[0], h[1], h[2])).join('')).join('') +
+    `<h3>${L('碎番 +0.5', 'Minor fans +½')} <small>${L('（要先有 1 番）', '(need ≥1 full fan)')}</small></h3>` + CHEAT_MINOR.map(h => row(h[0], h[1], h[2])).join('') +
+    `<h3>${L('可鳴的牌', 'What can be called')}</h3>` +
+    row('吃', '同花 123·234·345·456，只吃上家', '123·234·345·456, same suit, left only').replace(/<b>[^<]*<\/b>/, `<b>${L('吃', 'Chow')}</b>`) +
+    `<div class="r"><b>${L('碰', 'Pung')}</b><span>${L('1–6、中發白（7–9 不可）', '1–6, dragons (not 7–9)')}</span></div>` +
+    `<div class="r"><b>${L('槓', 'Kong')}</b><span>${L('4–6、中發白（1–3、7–9 不可）', '4–6, dragons (not 1–3, 7–9)')}</span></div>` +
+    `<div class="r"><b>${L('混碰', 'Mixed pung')}</b><span>${L('1–3 同數字、不同花', '1–3, same number, 3 suits')}</span></div>` +
+    `<p>${L('得分 = 全手點值（一＝9 … 九＝1）× 番數（上限 4）；番數取整數，1+0.5+0.5＝2。', 'Score = hand tile points (1 = 9 … 9 = 1) × fan (cap 4). Fan is rounded down: 1+½+½ = 2.')}</p></div>`;
+}
 /* ---- 語言 / Language ---- */
 function applyLang() {
   document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-Hant';
@@ -755,6 +797,9 @@ function applyLang() {
   $('#subtitle').textContent = L('', 'a tile game from the mahjong family');
   $('#langBtn').textContent = L('English', '中文');
   $('#rulesBtn').textContent = L('規則設定', 'Rules');
+  $('#cheatBtn').textContent = L('速查', 'Cheat sheet');
+  $('#cheat').innerHTML = cheatHTML();
+  $('#cheatDlg').innerHTML = cheatHTML() + `<form method="dialog" style="margin-top:12px"><button class="btn primary">${L('關閉', 'Close')}</button></form>`;
   $('#newBtn').textContent = L('重新開局', 'New game');
   $('.handbar .hint').textContent = L('拖曳或長按牌來排序', 'Drag or long-press to reorder');
   $('#leftBtn').setAttribute('aria-label', L('向左移', 'Move left')); $('#rightBtn').setAttribute('aria-label', L('向右移', 'Move right'));
@@ -772,6 +817,7 @@ function applyLang() {
 $('#langBtn').onclick = () => { LANG = LANG === 'en' ? 'zh' : 'en'; try { localStorage.setItem('yjl-lang', LANG); } catch (e) {} applyLang(); };
 $('#newBtn').onclick = () => { scores = [0, 0, 0, 0]; dealer = 0; $('#result').close?.(); play(); };
 $('#rulesBtn').onclick = () => $('#rules').showModal();
+$('#cheatBtn').onclick = () => $('#cheatDlg').showModal();
 applyLang(); play();
 </script>
 </body>
