@@ -34,6 +34,14 @@ function decomps(c0, need) {
     if (k === null) { if (sets.length === need && pair) res.push({ pair, sets: sets.slice() }); return; }
     if (sets.length > need) return;
     if (!pair && c[k] >= 2) { c[k] -= 2; rec(sets, k); c[k] += 2; }
+    if (!pair && k[0] !== 'z' && +k.slice(1) <= 3) {
+      // 小字混眼：1-3 同數字、不同花色的兩張可以當眼（pair 寫成 'p1/s1'）
+      for (const s2 of ['p', 's', 'm']) {
+        const k2 = s2 + k.slice(1);
+        if (s2 === k[0] || !(c[k2] > 0)) continue;
+        c[k]--; c[k2]--; rec(sets, k + '/' + k2); c[k]++; c[k2]++;
+      }
+    }
     if (sets.length < need) {
       if (c[k] >= 3) { c[k] -= 3; sets.push({ type: 'pong', k }); rec(sets, pair); sets.pop(); c[k] += 3; }
       if (k[0] !== 'z' && +k.slice(1) <= 3) {
@@ -110,7 +118,7 @@ function evaluateHand(melds, concealed, tsumo, winTile) {
     let anko = melds.filter(m => m.type === 'kong' && !m.open).length;
     const winK = (!tsumo && winTile) ? winTile.k : null;
     const inChow = (ck, k) => ck[0] === k[0] && +k.slice(1) >= +ck.slice(1) && +k.slice(1) <= +ck.slice(1) + 2;
-    const altPlace = winK && (d.pair === winK || d.sets.some(s => s.type === 'chow' && inChow(s.k, winK)));
+    const altPlace = winK && (d.pair.split('/').includes(winK) || d.sets.some(s => s.type === 'chow' && inChow(s.k, winK)));
     for (const s of d.sets) if (s.type === 'pong' && !(winK && (s.keys ? s.keys.includes(winK) : s.k === winK) && !altPlace)) anko++;
     if (anko >= 4) add('四暗刻', 4); else if (anko === 3) add('三暗刻', 2);
     // 幺九順：同花色 123+456+789，剩下一組可順可碰（可不同花色），眼任意

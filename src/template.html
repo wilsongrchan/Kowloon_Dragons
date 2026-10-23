@@ -292,13 +292,14 @@ zh: `  <h2>規則（目前實作）</h2>
     <li>大字牌（7–9）一律不能吃碰槓，暗槓也不可，也不可進入鳴牌區。</li>
     <li>混碰：1–3 同數字、不同花色（或自己手上兩張湊成），被要的那一張不計分，虛線框標示。</li>
     <li>小字混刻：1–3 同數字、不同花色的三張牌，不用碰也可以在手牌裡自己湊成刻子（暗刻），和一般刻子一樣計算（對對胡、三暗刻、四暗刻都可以用）。全部同花色的仍是一般刻子。</li>
+    <li>小字混眼：1–3 同數字、不同花色的兩張牌可以當眼（例如 一筒＋一索）。它不算三元眼；幺九龍的眼仍須是同一種牌。</li>
     <li>沒有混吃：吃只可以吃同花色順子，只可吃上家；順子內不可含 7–9（有 5、6 也不可吃 7，有 7、8 也不可吃 6），所以只可吃 123、234、345、456。</li>
     <li>小字牌（1–3）不能槓，也不能暗槓。沒有混槓。槓只可同花色同數字（4–6 或中發白）。</li>
     <li>三元大槓：暗槓或加槓中發白後可再補第五張（點「槓」），多 0.5 番。</li>
     <li>多人同時碰（例如 5、6 或中發白）：棄牌者的下家優先，再對家，再上家。胡牌最優先，吃最後。</li>
     <li>沒有搶槓。槓之後從牌山尾補牌。</li>
   </ul>
-  ${EG('牌面示例：吃碰槓、混碰、三元大槓', [X('吃','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('碰／槓','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('混碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('小字混刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7–9 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
+  ${EG('牌面示例：吃碰槓、混碰、三元大槓', [X('吃','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('碰／槓','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('混碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('小字混刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('小字混眼','p1 s1|p2 m2|s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7–9 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
   <h3>番種（疊加，4 番封頂；0.5 番稱碎番）</h3>
   <ul>
     <li>1 番（全番）：三元刻（中、發、白任一組刻子，明碰或暗刻都算，每組可疊加）、平胡（全順子、無中發白）、對對胡</li>
@@ -375,6 +376,12 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
         <li>On a discard win, a mixed triplet completed by the winning tile counts as open, unless that tile could sit in the pair or a chow.</li>
       </ul>
     </li>
+    <li><b>Mixed pair (小字混眼)</b>
+      <ul>
+        <li>Two tiles of the same number 1–3 in different suits can serve as the pair, for example 1筒 + 1索.</li>
+        <li>It is not a dragon pair, and the Kowloon Dragon pair must still be two identical tiles.</li>
+      </ul>
+    </li>
     <li><b>Grand dragon kong (三元大槓)</b>
       <ul>
         <li>After a concealed kong or added kong of a dragon, you can add the 5th copy (press Kong).</li>
@@ -382,7 +389,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
       </ul>
     </li>
   </ul>
-  ${EG('Tile examples: special actions', [X('Mixed pung (claimed tile faded)','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('Mixed triplet in hand (concealed)','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('Grand dragon kong (5 copies)','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3')])}
+  ${EG('Tile examples: special actions', [X('Mixed pung (claimed tile faded)','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('Mixed triplet in hand (concealed)','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('Mixed pair','p1 s1|p2 m2|s3 m3'),X('Grand dragon kong (5 copies)','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3')])}
   <h3>Winning hands (fan stack, capped at 4)</h3>
   <ul>
     <li><b>1 fan</b>
@@ -869,6 +876,7 @@ function cheatHTML() {
     `<div class="r"><b>${L('碰', 'Pung')}</b><span>${L('1–6、中發白（7–9 不可）', '1–6, dragons (not 7–9)')}</span></div>` +
     `<div class="r"><b>${L('槓', 'Kong')}</b><span>${L('4–6、中發白（1–3、7–9 不可）', '4–6, dragons (not 1–3, 7–9)')}</span></div>` +
     `<div class="r"><b>${L('混碰', 'Mixed pung')}</b><span>${L('1–3 同數字、不同花', '1–3, same number, 3 suits')}</span></div>` +
+    `<div class="r"><b>${L('混眼', 'Mixed pair')}</b><span>${L('1–3 同數字、不同花的兩張', '1–3, same number, 2 suits')}</span></div>` +
     `<p>${L('得分 = 全手點值（一＝9 … 九＝1）× 番數（上限 4）；番數取整數，1+0.5+0.5＝2。', 'Score = hand tile points (1 = 9 … 9 = 1) × fan (cap 4). Fan is rounded down: 1+½+½ = 2.')}</p></div>`;
 }
 function refreshCheat() {
