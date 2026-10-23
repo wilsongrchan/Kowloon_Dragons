@@ -75,3 +75,6 @@ Prefer one change at a time, simulate before changing scoring, and keep Wilson's
 - Settings (gear): theme auto/light/dark, text size S/M/L (`--fs` scales text via calc in the stylesheet), language 繁/简/EN (simplified is a DOM text conversion, `T2S_PAIRS` + MutationObserver). Prefs in localStorage `yjl-*`.
 - Hand: sort toggles 11·22·33 / 123·234; 彩組 groups+locks single 1-3 tiles of 2-3 suits; locked groups sort to the far left (sort-only, discarding unaffected); lock bar under each adjacent mixed run.
 - Cheat sheet: right sidebar >=1180px, slide-in drawer with edge tab below that.
+- Languages: 繁體 / 简体 / English / 日本語, all picked from the globe button menu (`openLangMenu`), not in Settings. Japanese lives in `src/ja.js` (inlined by build.js at `/*__JA__*/`): `L(zh, en)` looks the Chinese string up in `JA_EXACT`, then `JA_PATTERNS` (sentences with names/numbers), else shows the Chinese; fan names via `YAKU_JA`, seat names `SEAT_JA`, full rules text `RULES_HTML.ja` in template.html. Japanese uses Japanese mahjong terms (チー/ポン/カン/ロン/ツモ/翻/役牌/平和/一気通貫…); invented terms are 彩ポン / 彩刻子 / 彩雀頭 / 幺九龍. When adding any new `L('中文', 'English')` string, also add the Japanese to `JA_EXACT`/`JA_PATTERNS`.
+- Mobile: the cheat sheet is a long button next to the wall counter (`#cheatBar`), the edge tab only shows on tablet widths.
+

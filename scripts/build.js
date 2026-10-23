@@ -3,7 +3,8 @@ const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..');
 const engine = fs.readFileSync(path.join(root, 'src/engine.js'), 'utf8')
   .replace("if (typeof module !== 'undefined') module.exports", 'if (false) module.exports');
-const html = fs.readFileSync(path.join(root, 'src/template.html'), 'utf8').replace('/*__ENGINE__*/', engine);
+const ja = fs.readFileSync(path.join(root, 'src/ja.js'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'src/template.html'), 'utf8').replace('/*__ENGINE__*/', engine).replace('/*__JA__*/', ja);
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(root, 'dist/index.html'), html);
 // GitHub Pages serves from /docs
