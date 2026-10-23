@@ -173,7 +173,7 @@ details.eg summary{cursor:pointer;color:var(--gold);font-size:14px;font-weight:5
   button.btn.sm{padding:8px 12px;min-height:38px}
   .seat{padding:8px}
   .zone .melds{max-width:55%}
-  .opp .seat-head>span:not(.score){display:none}
+  .opp .seat-head>span:not(.score):not(.nm){display:none}
   .opp .seat-head{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 6px}
   .opp .seat-head .score{grid-column:2;grid-row:1;margin:0}
   .opp .seat-head .melds{grid-column:1/3;grid-row:2;justify-self:end;margin:0}
@@ -183,6 +183,18 @@ header::before{content:"";order:1;flex:none;width:112px;height:100px;margin:-6px
 header .brand{order:0}
 header .meta{order:2}
 @media (max-width:520px){header::before{width:88px;height:78px}}
+#lobby h2{margin-bottom:4px}
+#lobby .code{font:900 40px/1 var(--face);letter-spacing:.18em;color:var(--gold);margin:6px 0}
+#lobby .lrow{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:8px;background:rgba(0,0,0,.18);margin:5px 0}
+#lobby .lrow .ls{color:var(--muted);font-size:12px;min-width:4.5em}
+#lobby .lrow b{flex:1;font-weight:500}
+#lobby .lrow.open b{color:var(--muted)}
+#lobby .lrow.bot b{color:#9fd3b0}
+#lobby input{font:500 15px var(--ui);padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#16222c;color:var(--text);min-width:0}
+#lobby .fl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+#lobby .note{font-size:12px;color:var(--muted);margin-top:10px}
+#lobby .err{color:#f0928b;min-height:1.4em;margin:6px 0 0;font-size:13px}
+#roomPill{display:none}
 #cheat{display:none}
 .cs{background:var(--table);color:var(--text);border-radius:14px;padding:14px 14px 12px;font-size:13px;line-height:1.4}
 .cs h2{font:900 17px var(--face);margin:0 0 6px}
@@ -215,6 +227,7 @@ header .meta{order:2}
     <div class="brand"><h1 id="title">幺九龍</h1><span class="sub" id="subtitle"></span></div>
     <div class="meta">
       <span class="pill" id="wall">牌山 —</span>
+      <button class="btn ghost" id="onlineBtn" type="button">線上</button>
       <button class="btn ghost" id="langBtn" type="button">English</button>
       <button class="btn ghost" id="cheatBtn" type="button">速查</button>
       <button class="btn ghost" id="rulesBtn">規則設定</button>
@@ -254,6 +267,7 @@ header .meta{order:2}
 <dialog id="result"></dialog>
 <dialog id="rules"></dialog>
 <dialog id="cheatDlg"></dialog>
+<dialog id="lobby"></dialog>
 
 <script>
 /*__ENGINE__*/
@@ -264,6 +278,12 @@ let LANG = 'zh'; try { LANG = localStorage.getItem('yjl-lang') === 'en' ? 'en' :
 const L = (zh, en) => LANG === 'en' ? en : zh;
 const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Downstream', 'Across', 'Upstream'] };
 const NAMES = new Proxy({}, { get: (_, i) => SEAT[LANG][i] });
+/* ===== 線上房間狀態 / online room state (PeerJS, host-authoritative) ===== */
+const ROOM = { mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, rid: 0, handNo: 0, started: false, myName: '', conn: null, msg: '' };
+let mySeat = 0;
+const online = () => ROOM.mode !== 'solo';
+const isHost = () => ROOM.mode === 'host';
+const WHO = new Proxy({}, { get: (_, i) => (ROOM.mode === 'solo' || !ROOM.names[(+i + mySeat) % 4]) ? SEAT[LANG][i] : ROOM.names[(+i + mySeat) % 4] });
 const SUITEN = { p: 'Circles', s: 'Bamboo', m: 'Characters' }, DRAGEN = { 1: 'Red Dragon', 2: 'Green Dragon', 3: 'White Dragon' };
 const SUITE1 = { p: 'Circle', s: 'Bamboo', m: 'Character' };
 const enTile = (sx, n) => sx === 'z' ? DRAGEN[n] : n + ' ' + (n === 1 || sx === 's' ? SUITE1[sx] : SUITEN[sx]);
@@ -482,7 +502,10 @@ function meldEl(m, size) {
 }
 const LOGS = [];
 function renderLog() { const ol = $('#log'); ol.innerHTML = ''; LOGS.forEach(f => { const li = document.createElement('li'); li.textContent = f(); ol.appendChild(li); }); ol.scrollTop = ol.scrollHeight; }
-function log(fn) { LOGS.push(typeof fn === 'function' ? fn : () => fn); renderLog(); }
+function log(fn) {
+  const f = typeof fn === 'function' ? fn : () => fn; LOGS.push(f); renderLog();
+  if (isHost() && ROOM.started) { const sv = LANG; LANG = 'zh'; const zh = f(); LANG = 'en'; const en = f(); LANG = sv; bcast({ t: 'log', zh, en }); }
+}
 function setStatus(h) { UI.statusFn = typeof h === 'function' ? h : () => h; $('#status').innerHTML = UI.statusFn(); }
 function clearActions() { $('#actions').innerHTML = ''; }
 function addAction(label, fn, primary) {
@@ -497,8 +520,9 @@ function render() {
   const opps = $('#opps'); opps.innerHTML = '';
   for (const seat of [2, 3, 1]) {
     const s = document.createElement('section'); s.className = 'seat opp ' + (seat === 2 ? 'across' : seat === 3 ? 'left' : 'right') + (G.turn === seat ? ' active' : '');
-    const tag = seat === 3 ? L('可吃', 'you can chow from them') : seat === 1 ? L('', 'plays after you') : '';
-    s.innerHTML = `<div class="seat-head"><b>${NAMES[seat]}</b><span>${tag}</span><span class="score">${L('分數', 'Points')} <b>${scores[seat]}</b></span></div>`;
+    const rel = seat === 3 ? L('可吃', 'you can chow from them') : seat === 1 ? L('', 'plays after you') : '';
+    const tag = online() ? `<span class="nm">${ROOM.names[(seat + mySeat) % 4]}${G.dealer === seat ? ' ' + L('莊', '(dealer)') : ''}</span>` : '';
+    s.innerHTML = `<div class="seat-head"><b>${NAMES[seat]}</b>${tag}<span>${rel}</span><span class="score">${L('分數', 'Points')} <b>${scores[seat]}</b></span></div>`;
     const ml = document.createElement('div'); ml.className = 'melds'; G.melds[seat].forEach(m => ml.appendChild(meldEl(m, 'sm')));
     s.querySelector('.seat-head').insertBefore(ml, s.querySelector('.score'));
     const bk = document.createElement('div'); bk.className = 'backs'; for (let i = 0; i < G.hands[seat].length; i++) bk.appendChild(backEl()); s.appendChild(bk);
@@ -510,7 +534,7 @@ function render() {
   }
   $('#me').classList.toggle('active', G.turn === 0);
   $('#meScore').innerHTML = `${L('分數', 'Points')} <b>${scores[0]}</b>`;
-  $('#meTag').textContent = G.dealer === 0 ? L('莊', 'Dealer') : '';
+  $('#meTag').textContent = (online() ? ROOM.names[mySeat] + ' ' : '') + (G.dealer === 0 ? L('莊', 'Dealer') : '');
   let myPts = G.hands[0].reduce((a, t) => a + val(t), 0);
   G.melds[0].forEach(m => m.tiles.forEach(t => { if (!(m.mixed && t.id === m.claimed)) myPts += val(t); }));
   const mt = $('#meTotal'); mt.innerHTML = `${L('手牌點值', 'Hand points')} <b>${myPts}</b>`;
@@ -541,6 +565,7 @@ function render() {
   hideTip();
   const selT = hasSel ? G.hands[0].find(x => x.id === UI.sel) : null;
   $('#selinfo').innerHTML = selT ? infoHTML(selT.k) : '';
+  if (isHost()) bcastState();
 }
 function doDiscard() {
   if (UI.mode !== 'discard' || UI.sel == null) return;
@@ -693,45 +718,73 @@ function humanClaim(ho, t) {
       ho.pong.forEach(o => addAction(plabel('pong', { tiles: [...o.tiles, t], mixed: o.mixed }), done({ kind: 'pong', opt: o })));
       ho.chow.forEach(o => addAction(plabel('chow', { tiles: [...o.tiles, t].sort((a, b) => a.n - b.n), mixed: o.mixed }), done({ kind: 'chow', opt: o })));
       addAction(L('過', 'Pass'), done(null));
-      setStatus(() => L(`${NAMES[from]}打出 <b>${tn(t)}</b>，要不要？`, `${NAMES[from]} discarded <b>${tn(t)}</b>. Claim it?`));
+      setStatus(() => L(`${WHO[from]}打出 <b>${tn(t)}</b>，要不要？`, `${WHO[from]} discarded <b>${tn(t)}</b>. Claim it?`));
     };
-    UI.rebuild = build; build(); render();
+    UI.cancelClaim = done(null); UI.rebuild = build; build(); render();
   });
 }
 
+/* ---- 遠端玩家請求 ---- */
+function askRemote(seat, msg, ms, map, fallback) {
+  return new Promise(res => {
+    const conn = ROOM.conns[seat]; if (!conn || !conn.open) { res(fallback()); return; }
+    const rid = ++ROOM.rid;
+    const fin = v => { clearTimeout(tm); delete ROOM.pending[rid]; res(v); };
+    const tm = setTimeout(() => fin(fallback()), ms);
+    ROOM.pending[rid] = { seat, fin, map, fallback };
+    try { conn.send(Object.assign({ rid }, msg)); } catch (e) { fin(fallback()); }
+  });
+}
+async function askSelf(seat, opts, drawn) {
+  const kind = ROOM.kind[seat];
+  if (kind === 'host') return humanSelf(opts);
+  const sc = seat; setStatus(() => L(`${WHO[sc]}思考中…`, `${WHO[sc]} is thinking…`));
+  if (kind === 'bot') { if (!fast()) await sleep(650); return botSelf(G, seat, opts); }
+  const fb = () => botSelf(G, seat, opts);
+  return askRemote(seat, { t: 'self', opts, drawnId: drawn ? drawn.id : null }, 60000, a => {
+    if (a && a.win && opts.win) return { win: true };
+    if (a && Number.isInteger(a.kong) && opts.kongs[a.kong]) return { kong: opts.kongs[a.kong] };
+    if (a && G.hands[seat].some(t => t.id === a.discard)) return { discard: a.discard };
+    return fb();
+  }, fb);
+}
+const claimRank = c => c.kind === 'ron' ? 3 : c.kind === 'chow' ? 1 : 2;
 async function resolveClaims(from, t) {
   // 優先次序：胡 > 碰/槓（棄牌者的下家 > 對家 > 上家）> 吃
-  const botC = botClaims(G, from, t, [0]);
-  const ho = from !== 0 ? claimOptions(G, 0, t, from) : null;
-  const botRon = botC && botC.kind === 'ron';
+  const humans = [0, 1, 2, 3].filter(x => x !== from && ROOM.kind[x] !== 'bot');
+  const botC = botClaims(G, from, t, humans);
   const botMeld = botC && (botC.kind === 'pong' || botC.kind === 'kong');
-  if (botRon && !(ho && ho.ron)) return { win: true, seat: botC.seat, ev: botC.ev };
-  if (ho) {
-    const beaten = botMeld && ((botC.seat - from + 4) % 4) < ((0 - from + 4) % 4);
-    const ho2 = {
-      ron: ho.ron,
-      pong: beaten ? [] : ho.pong,
-      kong: beaten ? [] : ho.kong,
-      chow: botMeld ? [] : ho.chow
-    };
-    if (ho2.ron || ho2.pong.length || ho2.kong.length || ho2.chow.length) {
-      const ch = await humanClaim(ho2, t);
-      if (ch) {
-        if (ch.kind === 'ron') return { win: true, seat: 0, ev: ho.ron };
-        return { claim: true, seat: 0, kind: ch.kind, opt: ch.opt };
-      }
-      if (botRon) return { win: true, seat: botC.seat, ev: botC.ev };
-    }
-  }
-  if (botC) return { claim: true, seat: botC.seat, kind: botC.kind, opt: botC.opt };
-  return {};
+  const dist = x => (x - from + 4) % 4;
+  const asks = humans.map(async x => {
+    const ho = claimOptions(G, x, t, from);
+    if (botC && botC.kind === 'ron' && !ho.ron) return null;
+    const beaten = botMeld && dist(botC.seat) < dist(x);
+    const ho2 = { ron: ho.ron, pong: beaten ? [] : ho.pong, kong: beaten ? [] : ho.kong, chow: botMeld ? [] : ho.chow };
+    if (!(ho2.ron || ho2.pong.length || ho2.kong.length || ho2.chow.length)) return null;
+    let ch;
+    if (ROOM.kind[x] === 'host') ch = await humanClaim(ho2, t);
+    else ch = await askRemote(x, { t: 'claim', ho: ho2, tile: t, from }, 20000, a => {
+      if (!a) return null;
+      if (a.kind === 'ron') return ho2.ron ? { kind: 'ron' } : null;
+      const list = ho2[a.kind]; return list && list[a.idx] ? { kind: a.kind, opt: list[a.idx] } : null;
+    }, () => null);
+    if (!ch) return null;
+    return ch.kind === 'ron' ? { seat: x, kind: 'ron', ev: ho.ron } : { seat: x, kind: ch.kind, opt: ch.opt };
+  });
+  const cands = (await Promise.all(asks)).filter(Boolean); if (botC) cands.push(botC);
+  cands.sort((a, b) => claimRank(b) - claimRank(a) || dist(a.seat) - dist(b.seat));
+  if (isHost()) bcast({ t: 'claimOver' });
+  const w = cands[0]; if (!w) return {};
+  if (w.kind === 'ron') return { win: true, seat: w.seat, ev: w.ev };
+  return { claim: true, seat: w.seat, kind: w.kind, opt: w.opt };
 }
 
 async function play() {
-  const my = ++runId;
-  G = newGame(dealer); UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
+  const my = ++runId; ROOM.handNo++;
+  G = newGame(dealer); G.turn = dealer; UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
   LOGS.length = 0; renderLog(); clearActions();
-  const dl = dealer; log(() => L(`新局，${NAMES[dl]}做莊。`, dl === 0 ? 'New hand. You deal.' : `New hand. ${NAMES[dl]} deals.`));
+  $('#result').close?.(); render();
+  const dl = dealer; log(() => L(`新局，${WHO[dl]}做莊。`, !online() && dl === 0 ? 'New hand. You deal.' : `New hand. ${WHO[dl]} deals.`));
   let seat = dealer, rep = false, needDraw = true;
   const alive = () => my === runId;
   while (alive()) {
@@ -743,17 +796,16 @@ async function play() {
     render();
     const opts = selfOptions(G, seat, !drew);
     let act;
-    if (seat === 0) { act = await humanSelf(opts); }
-    else { const sc = seat; setStatus(() => L(`${NAMES[sc]}思考中…`, `${NAMES[sc]} is thinking…`)); if (!fast()) await sleep(650); act = botSelf(G, seat, opts); }
+    act = await askSelf(seat, opts, drew ? t0 : null);
     if (!alive()) return;
     if (act.win) { finish(winResult(G, seat, true, null, opts.win)); return; }
     if (act.kong) {
       const kk = act.kong, ks = seat;
-      applyKong(G, seat, kk); log(() => L(`${NAMES[ks]}${kk.big ? '大槓' : '槓'} ${kn(kk.k)}`, `${NAMES[ks]} ${kk.big ? 'grand kong' : 'kong'} ${kn(kk.k)}`));
+      applyKong(G, seat, kk); log(() => L(`${WHO[ks]}${kk.big ? '大槓' : '槓'} ${kn(kk.k)}`, `${WHO[ks]} ${kk.big ? 'grand kong' : 'kong'} ${kn(kk.k)}`));
       rep = true; UI.drawnId = null; continue;
     }
     const t = discardTile(G, seat, act.discard);
-    UI.drawnId = null; { const ds = seat; log(() => L(`${NAMES[ds]}打 ${tn(t)}`, `${NAMES[ds]} discards ${tn(t)}`)); } render();
+    UI.drawnId = null; { const ds = seat; log(() => L(`${WHO[ds]}打 ${tn(t)}`, `${WHO[ds]} discards ${tn(t)}`)); } render();
     if (!fast()) await sleep(seat === 0 ? 250 : 350);
     const cl = await resolveClaims(seat, t);
     if (!alive()) return;
@@ -761,7 +813,7 @@ async function play() {
     if (cl.claim) {
       applyClaim(G, cl.seat, cl.kind, cl.opt, t, seat);
       const mm = G.melds[cl.seat][G.melds[cl.seat].length - 1];
-      { const cs = cl.seat, ck = cl.kind, cm = mm.mixed; log(() => L(`${NAMES[cs]}${KIND[ck][0]} ${tn(t)}${cm ? '（混）' : ''}`, `${NAMES[cs]} ${KIND[ck][1].toLowerCase()} ${tn(t)}${cm ? ' (mixed)' : ''}`)); }
+      { const cs = cl.seat, ck = cl.kind, cm = mm.mixed; log(() => L(`${WHO[cs]}${KIND[ck][0]} ${tn(t)}${cm ? '（混）' : ''}`, `${WHO[cs]} ${KIND[ck][1].toLowerCase()} ${tn(t)}${cm ? ' (mixed)' : ''}`)); }
       seat = cl.seat; if (cl.kind === 'kong') rep = true; else needDraw = false;
       continue;
     }
@@ -781,42 +833,43 @@ function finish(res) {
   res.delta.forEach((v, i) => scores[i] += v);
   UI.result = res;
   const ev = res.ev;
-  log(() => { const who = NAMES[res.winner], how = res.tsumo ? L('自摸', 'self-draw') : L(`${NAMES[res.from]}出銃`, `discard from ${NAMES[res.from]}`); return L(`${who}胡牌（${how}）${evTxt(ev)}`, `${who} won (${how}) ${evTxt(ev)}`); });
+  log(() => { const who = WHO[res.winner], how = res.tsumo ? L('自摸', 'self-draw') : L(`${WHO[res.from]}出銃`, `discard from ${WHO[res.from]}`); return L(`${who}胡牌（${how}）${evTxt(ev)}`, `${who} won (${how}) ${evTxt(ev)}`); });
   dealer = res.winner === dealer ? dealer : (dealer + 1) % 4;
   renderResult(); $('#result').showModal(); $('#result').scrollTop = 0;
   setStatus(() => L('本局結束。', 'Hand over.'));
-  render();
+  render(); sendResult(res);
 }
 function endDraw() {
   log(() => L('流局', 'Draw'));
   UI.result = { draw: true };
   dealer = (dealer + 1) % 4; renderResult(); $('#result').showModal(); $('#result').scrollTop = 0;
-  setStatus(() => L('流局。', 'Draw.')); render();
+  setStatus(() => L('流局。', 'Draw.')); render(); sendResult(UI.result);
 }
 function renderResult() {
   const res = UI.result, d = $('#result'); if (!res) return;
   const next = `<form method="dialog" style="margin-top:16px"><button class="btn primary" id="nextBtn">${L('下一局', 'Next hand')}</button></form>`;
   if (res.draw) {
     d.innerHTML = `<h2>${L('流局', 'Draw')}</h2><p>${L('牌山摸完，沒有人胡牌。', 'The wall ran out and nobody won.')}</p><div class="reveal" id="rv"></div>${next}`;
-    const rv = d.querySelector('#rv'); for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, NAMES[s]));
+    const rv = d.querySelector('#rv'); for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, WHO[s]));
   } else {
-    const ev = res.ev, who = NAMES[res.winner];
-    const how = res.tsumo ? L('自摸', 'Self-draw') : L(`${NAMES[res.from]}出銃`, `Discard from ${NAMES[res.from]}`);
+    const ev = res.ev, who = WHO[res.winner];
+    const how = res.tsumo ? L('自摸', 'Self-draw') : L(`${WHO[res.from]}出銃`, `Discard from ${WHO[res.from]}`);
     const F = n => L(`${n} 番`, `${n} fan`);
     const rows = ev.items.map(i => `<span>${yn(i.name)}</span><span>${F(i.fan)}</span>`).join('') +
       ev.halves.map(i => `<span>${yn(i.name)}</span><span>+${F(i.fan)}</span>`).join('') +
       `<span class="tot">${L('合計（取整、4 番封頂）', 'Total (rounded down, capped at 4)')}</span><span class="tot">${F(ev.fan)} ×${ev.mult}</span>` +
       `<span>${L('全手點值' + (ev.bonus ? `（含${ev.bonusName}加分 +${ev.bonus}）` : ''), 'Hand tile points' + (ev.bonus ? ` (incl. +${ev.bonus} ${yn(ev.bonusName)} bonus)` : ''))}</span><span>${ev.tilePts}</span>`;
-    const pay = res.delta.map((v, i) => `<span>${NAMES[i]} <b class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v > 0 ? '+' : ''}${v}</b>${L(`（累計 ${scores[i]}）`, ` (total ${scores[i]})`)}</span>`).join('');
+    const pay = res.delta.map((v, i) => `<span>${WHO[i]} <b class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v > 0 ? '+' : ''}${v}</b>${L(`（累計 ${scores[i]}）`, ` (total ${scores[i]})`)}</span>`).join('');
     d.innerHTML = `<h2>${L(`${who}${res.tsumo ? '自摸' : '食胡'}！`, `${who} won by ${res.tsumo ? 'self-draw' : 'discard'}!`)}</h2><p style="margin:0;color:var(--muted)">${how}</p>
       <div class="hero"><small>${L('得分', 'Score')}</small><b>${ev.points}</b><span>${ev.tilePts} ${L('點', 'pts')} × ${ev.mult}</span></div>
       <h3>${L('番種', 'Fan breakdown')}</h3><div class="fanlist">${rows}</div>
       <h3>${L('結算', 'Settlement')}${res.tsumo ? L('（自摸：每家付一份）', ' (self-draw: each pays one share)') : L('（出銃者付兩份）', ' (discarder pays two shares)')}</h3><div class="pay">${pay}</div>
       <h3>${L('各家手牌', 'All hands')}</h3><div class="reveal" id="rv"></div>${next}`;
     const rv = d.querySelector('#rv');
-    for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, NAMES[s] + (s === res.winner ? L('（胡牌）', ' (winner)') : '')));
+    for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, WHO[s] + (s === res.winner ? L('（胡牌）', ' (winner)') : '')));
   }
-  d.querySelector('#nextBtn').onclick = () => setTimeout(play, 0);
+  if (ROOM.mode === 'guest') { const nb = d.querySelector('#nextBtn'); nb.disabled = true; nb.textContent = L('等待房主開始下一局…', 'Waiting for the host…'); d.querySelector('form').addEventListener('submit', e => e.preventDefault()); }
+  else d.querySelector('#nextBtn').onclick = () => setTimeout(play, 0);
 }
 const CHEAT_TIERS = [
   [1, [['三元刻', '中／發／白刻子，明暗皆可，每組 +1', 'Red/Green/White triplet, open or concealed, +1 each'], ['平胡', '全順子、無中發白', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼', '4 triplets + pair']]],
@@ -893,6 +946,7 @@ function applyLang() {
   $('#rulesBtn').textContent = L('規則設定', 'Rules');
   $('#cheatBtn').textContent = L('速查', 'Cheat sheet');
   refreshCheat();
+  if (typeof updateOnlineBtn === 'function') { updateOnlineBtn(); renderLobby(); }
   $('#newBtn').textContent = L('重新開局', 'New game');
   $('.handbar .hint').textContent = L('拖曳或長按牌來排序', 'Drag or long-press to reorder');
   $('#leftBtn').setAttribute('aria-label', L('向左移', 'Move left')); $('#rightBtn').setAttribute('aria-label', L('向右移', 'Move right'));
@@ -911,7 +965,215 @@ $('#langBtn').onclick = () => { LANG = LANG === 'en' ? 'zh' : 'en'; try { localS
 $('#newBtn').onclick = () => { scores = [0, 0, 0, 0]; dealer = 0; $('#result').close?.(); play(); };
 $('#rulesBtn').onclick = () => $('#rules').showModal();
 $('#cheatBtn').onclick = () => $('#cheatDlg').showModal();
-applyLang(); play();
+
+/* ============ 線上房間 / Online rooms (PeerJS WebRTC, host-authoritative) ============ */
+const cleanName = n => (n || '').replace(/[<>&"'`\\]/g, '').trim().slice(0, 12);
+const savedName = () => { try { return localStorage.getItem('yjl-name') || ''; } catch (e) { return ''; } };
+const defName = () => savedName() || L('玩家', 'Player') + Math.floor(100 + Math.random() * 900);
+function bcast(m) { Object.values(ROOM.conns).forEach(c => { if (c && c.open) { try { c.send(m); } catch (e) {} } }); }
+function viewOf(seat) { return a => (a - seat + 4) % 4; }
+function snapshot(sv) {
+  const R = viewOf(sv), V = v => (v + sv) % 4, vs = [0, 1, 2, 3];
+  return {
+    t: 'state', hn: ROOM.handNo, me: sv, names: ROOM.names,
+    hands: vs.map(v => v === 0 ? G.hands[V(0)] : G.hands[V(v)].map(() => ({ id: -1, s: 'z', n: 0, k: 'back' }))),
+    melds: vs.map(v => G.melds[V(v)]), discards: vs.map(v => G.discards[V(v)]),
+    wall: G.wall.length, turn: G.turn == null ? null : R(G.turn), dealer: R(G.dealer),
+    last: G.last ? { t: G.last.t, from: R(G.last.from) } : null, scores: vs.map(v => scores[V(v)])
+  };
+}
+function bcastState() {
+  if (!G || !ROOM.started) return;
+  for (const k in ROOM.conns) { const c = ROOM.conns[k]; if (c && c.open) { try { c.send(snapshot(+k)); } catch (e) {} } }
+}
+function sendResult(res) {
+  if (!isHost() || !ROOM.started) return;
+  for (const k in ROOM.conns) {
+    const c = ROOM.conns[k]; if (!c || !c.open) continue;
+    const sv = +k, R = viewOf(sv), V = v => (v + sv) % 4, vs = [0, 1, 2, 3];
+    const r = res.draw ? { draw: true } : Object.assign({}, res, { winner: R(res.winner), from: res.from == null ? null : R(res.from), delta: vs.map(v => res.delta[V(v)]) });
+    try { c.send({ t: 'result', res: r, hands: vs.map(v => G.hands[V(v)]), melds: vs.map(v => G.melds[V(v)]), scores: vs.map(v => scores[V(v)]), hn: ROOM.handNo }); } catch (e) {}
+  }
+}
+function loadPeer() {
+  return window.Peer ? Promise.resolve() : new Promise((ok, bad) => {
+    const sc = document.createElement('script'); sc.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+    sc.onload = ok; sc.onerror = () => bad(new Error('load')); document.head.appendChild(sc);
+  });
+}
+const rndCode = () => { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let c = ''; for (let i = 0; i < 5; i++) c += A[Math.floor(Math.random() * A.length)]; return c; };
+const peerOpts = { debug: 0, config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
+function setMsg(zh, en) { ROOM.msg = zh ? L(zh, en) : ''; renderLobby(); }
+
+function toSolo(keepMsg) {
+  try { ROOM.peer && ROOM.peer.destroy(); } catch (e) {}
+  Object.assign(ROOM, { mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, started: false, conn: null });
+  if (!keepMsg) ROOM.msg = '';
+  mySeat = 0; scores = [0, 0, 0, 0]; dealer = 0; UI.mode = null; UI.cancelClaim = null;
+  $('#newBtn').style.display = ''; updateOnlineBtn(); renderLobby();
+  play();
+}
+async function createRoom() {
+  ROOM.myName = cleanName($('#lbName').value) || defName(); try { localStorage.setItem('yjl-name', ROOM.myName); } catch (e) {}
+  setMsg('連線中…', 'Connecting…');
+  try { await loadPeer(); } catch (e) { setMsg('無法載入連線元件（請檢查網絡）', 'Could not load the networking library (check your connection).'); return; }
+  const tryOpen = n => {
+    const code = rndCode(), peer = new Peer('kowloon-' + code, peerOpts);
+    peer.on('open', () => {
+      runId++; ROOM.peer = peer; ROOM.code = code; ROOM.mode = 'host'; ROOM.started = false; ROOM.conns = {}; ROOM.pending = {};
+      ROOM.kind = ['host', 'open', 'open', 'open']; ROOM.names = [ROOM.myName, '', '', '']; mySeat = 0; G = null; ROOM.msg = '';
+      scores = [0, 0, 0, 0]; dealer = 0; clearActions(); updateOnlineBtn(); renderLobby();
+      peer.on('connection', hostConn);
+    });
+    peer.on('error', e => {
+      if (e.type === 'unavailable-id' && n < 5) { try { peer.destroy(); } catch (x) {} tryOpen(n + 1); return; }
+      if (ROOM.mode === 'solo') setMsg('無法連線到配對伺服器，請稍後再試', 'Could not reach the matchmaking server. Try again in a moment.');
+    });
+  };
+  tryOpen(0);
+}
+function hostConn(conn) {
+  conn.on('data', m => {
+    if (!m || typeof m !== 'object') return;
+    if (m.t === 'hello') {
+      if (ROOM.started || conn.seat != null) { if (ROOM.started) { conn.send({ t: 'full', why: 'started' }); setTimeout(() => conn.close(), 300); } return; }
+      const seat = [1, 2, 3].find(i => ROOM.kind[i] === 'open');
+      if (seat == null) { conn.send({ t: 'full', why: 'full' }); setTimeout(() => conn.close(), 300); return; }
+      conn.seat = seat; ROOM.conns[seat] = conn; ROOM.kind[seat] = 'human';
+      ROOM.names[seat] = cleanName(m.name) || L('玩家', 'Player') + seat; sendLobby(); renderLobby();
+    } else if (m.t === 'act') {
+      const p = ROOM.pending[m.rid];
+      if (p && conn.seat === p.seat) p.fin(p.map(m.a));
+    }
+  });
+  const gone = () => {
+    const seat = conn.seat; if (seat == null || ROOM.conns[seat] !== conn) return;
+    delete ROOM.conns[seat];
+    if (ROOM.started) { ROOM.kind[seat] = 'bot'; const nm = ROOM.names[seat]; ROOM.names[seat] = nm + (L(' (電腦)', ' (bot)')); log(() => L(`${nm} 離線，由電腦接手。`, `${nm} left; a bot takes over.`)); }
+    else { ROOM.kind[seat] = 'open'; ROOM.names[seat] = ''; }
+    Object.values(ROOM.pending).filter(p => p.seat === seat).forEach(p => p.fin(p.fallback()));
+    sendLobby(); renderLobby(); if (G) render();
+  };
+  conn.on('close', gone); conn.on('error', gone);
+}
+function sendLobby() {
+  for (const k in ROOM.conns) { const c = ROOM.conns[k]; if (c && c.open) c.send({ t: 'lobby', code: ROOM.code, kind: ROOM.kind, names: ROOM.names, you: +k, started: ROOM.started }); }
+}
+function startGame() {
+  if (!isHost() || ROOM.kind.slice(1).includes('open')) return;
+  ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0; sendLobby(); $('#lobby').close(); updateOnlineBtn(); play();
+}
+async function joinRoom() {
+  const code = ($('#lbCode').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (code.length < 4) { setMsg('請輸入房間代碼', 'Enter the room code.'); return; }
+  ROOM.myName = cleanName($('#lbName').value) || defName(); try { localStorage.setItem('yjl-name', ROOM.myName); } catch (e) {}
+  setMsg('連線中…', 'Connecting…');
+  try { await loadPeer(); } catch (e) { setMsg('無法載入連線元件（請檢查網絡）', 'Could not load the networking library (check your connection).'); return; }
+  const peer = new Peer(undefined, peerOpts); let joined = false;
+  const fail = (zh, en) => { if (joined) return; try { peer.destroy(); } catch (e) {} setMsg(zh, en); };
+  const to = setTimeout(() => fail('找不到這個房間（或連線被擋）', 'Room not found (or the connection is blocked).'), 12000);
+  peer.on('error', e => fail(e.type === 'peer-unavailable' ? '找不到這個房間' : '連線失敗', e.type === 'peer-unavailable' ? 'Room not found.' : 'Connection failed.'));
+  peer.on('open', () => {
+    const conn = peer.connect('kowloon-' + code, { reliable: true, serialization: 'json' });
+    conn.on('open', () => conn.send({ t: 'hello', name: ROOM.myName }));
+    conn.on('data', m => guestMsg(m, conn, peer, () => { joined = true; clearTimeout(to); }, code));
+    conn.on('close', () => { if (ROOM.mode === 'guest') { try { peer.destroy(); } catch (e) {} ROOM.msg = L('房主已離開房間。', 'The host left the room.'); toSolo(true); $('#lobby').showModal(); } });
+  });
+}
+function guestMsg(m, conn, peer, markJoined, code) {
+  if (!m || typeof m !== 'object') return;
+  if (m.t === 'full') { setMsg(m.why === 'started' ? '遊戲已開始，無法加入' : '房間已滿', m.why === 'started' ? 'The game has already started.' : 'The room is full.'); try { peer.destroy(); } catch (e) {} return; }
+  if (m.t === 'lobby') {
+    markJoined();
+    if (ROOM.mode !== 'guest') { runId++; ROOM.mode = 'guest'; ROOM.peer = peer; ROOM.conn = conn; G = null; clearActions(); $('#newBtn').style.display = 'none'; }
+    Object.assign(ROOM, { code, kind: m.kind, names: m.names, started: m.started, msg: '' }); mySeat = m.you; updateOnlineBtn(); renderLobby(); return;
+  }
+  if (ROOM.mode !== 'guest') return;
+  if (m.t === 'state') {
+    if (m.hn !== ROOM.handNo) { ROOM.handNo = m.hn; LOGS.length = 0; renderLog(); UI.manual = false; UI.order = []; UI.sel = null; UI.mode = null; $('#result').close?.(); clearActions(); }
+    ROOM.names = m.names; mySeat = m.me; ROOM.started = true;
+    G = { hands: m.hands, melds: m.melds, discards: m.discards, wall: { length: m.wall }, turn: m.turn, dealer: m.dealer, last: m.last };
+    scores = m.scores; dealer = m.dealer;
+    if ($('#lobby').open) $('#lobby').close();
+    if (!UI.mode) { const tn0 = m.turn; setStatus(() => L(`${WHO[tn0]}思考中…`, `${WHO[tn0]} is thinking…`)); }
+    updateOnlineBtn(); render();
+  } else if (m.t === 'log') {
+    LOGS.push(() => LANG === 'en' ? m.en : m.zh); renderLog();
+  } else if (m.t === 'self') {
+    UI.drawnId = m.drawnId;
+    humanSelf(m.opts).then(a => conn.send({ t: 'act', rid: m.rid, a: a.win ? { win: true } : a.kong ? { kong: m.opts.kongs.indexOf(a.kong) } : { discard: a.discard } }));
+  } else if (m.t === 'claim') {
+    humanClaim(m.ho, m.tile).then(ch => conn.send({ t: 'act', rid: m.rid, a: !ch ? null : ch.kind === 'ron' ? { kind: 'ron' } : { kind: ch.kind, idx: m.ho[ch.kind].indexOf(ch.opt) } }));
+  } else if (m.t === 'claimOver') {
+    if (UI.mode === 'claim' && UI.cancelClaim) { UI.cancelClaim(); clearActions(); render(); }
+  } else if (m.t === 'result') {
+    G.hands = m.hands; G.melds = m.melds; scores = m.scores; UI.mode = null; clearActions();
+    UI.result = m.res; renderResult(); $('#result').showModal(); $('#result').scrollTop = 0;
+    setStatus(() => L(m.res.draw ? '流局。' : '本局結束。', m.res.draw ? 'Draw.' : 'Hand over.')); render();
+  }
+}
+function updateOnlineBtn() {
+  const b = $('#onlineBtn'); if (!b) return;
+  b.textContent = ROOM.mode === 'solo' ? L('線上', 'Online') : L('房間 ', 'Room ') + ROOM.code;
+}
+const seatLabel = i => L('座位 ' + (i + 1), 'Seat ' + (i + 1));
+function renderLobby() {
+  const d = $('#lobby'); if (!d) return;
+  const name = ROOM.myName || savedName();
+  if (ROOM.mode === 'solo') {
+    d.innerHTML = `<h2>${L('線上房間', 'Online room')}</h2>
+      <p style="color:var(--muted);margin:0 0 8px">${L('開房間，把代碼傳給朋友；人數不足可以用電腦補位。', 'Host a room and send the code to friends. Empty seats can be filled with bots.')}</p>
+      <div class="fl"><label>${L('暱稱', 'Name')} <input id="lbName" maxlength="12" value="${name}" placeholder="${L('你的名字', 'Your name')}"></label></div>
+      <div class="fl"><button class="btn primary" id="lbCreate" type="button">${L('開房間', 'Create room')}</button></div>
+      <div class="fl"><input id="lbCode" maxlength="5" placeholder="${L('房間代碼', 'ROOM CODE')}" style="text-transform:uppercase;width:9em"><button class="btn" id="lbJoin" type="button">${L('加入', 'Join')}</button></div>
+      <p class="err">${ROOM.msg}</p>
+      <p class="note">${L('點對點連線（WebRTC），不需要伺服器；極少數網絡（公司／學校 Wi-Fi）可能連不上。房主關閉頁面，遊戲即結束。', 'Peer-to-peer (WebRTC), no server. A few networks (work/school Wi-Fi) may block it. If the host closes the page, the game ends.')}</p>
+      <form method="dialog" style="margin-top:10px"><button class="btn ghost">${L('關閉', 'Close')}</button></form>`;
+    return;
+  }
+  const hostMode = isHost();
+  const rows = [0, 1, 2, 3].map(i => {
+    const k = ROOM.kind[i];
+    const nm = k === 'bot' ? L('電腦', 'Bot') : k === 'open' ? L('空位', 'Open seat') : ROOM.names[i];
+    const me = i === mySeat ? ` (${L('你', 'you')})` : '';
+    let ctl = '';
+    if (hostMode && i > 0) {
+      if (k === 'human') ctl = `<button class="btn sm ghost" data-a="kick" data-i="${i}">${ROOM.started ? L('換成電腦', 'Replace with bot') : L('移除', 'Kick')}</button>`;
+      else if (!ROOM.started || k === 'bot') ctl = k === 'bot' ? (ROOM.started ? '' : `<button class="btn sm ghost" data-a="open" data-i="${i}">${L('取消電腦', 'Remove bot')}</button>`) : `<button class="btn sm" data-a="bot" data-i="${i}">${L('加入電腦', 'Add bot')}</button>`;
+    }
+    return `<div class="lrow ${k}"><span class="ls">${seatLabel(i)}</span><b>${nm}${me}${i === 0 ? ' ★' : ''}</b>${ctl}</div>`;
+  }).join('');
+  const open = ROOM.kind.slice(1).filter(x => x === 'open').length;
+  const link = location.origin + location.pathname + '?room=' + ROOM.code;
+  d.innerHTML = `<h2>${L('房間', 'Room')}</h2>
+    <div class="code">${ROOM.code}</div>
+    <div class="fl"><button class="btn sm" id="lbCopy" type="button">${L('複製邀請連結', 'Copy invite link')}</button><span style="color:var(--muted);font-size:12px">${link.replace(/^https?:\/\//, '')}</span></div>
+    ${rows}
+    ${hostMode && !ROOM.started ? `<div class="fl"><button class="btn" id="lbFill" type="button" ${open ? '' : 'disabled'}>${L('空位全部用電腦補', 'Fill empty seats with bots')}</button><button class="btn primary" id="lbStart" type="button" ${open ? 'disabled' : ''}>${L('開始遊戲', 'Start game')}</button></div>
+      <p class="note">${open ? L(`還有 ${open} 個空位：等朋友加入，或用電腦補位。`, `${open} open seat(s): wait for friends or add bots.`) : L('可以開始了。', 'Ready to start.')}</p>` : ''}
+    ${!hostMode && !ROOM.started ? `<p class="note">${L('等待房主開始遊戲…', 'Waiting for the host to start…')}</p>` : ''}
+    <p class="err">${ROOM.msg}</p>
+    <div class="fl"><button class="btn ghost" id="lbLeave" type="button">${L('離開房間', 'Leave room')}</button><form method="dialog"><button class="btn ghost">${L('關閉', 'Close')}</button></form></div>`;
+}
+$('#lobby').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.id === 'lbCreate') createRoom();
+  else if (t.id === 'lbJoin') joinRoom();
+  else if (t.id === 'lbStart') startGame();
+  else if (t.id === 'lbLeave') { toSolo(); $('#lobby').close(); }
+  else if (t.id === 'lbFill') { for (let i = 1; i < 4; i++) if (ROOM.kind[i] === 'open') ROOM.kind[i] = 'bot'; sendLobby(); renderLobby(); }
+  else if (t.id === 'lbCopy') { const link = location.origin + location.pathname + '?room=' + ROOM.code; (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(() => { t.textContent = L('已複製！', 'Copied!'); }, () => { t.textContent = link; }); }
+  else if (t.dataset.a) {
+    const i = +t.dataset.i;
+    if (t.dataset.a === 'bot') ROOM.kind[i] = 'bot';
+    else if (t.dataset.a === 'open') { ROOM.kind[i] = 'open'; }
+    else if (t.dataset.a === 'kick') { const c = ROOM.conns[i]; if (c) { try { c.send({ t: 'full', why: 'kicked' }); } catch (x) {} setTimeout(() => c.close(), 200); } }
+    sendLobby(); renderLobby();
+  }
+});
+$('#onlineBtn').onclick = () => { renderLobby(); $('#lobby').showModal(); };
+{ const q = new URLSearchParams(location.search).get('room'); if (q) { setTimeout(() => { renderLobby(); const c = $('#lbCode'); if (c) c.value = q.toUpperCase(); $('#lobby').showModal(); }, 300); } }
+applyLang(); updateOnlineBtn(); play();
 </script>
 </body>
 </html>
