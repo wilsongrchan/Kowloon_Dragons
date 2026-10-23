@@ -1086,14 +1086,13 @@ const HAND_EX = [
   [2, '七對子', 'Seven Pairs', 'p8 p8|p8 p8|s7 s7|s9 s9|m7 m7|m9 m9|z1 z1'],
   [3, '小三元', 'Small Dragons', 'z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'],
   [3, '全大字', 'All Big', 'p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'],
-  [3, '幺九順', 'Kowloon Straight', 'p1 p2 p3|p4 p5 p6|p7 p8 p9|s5 s5 s5|m6 m6', 'p'],
-  [3, '幺九順', 'Kowloon Straight', 'p1 p2 p3|p4 p5 p6|p7 p8 p9|s3 s4 s5|z1 z1', 'c'],
+  [3, '幺九順', 'Kowloon Straight', 'p1 p2 p3|p4 p5 p6|p7 p8 p9|s5 s5 s5|m6 m6'],
   [4, '清一色', 'Full Flush', 'p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'],
   [4, '四暗刻', 'Four Concealed Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'],
   [4, '大三元', 'Great Dragons', 'z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'],
-  [4, '門清幺九順', 'Concealed Kowloon Straight', 's1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6', 'p'],
-  [4, '門清幺九順', 'Concealed Kowloon Straight', 's1 s2 s3|s4 s5 s6|s7 s8 s9|p3 p4 p5|z2 z2', 'c'],
-  [6, '幺九龍／門清幺九龍', 'Kowloon Dragon / Concealed', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
+  [4, '門清幺九順', 'Concealed Kowloon Straight', 's1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'],
+  [6, '幺九龍', 'Kowloon Dragon', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
+  [6, '門清幺九龍', 'Concealed Kowloon Dragon', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
   [6, '槓三元', 'Dragon Kongs', 'z1 z1 z1 z1|z2 z2 z2 z2|z3 z3 z3 z3|p2 p3 p4|s5 s5']
 ];
 /* ---- 番種示例「換一組」：隨機生成，並用 evaluateHand 驗證確實是該番種 ---- */
@@ -1115,17 +1114,19 @@ const EXGEN = {
   '七對子': () => { const ks = []; while (ks.length < 7) { const k = exPick(EXS) + (2 + exR(8)); if (!ks.includes(k)) ks.push(k); } return ks.map(k => k + ' ' + k); },
   '小三元': () => { const d = exPick([[1, 2, 3], [2, 3, 1], [3, 1, 2]]); return [exPg('z', d[0]), exPg('z', d[1]), `z${d[2]} z${d[2]}`, exRch(), exSet(exPick(EXS))]; },
   '全大字': () => [exSet2(), exSet2(), exSet2(), exSet2(), exRpr(undefined, 7, 9)],
-  '幺九順': k => { const x = exPick(EXS); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), exFourth(k), k === 'c' ? (z => `z${z} z${z}`)(1 + exR(3)) : exRpr()]; },
+  '幺九順': exKS,
   '清一色': () => { const x = exPick(EXS); return [exSet(x), exSet(x), exSet(x), exSet(x), exRpr(x)]; },
   '四暗刻': () => [exRpg(), exRpg(), exRpg(), exRpg(), exRpr()],
   '大三元': () => [exPg('z', 1), exPg('z', 2), exPg('z', 3), exRch(), exRpr()],
-  '門清幺九順': k => { const x = exPick(EXS); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), exFourth(k), k === 'c' ? (z => `z${z} z${z}`)(1 + exR(3)) : exRpr()]; },
-  '幺九龍／門清幺九龍': () => { const x = exPick(EXS), n = exR(8) ? 3 + exR(7) : 0, pr = n ? `${x}${n} ${x}${n}` : (z => `z${z} z${z}`)(1 + exR(3)); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), 'z1 z2 z3', pr]; },
+  '門清幺九順': exKS,
+  '幺九龍': () => { const x = exPick(EXS), n = exR(8) ? 3 + exR(7) : 0, pr = n ? `${x}${n} ${x}${n}` : (z => `z${z} z${z}`)(1 + exR(3)); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), 'z1 z2 z3', pr]; },
+  '門清幺九龍': () => { const x = exPick(EXS), n = exR(8) ? 3 + exR(7) : 0, pr = n ? `${x}${n} ${x}${n}` : (z => `z${z} z${z}`)(1 + exR(3)); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), 'z1 z2 z3', pr]; },
   '槓三元': () => [exPg('z', 1) + ' z1', exPg('z', 2) + ' z2', exPg('z', 3) + ' z3', exRch(), exRpr()]
 };
-const exFourth = k => { const y = exPick(EXS); return k === 'p' ? exRpg(y) : k === 'c' ? exRch(y) : exSet(y); };
+function exFourth(k) { const y = exPick(EXS); return k === 'p' ? exRpg(y) : exRch(y); }
+function exKS() { const x = exPick(EXS), k = exR(2) ? 'p' : 'c'; return [exCh(x, 1), exCh(x, 4), exCh(x, 7), exFourth(k), k === 'c' ? (z => `z${z} z${z}`)(1 + exR(3)) : exRpr()]; }
 function exSet2() { const x = exPick(EXS); return exR(2) ? exPg(x, 7 + exR(3)) : exCh(x, 7); }
-const EXOPEN = { '對對胡': [0, 1], '大三元': [0, 1, 2], '槓三元': [0, 1, 2], '幺九順': [3] };
+const EXOPEN = { '幺九龍': [0], '對對胡': [0, 1], '大三元': [0, 1, 2], '槓三元': [0, 1, 2], '幺九順': [3] };
 function exCheck(name, tier, groups) {
   const cnt = {}; let id = 0;
   const gs = groups.map(g => g.split(' ').map(k => { cnt[k] = (cnt[k] || 0) + 1; return { id: id++, s: k[0], n: +k.slice(1), k }; }));
@@ -1145,13 +1146,12 @@ function exCheck(name, tier, groups) {
 }
 function exRandom(h) {
   const g = EXGEN[h[1]]; if (!g) return h[3];
-  for (let i = 0; i < 300; i++) { const r = exCheck(h[1], h[0], g(h[4])); if (r) return r; }
+  for (let i = 0; i < 300; i++) { const r = exCheck(h[1], h[0], g()); if (r) return r; }
   return h[3];
 }
-const EXSUF = { p: { zh: '（第四組為刻子）', en: ' (4th meld: triplet)', ja: '（4組目：刻子）' }, c: { zh: '（第四組為順子）', en: ' (4th meld: sequence)', ja: '（4組目：順子）' } };
-const exLabel = (lang, h) => (lang === 'en' ? h[0] + ' fan: ' + h[2] : lang === 'ja' ? h[0] + ' 翻：' + (YAKU_JA[h[1]] || h[1]) : h[0] + ' 番：' + h[1]) + (h[4] ? EXSUF[h[4]][lang] : '');
+const exLabel = (lang, h) => (lang === 'en' ? h[0] + ' fan: ' + h[2] : lang === 'ja' ? h[0] + ' 翻：' + (YAKU_JA[h[1]] || h[1]) : h[0] + ' 番：' + h[1]);
 const pairLast = spec => { const g = spec.split('|'), two = g.filter(x => x.trim().split(/\s+/).length === 2); return two.length === 1 ? [...g.filter(x => x !== two[0]), two[0]].join('|') : spec; };
-const EXCONC = { '三暗刻': [0, 1, 2], '四暗刻': [0, 1, 2, 3], '門清幺九順': 'all', '七對子': 'all' };
+const EXCONC = { '門清幺九龍': 'all', '三暗刻': [0, 1, 2], '四暗刻': [0, 1, 2, 3], '門清幺九順': 'all', '七對子': 'all' };
 const exampleRow = (lang, i, rand) => X(exLabel(lang, HAND_EX[i]), pairLast(rand ? exRandom(HAND_EX[i]) : HAND_EX[i][3]), EXCONC[HAND_EX[i][1]]).replace('</span><span class="exs">', `<button type="button" class="exre" data-re="${lang}" data-i="${i}" aria-label="shuffle" title="↻">↻</button></span><span class="exs">`);
 const exampleRows = lang => HAND_EX.map((h, i) => exampleRow(lang, i)).join('');
 const EXNOTE = { zh: '綠線＝這組必須是暗牌（不可吃碰）', en: 'Green line = this group must stay concealed (no chow/pung calls)', ja: '緑の線＝この組は暗（鳴き不可）' };
