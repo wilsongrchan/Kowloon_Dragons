@@ -63,3 +63,4 @@ Prefer one change at a time, simulate before changing scoring, and keep Wilson's
 - Result dialog: big gold score (.hero) under the title; muted gold dragon SVG as #result background (data URI, opacity .24).
 - Muted gold dragon drawn in the shape of 九 (SVG data URIs): in the header right after the title (header::before, in-flow so panels can't cover it; --dragon-h, light/dark variants) and as the result dialog background (--dragon). Seat headers show a labeled bigger score (分數/Points). On <=520px bot called tiles move to their own row under the header.
 - Cheat sheet is live: cheatStates() (template.html) reads your melds/hand each render() -> gold "✓" = supported by your melds/hand, grey+strikethrough = ruled out (reason shown). Keep its rules in sync with rule changes.
+- 混一色/清一色 can't include 混碰/小字混刻/小字混眼 (automatic: those tiles span 2+ suits; stated in both rules texts).
