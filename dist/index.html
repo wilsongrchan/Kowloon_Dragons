@@ -116,8 +116,11 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 .opp.across{grid-area:across}.opp.left{grid-area:left}.opp.right{grid-area:right}
 .opp.left,.opp.right{min-width:0}
 .opp .seat-head{flex-wrap:wrap;gap:4px 8px}
-.opp.left .zone,.opp.right .zone{flex-direction:column;gap:6px}
-.opp.left .zone .melds,.opp.right .zone .melds{max-width:none;justify-content:flex-start;padding:0;border-left:0}
+.opp .seat-head .melds{margin:0 0 0 auto;max-width:100%;justify-content:flex-end;gap:6px}
+.opp .seat-head .melds:empty{display:none}
+.opp .seat-head .melds:not(:empty) + .score{margin-left:8px}
+.melds:not(:empty){background:rgba(224,176,78,.13);border:1px solid rgba(224,176,78,.4);border-radius:8px;padding:3px 5px}
+.opp .seat-head .meld{background:rgba(0,0,0,.22)}
 .opp .zone{min-height:2.4em}
 .actions{display:flex;flex-wrap:wrap;gap:8px;min-height:40px;margin-top:8px}
 .status{margin:8px 0 0;color:var(--muted);min-height:1.5em;font-size:14px}
@@ -769,11 +772,12 @@ function render() {
     const s = document.createElement('section'); s.className = 'seat opp ' + (seat === 2 ? 'across' : seat === 3 ? 'left' : 'right') + (G.turn === seat ? ' active' : '');
     const tag = seat === 3 ? L('上家・可吃', 'can chow') : seat === 1 ? L('下家', 'next') : '';
     s.innerHTML = `<div class="seat-head"><b>${NAMES[seat]}</b><span>${tag}</span><span class="score">${scores[seat]}</span></div>`;
+    const ml = document.createElement('div'); ml.className = 'melds'; G.melds[seat].forEach(m => ml.appendChild(meldEl(m, 'sm')));
+    s.querySelector('.seat-head').insertBefore(ml, s.querySelector('.score'));
     const bk = document.createElement('div'); bk.className = 'backs'; for (let i = 0; i < G.hands[seat].length; i++) bk.appendChild(backEl()); s.appendChild(bk);
     const zone = document.createElement('div'); zone.className = 'zone';
     const pl = document.createElement('div'); pl.className = 'pool';
     G.discards[seat].forEach(t => pl.appendChild(tileEl(t, { sm: true, cls: G.last && G.last.t.id === t.id ? 'last' : '' }))); zone.appendChild(pl);
-    const ml = document.createElement('div'); ml.className = 'melds'; G.melds[seat].forEach(m => ml.appendChild(meldEl(m, 'sm'))); zone.appendChild(ml);
     s.appendChild(zone);
     opps.appendChild(s);
   }
