@@ -235,7 +235,7 @@ details.eg summary{cursor:pointer;color:var(--gold);font-size:14px;font-weight:5
 const $ = s => document.querySelector(s);
 let LANG = 'zh'; try { LANG = localStorage.getItem('yjl-lang') === 'en' ? 'en' : 'zh'; } catch (e) {}
 const L = (zh, en) => LANG === 'en' ? en : zh;
-const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Right', 'Across', 'Left'] };
+const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Downstream', 'Across', 'Upstream'] };
 const NAMES = new Proxy({}, { get: (_, i) => SEAT[LANG][i] });
 const SUITEN = { p: 'Circles', s: 'Bamboo', m: 'Characters' }, DRAGEN = { 1: 'Red Dragon', 2: 'Green Dragon', 3: 'White Dragon' };
 const tn = t => LANG === 'en' ? (t.s === 'z' ? DRAGEN[t.n] : t.n + SUITN[t.s]) : tname(t);
@@ -308,7 +308,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
   <ul>
     <li><b>Chow (吃)</b>
       <ul>
-        <li>Same suit only, and only from the player on your left.</li>
+        <li>Same suit only, and only from your upstream player (the one who plays right before you, on your left).</li>
         <li>The chow can't contain a 7–9. Holding 5-6 you can't chow a 7; holding 7-8 you can't chow a 6.</li>
         <li>So only <b>123, 234, 345 and 456</b> can be claimed. A 789 chow is fine inside your closed hand.</li>
         <li>No mixed chow.</li>
@@ -317,7 +317,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     <li><b>Pung (碰)</b>
       <ul>
         <li>Allowed for 1–6 and dragons. Big tiles (7–9) can never be punged.</li>
-        <li>If several players can pung the same discard, priority is: the discarder's right-hand player, then across, then left.</li>
+        <li>If several players can pung the same discard, priority is: the discarder's downstream player (next to play), then across, then upstream.</li>
       </ul>
     </li>
     <li><b>Kong (槓)</b>
@@ -460,7 +460,7 @@ function render() {
   const opps = $('#opps'); opps.innerHTML = '';
   for (const seat of [2, 3, 1]) {
     const s = document.createElement('section'); s.className = 'seat opp ' + (seat === 2 ? 'across' : seat === 3 ? 'left' : 'right') + (G.turn === seat ? ' active' : '');
-    const tag = seat === 3 ? L('上家・可吃', 'can chow') : seat === 1 ? L('下家', 'next') : '';
+    const tag = seat === 3 ? L('上家・可吃', 'you can chow from them') : seat === 1 ? L('下家', 'plays after you') : '';
     s.innerHTML = `<div class="seat-head"><b>${NAMES[seat]}</b><span>${tag}</span><span class="score">${scores[seat]}</span></div>`;
     const ml = document.createElement('div'); ml.className = 'melds'; G.melds[seat].forEach(m => ml.appendChild(meldEl(m, 'sm')));
     s.querySelector('.seat-head').insertBefore(ml, s.querySelector('.score'));
@@ -793,7 +793,7 @@ function cheatHTML() {
     CHEAT_TIERS.map(([f, hs]) => `<h3>${L(f + ' 番 ×' + f, f + ' fan ×' + f)}</h3>` + hs.map(h => row(h[0], h[1], h[2])).join('')).join('') +
     `<h3>${L('碎番 +0.5', 'Minor fans +½')} <small>${L('（要先有 1 番）', '(need ≥1 full fan)')}</small></h3>` + CHEAT_MINOR.map(h => row(h[0], h[1], h[2])).join('') +
     `<h3>${L('可鳴的牌', 'What can be called')}</h3>` +
-    row('吃', '同花 123·234·345·456，只吃上家', '123·234·345·456, same suit, left only').replace(/<b>[^<]*<\/b>/, `<b>${L('吃', 'Chow')}</b>`) +
+    row('吃', '同花 123·234·345·456，只吃上家', '123·234·345·456, same suit, from upstream only').replace(/<b>[^<]*<\/b>/, `<b>${L('吃', 'Chow')}</b>`) +
     `<div class="r"><b>${L('碰', 'Pung')}</b><span>${L('1–6、中發白（7–9 不可）', '1–6, dragons (not 7–9)')}</span></div>` +
     `<div class="r"><b>${L('槓', 'Kong')}</b><span>${L('4–6、中發白（1–3、7–9 不可）', '4–6, dragons (not 1–3, 7–9)')}</span></div>` +
     `<div class="r"><b>${L('混碰', 'Mixed pung')}</b><span>${L('1–3 同數字、不同花', '1–3, same number, 3 suits')}</span></div>` +
