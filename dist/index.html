@@ -6,7 +6,7 @@
 <title>幺九龍 試玩</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#e9e3d2; --h:#22313e; --pg:#2a2f35; --pgm:#5a6570;
@@ -77,8 +77,8 @@ button.btn.ghost{background:transparent;color:var(--pg);border-color:var(--pgm)}
 .tile .ic.c::after{content:"";position:absolute;inset:.17em;border-radius:50%;background:currentColor}
 .tile .ic.k{width:.5em;height:1.25em;border-radius:.22em;background:currentColor;position:relative}
 .tile .ic.k::after{content:"";position:absolute;left:-.06em;right:-.06em;top:50%;height:.14em;margin-top:-.07em;background:var(--ivory);opacity:.9}
-.tile .ic.w{font:900 1.35em/1 var(--face)}
-.tile .h{font:900 2.3em/1 var(--face)}
+.tile .ic.w{font:900 1.35em/1 var(--ui)}
+.tile .h{font:900 2.3em/1 var(--ui)}
 .tile .v{position:absolute;top:-.35em;right:-.4em;min-width:1.4em;height:1.4em;padding:0 .2em;border-radius:99px;background:rgba(14,21,28,.9);
   font:700 .7em/1.4em var(--ui);text-align:center;color:var(--gold);margin:0;-webkit-text-stroke:0}
 .tile.p{color:var(--blue)} .tile.s{color:var(--green)} .tile.m{color:var(--red)}
@@ -115,9 +115,11 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 #hand .gap{width:.9em}
 .opp .tile.back{--u:7px}
 #opps{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"across across" "left right";gap:8px;align-items:start}
-.opp.across{grid-area:across}.opp.left{grid-area:left}.opp.right{grid-area:right}
+.opp.across{grid-area:across;justify-self:center;width:calc(50% - 4px)}.opp.left{grid-area:left}.opp.right{grid-area:right}
 .opp.left,.opp.right{min-width:0}
-.opp .seat-head{flex-wrap:wrap;gap:4px 8px}
+.opp .seat-head{flex-wrap:nowrap;align-items:flex-start;gap:4px 8px}
+.opp .seat-head>b,.opp .seat-head>span{flex:none}
+.opp .seat-head .melds{flex:0 1 auto;min-width:0}
 .opp .seat-head .melds{margin:0 0 0 auto;max-width:100%;justify-content:flex-end;gap:6px}
 .opp .seat-head .melds:empty{display:none}
 .opp .seat-head .melds:not(:empty) + .score{margin-left:8px}
@@ -161,6 +163,7 @@ details.eg summary{cursor:pointer;color:var(--gold);font-size:14px;font-weight:5
   button.btn.sm{padding:8px 12px;min-height:38px}
   .seat{padding:8px}
   .zone .melds{max-width:55%}
+  .opp .seat-head>span:not(.score){display:none}
   dialog{padding:16px}
 }
 #cheat{display:none}
