@@ -60,4 +60,4 @@ Prefer one change at a time, simulate before changing scoring, and keep Wilson's
 - Rules dialog has collapsed `<details class="eg">` tile examples built with `X(label, 'p1 s1 m1*|...')` (tile keys p/s/m1-9, z1-3; `*` = claimed tile, faded) and `EG(title, rows)`; update them when a hand definition changes. English name for 三元刻 is "Dragon triplet" (revealed pung or concealed triplet).
 - Tiles are drawn in CSS (no images): big digit + suit icon (筒 = ring, 索 = stick, 萬 = 萬 character), dragons 中/發/白 (白 = blue frame); gold badge = point value. `faceHTML(suit, n, badge)` builds the face; the rules examples reuse it.
 - Cheat sheet (番種速查): sidebar `#cheat` on >=1180px, header button `#cheatBtn` -> `#cheatDlg` dialog below that. Content from `CHEAT_TIERS` / `CHEAT_MINOR` / `cheatHTML()` in template.html; update with rule changes (along with both rules texts).
-- Result dialog: big gold score (.hero) under the title; muted gold dragon SVG as #result background (data URI, opacity .11).
+- Result dialog: big gold score (.hero) under the title; muted gold dragon SVG as #result background (data URI, opacity .24).
