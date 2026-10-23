@@ -2,7 +2,7 @@
 /* ===== 幺九龍 engine (no DOM) ===== */
 const RULES = {
   ALLOW_789_ANKAN: false,      // 7-9 可否暗槓（字面解讀：不可）
-  PAIR_HONOR_BREAKS_PINGHU: true, // 平和的將不可以是中發白
+  PAIR_HONOR_BREAKS_PINGHU: true, // 平胡的將不可以是中發白
   RON_MULT: 2,                 // 出銃者付 2x，自摸每家付 1x
 };
 const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
@@ -103,7 +103,7 @@ function evaluateHand(melds, concealed, tsumo, winTile) {
     if (dr === 3) { add('大三元', 4); bonus = 40; bonusName = '大三元'; }
     else if (dr === 2 && pairHon && !dragonSets.some(s => s.k === d.pair)) { add('小三元', 3); bonus = 20; bonusName = '小三元'; }
     else for (let i = 0; i < dr; i++) add('三元刻', 1);
-    if (sets.every(s => s.kind === 'chow') && !(RULES.PAIR_HONOR_BREAKS_PINGHU && pairHon)) add('平和', 1);
+    if (sets.every(s => s.kind === 'chow') && !(RULES.PAIR_HONOR_BREAKS_PINGHU && pairHon)) add('平胡', 1);
     if (sets.every(s => s.kind === 'pong')) add('對對胡', 1);
     // 暗刻：暗槓算暗刻；榮和時，靠胡牌完成的刻子算明刻
     // 榮胡進眼（或胡牌可放進順子）不毀暗刻：只有胡牌別無去處、必須放進該刻子時，該刻才算明刻

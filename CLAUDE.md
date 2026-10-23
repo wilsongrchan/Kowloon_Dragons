@@ -22,7 +22,7 @@ Hand 13, win 14: 4 sets + pair.
 - 一番起和 (needs >=1 fan from real conditions; two half-fans alone cannot win).
 - Multiplier on sum of all hand point values: 1番 x1, 2番 x2, 3番 x3, 4番(cap) x4 (linear).
 - Fan = floor(total incl. halves) so 1+0.5+0.5 = 2.
-- 1番: 三元刻(each, stackable), 平和 (all chows, no dragons), 對對胡(混碰 ok)
+- 1番: 三元刻(each, stackable), 平胡 (all chows, no dragons), 對對胡(混碰 ok)
 - 2番: 混一色, 門清加自摸, 全大字(all tiles 7-9), 斷大字(no 7-9), 三暗刻
 - 3番: 清一色, 小三元 (no extra 中發白刻; hand tile sum +20 before multiplier), 幺九順 (same suit 123+456+789; remaining set chow or pong, any suit; pair any)
 - 4番: 大三元 (no extra 中發白刻; hand tile sum +40 before multiplier), 四暗刻, 幺九龍 (same suit 123+456+789 + one each of 中發白 + a pair of a same-suit number or a dragon, i.e. that tile type has 3 copies; hand tile sum +40 before multiplier -> 340-396 pts)
@@ -34,7 +34,7 @@ Hand 13, win 14: 4 sets + pair.
 ## Implementation assumptions (NOT yet decided by Wilson; change in engine.js `RULES` / `evaluateHand`)
 - 幺九龍: 12 distinct tiles + two more copies of a same-suit number or dragon (3 copies of it; 一/二 impossible) - confirmed by Wilson's wording.
 - 自摸 half-fan not given on top of 門清加自摸 (assumed).
-- 平和 pair cannot be honor. 斷一門無三元 does not stack with 清一色 (混一色 has honors so already excluded).
+- 平胡 pair cannot be honor. 斷一門無三元 does not stack with 清一色 (混一色 has honors so already excluded).
 - 全大字 + 門清加自摸 still stack (2+2, hits 4 cap).
 - 吃 only from player on your left; no mixed 槓; no robbing the kong.
 - Payment placeholder: tsumo each pays 1x; ron discarder pays 2x (RULES.RON_MULT). No dealer bonus/wind rotation.
