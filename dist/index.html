@@ -387,8 +387,8 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
       const bigs = melds.filter(m => m.big).length;
       if (bigs) halves.push({ name: '三元大補槓×' + bigs, fan: 0.5 * bigs });
       if (tsumo && kongDraw) halves.push({ name: '槓上自摸', fan: 0.5 }); // 槓後補牌自摸：與自摸、槓重疊，合計追加 1.5 番
-      // 不求人已包含門清與自摸；全大字、門清幺九順不重複算門清
-      const noMen = has('不求人') || has('全大字') || has('門清幺九順');
+      // 不求人已包含門清與自摸；全大字、門清幺九順、七對子不重複算門清
+      const noMen = has('不求人') || has('全大字') || has('門清幺九順') || has('七對子');
       if (isConcealed) { if (!tsumo && !noMen) halves.push({ name: '門清', fan: 0.5 }); }
       else if (tsumo) halves.push({ name: '自摸', fan: 0.5 });
       // 斷一門無三元：缺筒索萬其中一門，且沒有中發白；清一色／混一色不重複
@@ -722,13 +722,13 @@ zh: `  <h2>規則（目前實作）</h2>
   <h3>番種（疊加，6 番封頂；0.5 番稱碎番）</h3>
   <ul>
     <li><b>1 番（全番）</b>：三元刻（中、發、白任一組刻子，明碰或暗刻都算，每組可疊加）、平胡（全順子、無三元）、對對胡（混碰可）、混眼混一色（混一色，但眼是混眼）、混碰混一色（混一色，其中一刻為混碰；多於一刻混碰不可）</li>
-    <li><b>2 番</b>：混一色（不可混碰、小字混刻、混眼；不重複算斷一門）、不求人（門清加自摸，不重複算門清或自摸）、斷大字（整副手牌沒有 7–9）、三暗刻、七對子（可重複，如 8888 算兩對；可疊混一色、清一色；不可混眼）</li>
+    <li><b>2 番</b>：混一色（不可混碰、小字混刻、混眼；不重複算斷一門）、不求人（門清加自摸，不重複算門清或自摸）、斷大字（整副手牌沒有 7–9）、三暗刻、七對子（可重複，如 8888 算兩對；可疊混一色、清一色；不可混眼；不重複算門清）</li>
     <li><b>3 番</b>：小三元（不另計三元刻，手牌點值立刻 +30）、全大字（整副手牌只有 7–9；不重複算門清）、幺九順（同花色 123＋456＋789，其餘一組可順可碰、可不同花色）</li>
     <li><b>4 番</b>：清一色（不可混碰、混眼；不重複算斷一門無三元）、四暗刻、大三元（不另計三元刻，手牌點值立刻 +60）、門清幺九順（同幺九順但門清，手牌點值立刻 +30；不重複算門清）</li>
     <li><b>6 番（封頂）</b>：幺九龍（同花色 123＋456＋789＋中發白各一＋同花色或三元的眼，手牌點值立刻 +30）、門清幺九龍（同上但門清，手牌點值立刻 +90）、槓三元（中發白全槓，手牌點值立刻 +90）、天胡（莊家起手即胡）、地胡（閒家胡莊家打出的第一隻牌）、人胡（閒家第一次摸牌自摸，之前無人吃碰槓）。天胡、地胡、人胡只要牌型完成即可，不需另有番種。</li>
     <li>暗刻：暗槓算暗刻；榮和時靠胡牌完成的刻子算明刻，但榮胡進眼（胡牌放進眼）不毀暗刻。</li>
     <li>半番（碎番）：只有碎番、沒有全番不能胡；須已有 1 番才可追加，兩個半番不能起和。包括：槓（每次）、三元大補槓、門清、自摸（只給有鳴牌的手牌，已含在不求人）、槓上自摸（槓後補牌自摸，與自摸及槓重疊，合共追加 1.5 番）、斷一門無三元（筒索萬缺一門且沒有中發白；混一色、清一色不重複算）、胡小字（胡的那張是 1–3）。</li>
-    <li>不求人已包含門清與自摸；全大字、門清幺九順不計門清。</li>
+    <li>不求人已包含門清與自摸；全大字、門清幺九順、七對子不計門清。</li>
     <li>總番數取整數部分，所以 1+0.5+0.5＝2 番。</li>
     <li>倍數 = 番數（1 番 ×1 … 6 番 ×6）。得分 = 全手牌點值總和（含已鳴的牌，扣除混碰被要的那張，加上各牌型的立刻加分）× 倍數。</li>
   </ul>
@@ -827,7 +827,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
         <li><b>Concealed Self-Draw (不求人)</b>: no calls and you win by drawing. Replaces Concealed and Self-draw.</li>
         <li><b>No Big (斷大字)</b>: no 7–9 anywhere in the hand.</li>
         <li><b>Three Concealed Triplets (三暗刻)</b></li>
-        <li><b>Seven Pairs (七對子)</b>: seven pairs, all concealed. Four of a kind counts as two pairs (8888). No mixed pair. Can stack with Half Flush and Full Flush.</li>
+        <li><b>Seven Pairs (七對子)</b>: seven pairs, all concealed. Four of a kind counts as two pairs (8888). No mixed pair. Can stack with Half Flush and Full Flush. No Concealed bonus on top.</li>
       </ul>
     </li>
     <li><b>3 fan</b>
@@ -863,7 +863,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     <li>Only added once you already have at least 1 full fan; two ½ fans alone can’t win.</li>
     <li><b>Kong (槓)</b>: each kong.</li>
     <li><b>Grand dragon kong (三元大補槓)</b></li>
-    <li><b>Concealed (門清)</b>: no calls. Not given with Concealed Self-Draw, All Big or Concealed Kowloon Straight.</li>
+    <li><b>Concealed (門清)</b>: no calls. Not given with Concealed Self-Draw, All Big, Seven Pairs or Concealed Kowloon Straight.</li>
     <li><b>Self-draw (自摸)</b>: open hands only. Concealed Self-Draw already includes it.</li>
     <li><b>Kong self-draw (槓上自摸)</b>: you win by self-draw on the replacement tile drawn after a kong. It stacks with Self-draw and Kong, so a win like that adds 1½ fan in total.</li>
     <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons. Half Flush and Full Flush don’t get it.</li>

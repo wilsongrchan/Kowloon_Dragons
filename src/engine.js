@@ -114,8 +114,8 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
       const bigs = melds.filter(m => m.big).length;
       if (bigs) halves.push({ name: '三元大補槓×' + bigs, fan: 0.5 * bigs });
       if (tsumo && kongDraw) halves.push({ name: '槓上自摸', fan: 0.5 }); // 槓後補牌自摸：與自摸、槓重疊，合計追加 1.5 番
-      // 不求人已包含門清與自摸；全大字、門清幺九順不重複算門清
-      const noMen = has('不求人') || has('全大字') || has('門清幺九順');
+      // 不求人已包含門清與自摸；全大字、門清幺九順、七對子不重複算門清
+      const noMen = has('不求人') || has('全大字') || has('門清幺九順') || has('七對子');
       if (isConcealed) { if (!tsumo && !noMen) halves.push({ name: '門清', fan: 0.5 }); }
       else if (tsumo) halves.push({ name: '自摸', fan: 0.5 });
       // 斷一門無三元：缺筒索萬其中一門，且沒有中發白；清一色／混一色不重複
