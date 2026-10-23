@@ -7,7 +7,6 @@ Wilson writes rules in Traditional Chinese; UI and rules text are Traditional Ch
 
 ## Layout
 - `src/engine.js`   pure game logic (no DOM): deck, claims, win detection, fan scoring, bots, `simGame()` headless sim
-- `src/tiles/` tile PNGs (p/s/m 1-9, z1-3 = 中發白), copied from Mahjong201, downscaled; build copies them to dist/tiles and docs/tiles
 - `src/template.html` UI + CSS; contains `/*__ENGINE__*/` placeholder
 - `scripts/build.js` inlines engine into template -> `dist/index.html` and `docs/index.html` (publishable single file; GitHub Pages serves `docs/`)
 - `scripts/sim.js`   bot-only simulation stats (use before changing any fan/point rule)
@@ -58,3 +57,4 @@ Prefer one change at a time, simulate before changing scoring, and keep Wilson's
 - Mobile checked at 390px width (no horizontal overflow, touch drag works). Tests used Playwright (python) + jsdom auto-play.
 - Bilingual UI (中文 default / English): `LANG`, `L(zh,en)`, `tn/kn/knFull` tile names, `yn` yaku-name map (YAKU_EN), `RULES_HTML.{zh,en}` rules dialog, header button #langBtn (remembers choice in localStorage 'yjl-lang'). English mode shows digits on tiles instead of 一二三. Log/status/claim buttons/result dialog are re-rendered on language switch. When changing any rule, update BOTH rules texts (RULES_HTML.zh and .en) and YAKU_EN if yaku names change.
 - Rules dialog has collapsed `<details class="eg">` tile examples built with `X(label, 'p1 s1 m1*|...')` (tile keys p/s/m1-9, z1-3; `*` = claimed tile, faded) and `EG(title, rows)`; update them when a hand definition changes. English name for 中發白刻子 is "Dragon triplet" (revealed pung or concealed triplet).
+- Tiles are drawn in CSS (no images): big digit + suit icon (筒 = ring, 索 = stick, 萬 = 萬 character), dragons 中/發/白 (白 = blue frame); gold badge = point value. `faceHTML(suit, n, badge)` builds the face; the rules examples reuse it.

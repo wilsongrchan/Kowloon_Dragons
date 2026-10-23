@@ -60,15 +60,28 @@ button.btn.ghost{background:transparent;color:var(--pg);border-color:var(--pgm)}
 .backs{display:flex;gap:1px;flex-wrap:wrap}
 
 /* tiles: sized by font-size so everything scales together */
-.tile{--u:14px;font-size:var(--u);width:3.3em;height:4em;position:relative;flex:none;
-  display:flex;align-items:center;justify-content:center;line-height:1;margin-bottom:.25em;padding:0;
-  background:none;border:0;border-radius:.4em;font-family:var(--face);font-weight:900}
+.tile{--u:14px;font-size:var(--u);width:3.3em;height:4em;position:relative;flex:none;border-radius:.45em;
+  background:linear-gradient(170deg,#fffdf2,var(--ivory) 55%,#eadfbf);color:#222;border:.12em solid #2b2a28;
+  box-shadow:0 .26em 0 var(--jade-d),0 .26em 0 .12em #2b2a28;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12em;
+  font-family:var(--ui);font-weight:900;line-height:1;margin-bottom:.45em;padding:0}
 .tile.sm{--u:9px}
 .tile.md{--u:11px}
-.tile img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 .15em .2em rgba(0,0,0,.35))}
+.tile.xs{--u:8.5px;margin-bottom:.4em}
 .tile i{font-style:normal;display:block}
-.tile .v{position:absolute;top:-.1em;right:-.15em;min-width:1.35em;height:1.35em;padding:0 .2em;border-radius:99px;background:rgba(14,21,28,.82);
-  font:700 .7em/1.35em var(--ui);text-align:center;color:var(--gold);margin:0}
+.tile .n{font-size:1.9em;font-weight:900;-webkit-text-stroke:.03em currentColor}
+.tile .ic{display:block;flex:none}
+.tile .ic.c{width:1.05em;height:1.05em;border-radius:50%;border:.24em solid currentColor;position:relative}
+.tile .ic.c::after{content:"";position:absolute;inset:.17em;border-radius:50%;background:currentColor}
+.tile .ic.k{width:.5em;height:1.25em;border-radius:.22em;background:currentColor;position:relative}
+.tile .ic.k::after{content:"";position:absolute;left:-.06em;right:-.06em;top:50%;height:.14em;margin-top:-.07em;background:var(--ivory);opacity:.9}
+.tile .ic.w{font:900 1.35em/1 var(--face)}
+.tile .h{font:900 2.3em/1 var(--face)}
+.tile .v{position:absolute;top:-.35em;right:-.4em;min-width:1.4em;height:1.4em;padding:0 .2em;border-radius:99px;background:rgba(14,21,28,.9);
+  font:700 .7em/1.4em var(--ui);text-align:center;color:var(--gold);margin:0;-webkit-text-stroke:0}
+.tile.p{color:var(--blue)} .tile.s{color:var(--green)} .tile.m{color:var(--red)}
+.tile.z1{color:var(--red)} .tile.z2{color:var(--green)} .tile.z3{color:var(--blue)}
+.tile.z3 .h{width:1.25em;height:1.75em;border:.16em solid currentColor;border-radius:.25em;font-size:1em}
 .tile{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .tile.dragging{opacity:.25}
 .dragghost{position:fixed;z-index:60;pointer-events:none;margin:0;transform:translate(-50%,-62%) scale(1.15);box-shadow:0 .5em 1.2em rgba(0,0,0,.55)}
@@ -81,7 +94,7 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 #discardBtn{width:100%;margin-top:8px;padding:11px 14px;font-size:16px}
 .handbar{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}
 .handbar .hint{margin-right:auto;font-size:12px;color:var(--muted)}
-.tile.back{background:repeating-linear-gradient(45deg,var(--jade) 0 .35em,#2f8660 .35em .7em);border:1px solid var(--jade-d);box-shadow:0 .2em 0 #153f2c;height:3.6em;width:2.8em}
+.tile.back{background:repeating-linear-gradient(45deg,var(--jade) 0 .35em,#2f8660 .35em .7em);border:1px solid var(--jade-d);box-shadow:0 .2em 0 #153f2c;height:3.6em;width:2.8em;gap:0}
 .tile.last{outline:2px solid var(--gold);outline-offset:1px}
 .tile.clk{cursor:pointer;transition:transform .12s}
 .tile.clk:hover{transform:translateY(-.3em)}
@@ -118,9 +131,8 @@ details.eg summary{cursor:pointer;color:var(--gold);font-size:14px;font-weight:5
 .exrow{display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;margin:8px 0}
 .exl{flex:0 0 11em;font-size:13px;color:var(--muted)}
 .exs{display:flex;flex-wrap:wrap;gap:6px 10px}
-.exg{display:flex;padding:2px;border-radius:5px;background:rgba(0,0,0,.18)}
-.xt{width:28px;height:34px;object-fit:contain;display:block}
-.xt.cl{opacity:.5;outline:1px dashed var(--gold);outline-offset:-1px;border-radius:3px}
+.exg{display:flex;gap:3px;padding:2px 3px 4px;border-radius:5px;background:rgba(0,0,0,.18)}
+.tile.cl{opacity:.5;outline:1px dashed var(--gold);outline-offset:1px}
 .fanlist{display:grid;grid-template-columns:1fr auto;gap:2px 16px;max-width:360px;font-variant-numeric:tabular-nums}
 .fanlist .tot{border-top:1px solid var(--line);padding-top:4px;margin-top:2px;font-weight:700}
 .reveal{margin-top:10px;display:grid;gap:8px}
@@ -195,8 +207,12 @@ const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? (k[0] === 'z' ? DRAGEN[+k.slice(1)] : +k.slice(1) + SUITN[k[0]] + ' ' + SUITEN[k[0]]) : kn(k);
 const YAKU_EN = {'中發白刻子':'Dragon triplet','平和':'All Chows','對對胡':'All Pungs','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Pungs','四暗刻':'Four Concealed Pungs','小三元':'Small Three Dragons','大三元':'Big Three Dragons','幺九順':'Yaojiu Straight','幺九龍':'Yaojiu Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
 const yn = name => { if (LANG !== 'en') return name; const m = name.match(/^(.+?)(×\d+)?$/); return (YAKU_EN[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
+const ICON = { p: 'c', s: 'k', m: 'w' };
+const faceHTML = (sx, n, badge) => sx === 'z'
+  ? `<i class="h">${n === 3 ? '' : HON[n]}</i>`
+  : `<i class="n">${n}</i><i class="ic ${ICON[sx]}">${sx === 'm' ? '萬' : ''}</i>` + (badge == null ? '' : `<i class="v">${badge}</i>`);
 const X = (label, spec) => `<div class="exrow"><span class="exl">${label}</span><span class="exs">` + spec.split('|').map(g =>
-  '<span class="exg">' + g.trim().split(/\s+/).map(t => { const c = t.endsWith('*'); t = t.replace('*', ''); return `<img class="xt${c ? ' cl' : ''}" src="tiles/${t}.png" alt="${t}">`; }).join('') + '</span>').join('') + '</span></div>';
+  '<span class="exg">' + g.trim().split(/\s+/).map(t => { const c = t.endsWith('*'); t = t.replace('*', ''); return `<span class="tile xs ${t[0] === 'z' ? t : t[0]}${c ? ' cl' : ''}">${faceHTML(t[0], +t.slice(1))}</span>`; }).join('') + '</span>').join('') + '</span></div>';
 const EG = (title, rows) => `<details class="eg"><summary>${title}</summary>${rows.join('')}</details>`;
 const RULES_HTML = {
 zh: `  <h2>規則（目前實作）</h2>
@@ -378,7 +394,7 @@ function tileEl(t, o = {}) {
   d.className = 'tile ' + (t.s === 'z' ? 'z' + t.n : t.s) + (o.sm ? ' sm' : '') + (o.md ? ' md' : '') + (o.btn ? ' clk' : '') + (o.cls ? ' ' + o.cls : '');
   if (o.btn) d.type = 'button';
   d.setAttribute('aria-label', tn(t)); d.dataset.id = t.id; d.dataset.k = t.k;
-  d.innerHTML = `<img src="tiles/${t.s}${t.n}.png" alt="" draggable="false">` + (t.s === 'z' ? '' : `<i class="v">${val(t)}</i>`);
+  d.innerHTML = faceHTML(t.s, t.n, t.s === 'z' ? null : val(t));
   return d;
 }
 function backEl() { const d = document.createElement('div'); d.className = 'tile back'; return d; }
