@@ -20,22 +20,23 @@ Hand 13, win 14: 4 sets + pair.
 - Pong priority when several players can pong the same discard (5/6, honors): discarder's 下家 > 對家 > 上家. Ron > pong/kong > chow.
 - 三元大槓: 中發白 5th tile via self-draw (kong then 5th, pong then 4th+5th, or 5 concealed).
 - 一番起和 (needs >=1 fan from real conditions; two half-fans alone cannot win).
-- Multiplier on sum of all hand point values: 1番 x1, 2番 x2, 3番 x3, 4番(cap) x4 (linear).
-- Fan = floor(total incl. halves) so 1+0.5+0.5 = 2.
-- 1番: 三元刻(each, stackable), 平胡 (all chows, no dragons), 對對胡(混碰 ok)
-- 2番: 混一色, 門清加自摸, 全大字(all tiles 7-9), 斷大字(no 7-9), 三暗刻
-- 3番: 清一色, 小三元 (no extra 中發白刻; hand tile sum +30 before multiplier), 幺九順 (same suit 123+456+789; remaining set chow or pong, any suit; pair any)
-- 4番: 大三元 (no extra 中發白刻; hand tile sum +60 before multiplier), 四暗刻, 幺九龍 (same suit 123+456+789 + one each of 中發白 + a pair of a same-suit number or a dragon, i.e. that tile type has 3 copies; hand tile sum +50 before multiplier -> 380-436 pts)
+- FINAL RULE SET (Wilson, 2026-10-23): cap 6 fan, multiplier = fan (x1..x6). Score = (hand tile points + instant bonus) x multiplier.
+- Fan = floor(total incl. halves) so 1+0.5+0.5 = 2; need >=1 full fan from real conditions (halves alone can't win).
+- 1番: 三元刻 (each, stackable; open pung or concealed triplet), 平胡 (all chows, no dragons), 對對胡 (混碰 ok), 混眼混一色 (half flush whose pair is a 混眼), 混碰混一色 (half flush with exactly ONE 混碰; more not allowed)
+- 2番: 混一色 (no 混碰/小字混刻/混眼; no 斷一門), 不求人 (concealed + tsumo; replaces 門清/自摸), 斷大字 (no 7-9), 三暗刻, 七對子 (7 pairs, 8888 = two pairs, may stack 混一色/清一色, NO mixed pair, fully concealed)
+- 3番: 小三元 (+30 hand pts), 全大字 (all 7-9; no 門清 half), 幺九順 (same suit 123+456+789; remaining set chow or pung any suit; pair any; open hand)
+- 4番: 清一色 (no mixed; no 斷一門無三元), 四暗刻, 大三元 (+60), 門清幺九順 (concealed 幺九順, +30, no 門清 half)
+- 6番 (cap): 幺九龍 (+30; claimed 123/456 chows of that suit allowed), 門清幺九龍 (+90, no open melds), 槓三元 (kongs of all 3 dragons, +90), 天胡 (dealer wins on starting 14), 地胡 (non-dealer wins on the dealer's first discard), 人胡 (non-dealer wins by tsumo on their first draw, no calls before). 天胡/地胡/人胡 need only a complete shape (no other fan), flat 6 fan, pts x6, no bonus. Engine tracks g.drawN / g.discardN / g.calls for these.
 - 暗刻: ankan counts as concealed; on ron, the triplet completed by the winning tile counts as open, BUT 榮胡進眼 doesn't ruin concealed triplets (if the winning tile can sit in the pair or a chow, the triplet stays concealed).
 - Half fan 碎番 (+0.5, need >=1 real fan first): 槓上自摸 (self-draw on the replacement tile after a kong; stacks with 自摸 and 槓, so +1.5 in total; engine: g.lastDrawRep -> evaluateHand kongDraw), 槓 (each), 三元大補槓, 門清, 斷一門無三元 (missing one of 筒/索/萬 AND no 中發白), 自摸 (only open hands; 門清加自摸 already includes it), 胡小字 (winning tile is a 小字 1-3)
 - 無混吃無混碰 was DELETED as a 碎番 by Wilson (no longer exists).
-- 門清加自摸 already includes 門清; 全大字 does not get 門清 half.
+- 不求人 (was 門清加自摸) already includes 門清 and 自摸; 全大字 and 門清幺九順 do not get the 門清 half. Cheat sheet shows 門清幺九順/門清幺九龍 as one-line rows (just the bonus) to save space.
 
 ## Implementation assumptions (NOT yet decided by Wilson; change in engine.js `RULES` / `evaluateHand`)
 - 幺九龍: 12 distinct tiles + two more copies of a same-suit number or dragon (3 copies of it; 一/二 impossible) - confirmed by Wilson's wording.
-- 自摸 half-fan not given on top of 門清加自摸 (assumed).
+- 自摸 half-fan not given on top of 不求人 (assumed; given only to open hands).
 - 平胡 pair cannot be honor. 斷一門無三元 does not stack with 清一色 (混一色 has honors so already excluded).
-- 全大字 + 門清加自摸 still stack (2+2, hits 4 cap).
+- 全大字 + 不求人 still stack (3+2). 斷一門 and 無三元 are ONE combined half fan (斷一門無三元) - not split (balance test: splitting inflated scores ~20%).
 - 吃 only from player on your left; no mixed 槓; no robbing the kong.
 - Payment placeholder: tsumo each pays 1x; ron discarder pays 2x (RULES.RON_MULT). No dealer bonus/wind rotation.
 - Bots are naive (no defense, random claims) - for rule testing only.
@@ -62,6 +63,6 @@ Prefer one change at a time, simulate before changing scoring, and keep Wilson's
 - Cheat sheet (番種速查): sidebar `#cheat` on >=1180px, header button `#cheatBtn` -> `#cheatDlg` dialog below that. Content from `CHEAT_TIERS` / `CHEAT_MINOR` / `cheatHTML()` in template.html; update with rule changes (along with both rules texts).
 - Result dialog: big gold score (.hero) under the title; muted gold dragon SVG as #result background (data URI, opacity .24).
 - Muted gold dragon drawn in the shape of 九 (SVG data URIs): in the header right after the title (header::before, in-flow so panels can't cover it; --dragon-h, light/dark variants) and as the result dialog background (--dragon). Seat headers show a labeled bigger score (分數/Points). On <=520px bot called tiles move to their own row under the header.
-- Cheat sheet is live: cheatStates() (template.html) reads your melds/hand each render() -> gold "✓" = supported by your melds/hand, grey+strikethrough = ruled out (reason shown). Keep its rules in sync with rule changes.
+- Cheat sheet is live: cheatStates() (template.html) reads your melds/hand each render() -> gold "✓" ONLY for what you already have (dragon triplet, 門清 while no open meld, kong, formed concealed triplets), grey+strikethrough = no longer possible (reason shown); never highlight merely-possible hands (Wilson's request). Keep its rules in sync with rule changes.
 - 混一色/清一色 can't include 混碰/小字混刻/小字混眼 (automatic: those tiles span 2+ suits; stated in both rules texts).
 - Online rooms (header 線上/Online button -> #lobby dialog): serverless WebRTC via PeerJS (loaded lazily from unpkg; free PeerJS cloud broker; STUN only, no TURN). Host's browser runs the engine and the existing play() loop (host = seat 0); guests get per-seat rotated state snapshots (`snapshot()`, hand tiles only for their own seat), prompts ('self'/'claim'), logs and results, and answer with 'act'. Seat kinds in ROOM.kind: host/human/bot/open. Remote prompts time out (60s turn, 20s claim -> bot/pass); a disconnect in game turns the seat into a bot. Room code = peer id 'kowloon-'+CODE; invite link ?room=CODE. Solo vs 3 bots is unchanged (ROOM.mode 'solo').

@@ -209,6 +209,7 @@ header .meta{order:2}
 .cs .outc{opacity:.5;text-decoration:line-through}
 .cs .r.ok{background:rgba(224,176,78,.18);border-radius:5px;padding:2px 5px;margin:0 -5px;border-bottom-color:transparent}
 .cs .r.ok b{color:var(--gold)}
+.cs .tick{font-style:normal;margin-left:2px}
 .cs .r.out{opacity:.38}
 .cs .r.out b{text-decoration:line-through}
 #cheatBtn{display:none}
@@ -344,109 +345,164 @@ function decomps(c0, need) {
   return res;
 }
 
-/* ---- score a complete 14-tile hand ---- */
-function evaluateHand(melds, concealed, tsumo, winTile, kongDraw) {
+/* ---- 新番種（Wilson 的最終清單）：封頂 6 番，倍數 = 番數 ---- */
+const CAP = 6;
+function sevenPairsShape(concealed) {
+  // 七對子：14 張全是對子（可重複，如 8888 算兩對）；不可混眼
+  if (concealed.length !== 14) return null;
+  const c = counts(concealed), pairs = [];
+  for (const k of ORDER) {
+    const n = c[k] || 0; if (n % 2) return null;
+    for (let i = 0; i < n / 2; i++) pairs.push(k);
+  }
+  return pairs.length === 7 ? { pairs } : null;
+}
+function flushOf(normalKeys, mixedSets, mixedPairs) {
+  // 混一色／清一色（不可混碰混眼）；混眼混一色、混碰混一色（只有一個混的部份，其餘同一花色＋可有三元）各 1 番
+  const suits = new Set(normalKeys.filter(k => k[0] !== 'z').map(k => k[0]));
+  const hon = normalKeys.some(k => k[0] === 'z');
+  if (suits.size !== 1) return null;
+  if (mixedSets === 0 && mixedPairs === 0) return hon ? { name: '混一色', fan: 2 } : { name: '清一色', fan: 4 };
+  if (mixedSets === 0 && mixedPairs === 1) return { name: '混眼混一色', fan: 1 };
+  if (mixedSets === 1 && mixedPairs === 0) return { name: '混碰混一色', fan: 1 };
+  return null;
+}
+// special: null | '天胡'（莊家起手即胡）| '地胡'（閒家胡莊家第一隻打出的牌）| '人胡'（閒家第一次摸牌自摸，之前無人吃碰槓）
+function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
   const allTiles = concealed.slice(); melds.forEach(m => allTiles.push(...m.tiles));
   let pts = 0;
   concealed.forEach(t => pts += val(t));
   melds.forEach(m => m.tiles.forEach(t => { if (!(m.mixed && t.id === m.claimed)) pts += val(t); }));
   const need = 4 - melds.length;
   if (need < 0) return { ok: false };
-  // 幺九龍：同一花色 123+456+789 + 中發白各一 + 同花色或三元的眼（該牌共三張）（該牌共三張）
-  if (!melds.length && concealed.length === 14) {
-    const c0 = counts(concealed);
-    for (const su of ['p', 's', 'm']) {
-      const keys = []; for (let n = 1; n <= 9; n++) keys.push(su + n); keys.push('z1', 'z2', 'z3');
-      if (keys.every(k => c0[k] >= 1) && keys.some(k => c0[k] === 3)) {
-        const points = Math.round((pts + 50) * 4);
-        return { ok: true, items: [{ name: '幺九龍', fan: 4 }], halves: [], base: 4, total: 4, fan: 4, mult: 4, tilePts: pts + 50, bonus: 50, bonusName: '幺九龍', points, pair: null, tsumo };
-      }
-    }
-  }
-  const ds = decomps(counts(concealed), need);
-  if (!ds.length) return { ok: false, reason: 'shape' };
   const isConcealed = melds.every(m => !m.open);
-  const suits = new Set(allTiles.filter(t => t.s !== 'z').map(t => t.s));
-  const hasHonor = allTiles.some(t => t.s === 'z');
-  let best = null;
-  for (const d of ds) {
-    const sets = [
-      ...melds.map(m => ({ kind: m.type === 'chow' ? 'chow' : 'pong', k: m.tiles[0].k })),
-      ...d.sets.map(s => ({ kind: s.type, k: s.k, keys: s.keys }))
-    ];
-    const items = []; let base = 0;
-    const add = (name, f) => { items.push({ name, fan: f }); base += f; };
-    const dragonSets = sets.filter(s => s.kind === 'pong' && s.k[0] === 'z');
-    const dr = dragonSets.length;
-    const pairHon = d.pair[0] === 'z';
-    let bonus = 0, bonusName = null;
-    if (dr === 3) { add('大三元', 4); bonus = 60; bonusName = '大三元'; }
-    else if (dr === 2 && pairHon && !dragonSets.some(s => s.k === d.pair)) { add('小三元', 3); bonus = 30; bonusName = '小三元'; }
-    else for (let i = 0; i < dr; i++) add('三元刻', 1);
-    if (sets.every(s => s.kind === 'chow') && !(RULES.PAIR_HONOR_BREAKS_PINGHU && pairHon)) add('平胡', 1);
-    if (sets.every(s => s.kind === 'pong')) add('對對胡', 1);
-    // 暗刻：暗槓算暗刻；榮和時，靠胡牌完成的刻子算明刻
-    // 榮胡進眼（或胡牌可放進順子）不毀暗刻：只有胡牌別無去處、必須放進該刻子時，該刻才算明刻
-    let anko = melds.filter(m => m.type === 'kong' && !m.open).length;
-    const winK = (!tsumo && winTile) ? winTile.k : null;
-    const inChow = (ck, k) => ck[0] === k[0] && +k.slice(1) >= +ck.slice(1) && +k.slice(1) <= +ck.slice(1) + 2;
-    const altPlace = winK && (d.pair.split('/').includes(winK) || d.sets.some(s => s.type === 'chow' && inChow(s.k, winK)));
-    for (const s of d.sets) if (s.type === 'pong' && !(winK && (s.keys ? s.keys.includes(winK) : s.k === winK) && !altPlace)) anko++;
-    if (anko >= 4) add('四暗刻', 4); else if (anko === 3) add('三暗刻', 2);
-    // 幺九順：同花色 123+456+789，剩下一組可順可碰（可不同花色），眼任意
-    for (const su of ['p', 's', 'm']) {
-      const a = sets.find(s => s.kind === 'chow' && s.k === su + 1), b = sets.find(s => s.kind === 'chow' && s.k === su + 4), c3 = sets.find(s => s.kind === 'chow' && s.k === su + 7);
-      if (a && b && c3) { const rest = sets.filter(s => s !== a && s !== b && s !== c3); if (rest.length === 1) { add('幺九順', 3); break; } }
-    }
-    if (suits.size === 1 && !hasHonor) add('清一色', 3);
-    else if (suits.size === 1) add('混一色', 2);
-    const oneSuit = suits.size === 1;
-    if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全大字', 2);
-    if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷大字', 2);
-    if (isConcealed && tsumo) add('門清加自摸', 2);
-
+  const fixed = (items, bonus, bonusName) => ({ ok: true, items, halves: [], base: 6, total: 6, fan: 6, mult: 6, tilePts: pts + bonus, bonus, bonusName, points: Math.round((pts + bonus) * 6), tsumo });
+  const finish = (items, bonus, bonusName, extra) => {
+    const base = items.reduce((a, i) => a + i.fan, 0);
     const halves = [];
+    const has = n => items.some(i => i.name === n);
     if (base >= 1) {
       const kongs = melds.filter(m => m.type === 'kong').length;
       if (kongs) halves.push({ name: '槓×' + kongs, fan: 0.5 * kongs });
       const bigs = melds.filter(m => m.big).length;
       if (bigs) halves.push({ name: '三元大補槓×' + bigs, fan: 0.5 * bigs });
       if (tsumo && kongDraw) halves.push({ name: '槓上自摸', fan: 0.5 }); // 槓後補牌自摸：與自摸、槓重疊，合計追加 1.5 番
-      const quanDa = items.some(i => i.name === '全大字');
-      // 門清加自摸 已包含門清與自摸；全大字 不重複算門清
-      if (isConcealed) { if (!tsumo && !quanDa) halves.push({ name: '門清', fan: 0.5 }); }
-      else if (tsumo) halves.push({ name: '自摸', fan: 0.5 }); // 門清加自摸已包含自摸
-      // 斷一門無三元：缺筒索萬其中一門，且沒有中發白；清一色/混一色不重複
-      if (suits.size < 3 && !oneSuit && !hasHonor) halves.push({ name: '斷一門無三元', fan: 0.5 });
+      // 不求人已包含門清與自摸；全大字、門清幺九順不重複算門清
+      const noMen = has('不求人') || has('全大字') || has('門清幺九順');
+      if (isConcealed) { if (!tsumo && !noMen) halves.push({ name: '門清', fan: 0.5 }); }
+      else if (tsumo) halves.push({ name: '自摸', fan: 0.5 });
+      // 斷一門無三元：缺筒索萬其中一門，且沒有中發白；清一色／混一色不重複
+      const suits = new Set(allTiles.filter(t => t.s !== 'z').map(t => t.s));
+      if (suits.size < 3 && suits.size !== 1 && !allTiles.some(t => t.s === 'z')) halves.push({ name: '斷一門無三元', fan: 0.5 });
       if (winTile && winTile.s !== 'z' && winTile.n <= 3) halves.push({ name: '胡小字', fan: 0.5 });
     }
-    const halfSum = halves.reduce((a, h) => a + h.fan, 0);
-    const total = base + halfSum;
-    const fan = Math.min(4, Math.floor(total));
-    const mult = [0, 1, 2, 3, 4][fan];
+    const total = base + halves.reduce((a, h) => a + h.fan, 0);
+    const fan = Math.min(CAP, Math.floor(total)), mult = fan;
     const points = Math.round((pts + bonus) * mult);
-    const r = { ok: base >= 1, items, halves, base, total, fan, mult, tilePts: pts + bonus, bonus, bonusName, points, pair: d.pair, tsumo };
-    if (!best || (r.ok && !best.ok) || (r.ok === best.ok && r.points > best.points)) best = r;
+    return Object.assign({ ok: base >= 1, items, halves, base, total, fan, mult, tilePts: pts + bonus, bonus, bonusName, points, tsumo }, extra || {});
+  };
+  const cands = [];
+  let shapeOk = false;
+  // 幺九龍／門清幺九龍：同花 123+456+789 + 中發白各一 + 同花或三元的眼（該牌共三張）；吃的牌只可以是同花 123／456
+  if (allTiles.length === 14) {
+    const c0 = counts(allTiles);
+    for (const su of ['p', 's', 'm']) {
+      const keys = []; for (let n = 1; n <= 9; n++) keys.push(su + n); keys.push('z1', 'z2', 'z3');
+      if (!keys.every(k => c0[k] >= 1) || !keys.some(k => c0[k] === 3)) continue;
+      if (!melds.every(m => m.type === 'chow' && m.tiles[0].s === su && (m.tiles[0].n === 1 || m.tiles[0].n === 4))) continue;
+      const nm = isConcealed ? '門清幺九龍' : '幺九龍';
+      cands.push(fixed([{ name: nm, fan: 6 }], isConcealed ? 90 : 30, nm)); shapeOk = true;
+    }
   }
+  // 七對子
+  if (!melds.length) {
+    const sp = sevenPairsShape(concealed);
+    if (sp) {
+      shapeOk = true;
+      const items = [{ name: '七對子', fan: 2 }];
+      const fl = flushOf(sp.pairs.flatMap(k => [k, k]), 0, 0); if (fl) items.push(fl);
+      if (isConcealed && tsumo) items.push({ name: '不求人', fan: 2 });
+      if (concealed.every(t => t.s !== 'z' && t.n >= 7)) items.push({ name: '全大字', fan: 3 });
+      if (concealed.every(t => t.s === 'z' || t.n <= 6)) items.push({ name: '斷大字', fan: 2 });
+      cands.push(finish(items, 0, null, { pair: 'seven' }));
+    }
+  }
+  // 一般：N 組 + 眼
+  const ds = decomps(counts(concealed), need);
+  if (ds.length) shapeOk = true;
+  for (const d of ds) {
+    const sets = [
+      ...melds.map(m => ({ kind: m.type === 'chow' ? 'chow' : 'pong', k: m.tiles[0].k, mixed: !!m.mixed, kong: m.type === 'kong' })),
+      ...d.sets.map(s => ({ kind: s.type, k: s.k, keys: s.keys, mixed: !!s.mixed }))
+    ];
+    const items = []; let bonus = 0, bonusName = null;
+    const add = (name, f) => items.push({ name, fan: f });
+    const dragonSets = sets.filter(s => s.kind === 'pong' && s.k[0] === 'z'), dr = dragonSets.length;
+    const pairMixed = d.pair.includes('/');
+    const pairHon = d.pair[0] === 'z' && !pairMixed;
+    if (dr === 3 && dragonSets.every(s => s.kong)) { add('槓三元', 6); bonus = 90; bonusName = '槓三元'; }
+    else if (dr === 3) { add('大三元', 4); bonus = 60; bonusName = '大三元'; }
+    else if (dr === 2 && pairHon && !dragonSets.some(s => s.k === d.pair)) { add('小三元', 3); bonus = 30; bonusName = '小三元'; }
+    else for (let i = 0; i < dr; i++) add('三元刻', 1);
+    if (sets.every(s => s.kind === 'chow') && !pairHon) add('平胡', 1);
+    if (sets.every(s => s.kind === 'pong')) add('對對胡', 1);
+    // 暗刻：暗槓算暗刻；榮和時，靠胡牌完成的刻子算明刻；榮胡進眼（或胡牌可放進順子）不毀暗刻
+    let anko = melds.filter(m => m.type === 'kong' && !m.open).length;
+    const winK = (!tsumo && winTile) ? winTile.k : null;
+    const inChow = (ck, k) => ck[0] === k[0] && +k.slice(1) >= +ck.slice(1) && +k.slice(1) <= +ck.slice(1) + 2;
+    const altPlace = winK && (d.pair.split('/').includes(winK) || d.sets.some(s => s.type === 'chow' && inChow(s.k, winK)));
+    for (const s of d.sets) if (s.type === 'pong' && !(winK && (s.keys ? s.keys.includes(winK) : s.k === winK) && !altPlace)) anko++;
+    if (anko >= 4) add('四暗刻', 4); else if (anko === 3) add('三暗刻', 2);
+    // 幺九順：同花 123+456+789，剩下一組可順可碰（可不同花色），眼任意；門清的話是門清幺九順（+30，不重複算門清）
+    for (const su of ['p', 's', 'm']) {
+      const a = sets.find(s => s.kind === 'chow' && s.k === su + 1), b = sets.find(s => s.kind === 'chow' && s.k === su + 4), c3 = sets.find(s => s.kind === 'chow' && s.k === su + 7);
+      if (a && b && c3 && sets.filter(s => s !== a && s !== b && s !== c3).length === 1) {
+        if (isConcealed) { add('門清幺九順', 4); bonus = Math.max(bonus, 30); bonusName = bonusName || '門清幺九順'; } else add('幺九順', 3);
+        break;
+      }
+    }
+    // 一色系
+    const normalKeys = [];
+    for (const s of sets) {
+      if (s.mixed) continue;
+      if (s.kind === 'chow') { const n = +s.k.slice(1); for (let i = 0; i < 3; i++) normalKeys.push(s.k[0] + (n + i)); }
+      else normalKeys.push(s.k, s.k, s.k);
+    }
+    if (!pairMixed) normalKeys.push(d.pair, d.pair);
+    const fl = flushOf(normalKeys, sets.filter(s => s.mixed).length, pairMixed ? 1 : 0); if (fl) items.push(fl);
+    if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全大字', 3);
+    if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷大字', 2);
+    if (isConcealed && tsumo) add('不求人', 2);
+    cands.push(finish(items, bonus, bonusName, { pair: d.pair }));
+  }
+  // 天胡／地胡／人胡：手牌成形即可（不需另有番種），固定 6 番
+  if (special && shapeOk) cands.push(fixed([{ name: special, fan: 6 }], 0, special));
+  if (!cands.length) return { ok: false, reason: 'shape' };
+  let best = null;
+  for (const r of cands) if (!best || (r.ok && !best.ok) || (r.ok === best.ok && r.points > best.points)) best = r;
   return best;
 }
 
 /* ---- game state ---- */
 function newGame(dealer = 0) {
-  const g = { wall: shuffle(makeDeck()), hands: [[], [], [], []], melds: [[], [], [], []], discards: [[], [], [], []], dealer, last: null, over: null };
+  const g = { wall: shuffle(makeDeck()), hands: [[], [], [], []], melds: [[], [], [], []], discards: [[], [], [], []], dealer, last: null, over: null, drawN: [0, 0, 0, 0], discardN: 0, calls: 0 };
   for (let r = 0; r < 13; r++) for (let s = 0; s < 4; s++) g.hands[s].push(g.wall.pop());
   return g;
 }
 function drawTile(g, seat, replacement) {
   if (!g.wall.length) return null;
   const t = replacement ? g.wall.shift() : g.wall.pop();
-  g.hands[seat].push(t); g.lastDraw = t; g.lastDrawRep = !!replacement;
+  g.hands[seat].push(t); g.lastDraw = t; g.lastDrawRep = !!replacement; g.drawN[seat]++;
   return t;
 }
 function selfOptions(g, seat, noWin) {
   const h = g.hands[seat], ms = g.melds[seat];
   let win = null;
-  if (!noWin) { const ev = evaluateHand(ms, h, true, g.lastDraw, g.lastDrawRep); if (ev.ok) win = ev; }
+  if (!noWin) {
+    // 天胡：莊家起手即胡；人胡：閒家第一次摸牌自摸，之前無人吃碰槓
+    const sp = g.calls === 0 && g.drawN[seat] === 1 ? (seat === g.dealer && g.discardN === 0 ? '天胡' : seat !== g.dealer ? '人胡' : null) : null;
+    const ev = evaluateHand(ms, h, true, g.lastDraw, g.lastDrawRep, sp); if (ev.ok) win = ev;
+  }
   const kongs = []; const c = counts(h);
   for (const k in c) {
     const hon = k[0] === 'z', n = +k[1];
@@ -462,7 +518,7 @@ function selfOptions(g, seat, noWin) {
 }
 function removeTile(arr, t) { const i = arr.findIndex(x => x.id === t.id); if (i >= 0) arr.splice(i, 1); }
 function applyKong(g, seat, opt) {
-  const h = g.hands[seat];
+  const h = g.hands[seat]; g.calls++;
   if (opt.kind === 'ankan') {
     const ts = h.filter(t => t.k === opt.k).slice(0, opt.count);
     ts.forEach(t => removeTile(h, t));
@@ -476,13 +532,14 @@ function applyKong(g, seat, opt) {
 function discardTile(g, seat, id) {
   const t = g.hands[seat].find(x => x.id === id);
   removeTile(g.hands[seat], t);
-  g.discards[seat].push(t); g.last = { t, from: seat };
+  g.discards[seat].push(t); g.last = { t, from: seat }; g.discardN++;
   return t;
 }
 function claimOptions(g, seat, t, from) {
   const h = g.hands[seat], ms = g.melds[seat];
   const res = { ron: null, pong: [], kong: [], chow: [] };
-  const ev = evaluateHand(ms, [...h, t], false, t); if (ev.ok) res.ron = ev;
+  const sp = from === g.dealer && seat !== g.dealer && g.discardN === 1 && g.calls === 0 ? '地胡' : null; // 地胡：閒家胡莊家第一隻打出的牌
+  const ev = evaluateHand(ms, [...h, t], false, t, false, sp); if (ev.ok) res.ron = ev;
   const hon = t.s === 'z';
   if (!(hon || t.n <= 6)) return res;           // 7-9 不可吃碰槓
   const same = h.filter(x => x.k === t.k);
@@ -509,6 +566,7 @@ function claimOptions(g, seat, t, from) {
   return res;
 }
 function applyClaim(g, seat, kind, opt, t, from) {
+  g.calls++;
   opt.tiles.forEach(x => removeTile(g.hands[seat], x));
   const d = g.discards[from]; if (d.length && d[d.length - 1].id === t.id) d.pop();
   const tiles = [...opt.tiles, t].sort((a, b) => (a.n - b.n) || (ORD[a.k] - ORD[b.k]));
@@ -590,7 +648,7 @@ function simGame() {
   }
   return { draw: true, g };
 }
-if (false) module.exports = { RULES, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val };
+if (false) module.exports = { RULES, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
 
 
 /* ===== UI ===== */
@@ -611,7 +669,7 @@ const enTile = (sx, n) => sx === 'z' ? DRAGEN[n] : n + ' ' + (n === 1 || sx === 
 const tn = t => LANG === 'en' ? enTile(t.s, t.n) : tname(t);
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? enTile(k[0], +k.slice(1)) : kn(k);
-const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Chows','對對胡':'All Triplets','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','幺九龍':'Kowloon Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Chows','對對胡':'All Triplets','混眼混一色':'Mixed-Pair Half Flush','混碰混一色':'Mixed-Pung Half Flush','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragon','門清幺九龍':'Concealed Kowloon Dragon','槓三元':'Dragon Kongs','天胡':'Heavenly Win','地胡':'Earthly Win','人胡':'Human Win','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
 const yn = name => { if (LANG !== 'en') return name; const m = name.match(/^(.+?)(×\d+)?$/); return (YAKU_EN[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -620,6 +678,26 @@ const faceHTML = (sx, n, badge) => sx === 'z'
 const X = (label, spec) => `<div class="exrow"><span class="exl">${label}</span><span class="exs">` + spec.split('|').map(g =>
   '<span class="exg">' + g.trim().split(/\s+/).map(t => { const c = t.endsWith('*'); t = t.replace('*', ''); return `<span class="tile xs ${t[0] === 'z' ? t : t[0]}${c ? ' cl' : ''}">${faceHTML(t[0], +t.slice(1))}</span>`; }).join('') + '</span>').join('') + '</span></div>';
 const EG = (title, rows) => `<details class="eg"><summary>${title}</summary>${rows.join('')}</details>`;
+const HAND_EX = [
+  [1, '三元刻', 'Dragon triplet', 'z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'],
+  [1, '平胡', 'All Chows', 'p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'],
+  [1, '對對胡', 'All Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'],
+  [1, '混眼混一色', 'Mixed-Pair Half Flush', 'p1 s1|p2 p3 p4|p4 p5 p6|p5 p6 p7|z1 z1 z1'],
+  [1, '混碰混一色', 'Mixed-Pung Half Flush', 'p1 s1 m1|p2 p3 p4|p4 p5 p6|p5 p6 p7|p8 p8'],
+  [2, '混一色', 'Half Flush', 'p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'],
+  [2, '斷大字', 'No Big', 'p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'],
+  [2, '三暗刻', 'Three Concealed Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'],
+  [2, '七對子', 'Seven Pairs', 'p8 p8|p8 p8|s7 s7|s9 s9|m7 m7|m9 m9|z1 z1'],
+  [3, '小三元', 'Small Dragons', 'z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'],
+  [3, '全大字', 'All Big', 'p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'],
+  [3, '幺九順', 'Kowloon Straight', 'p1 p2 p3|p4 p5 p6|p7 p8 p9|s5 s5 s5|m6 m6'],
+  [4, '清一色', 'Full Flush', 'p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'],
+  [4, '四暗刻', 'Four Concealed Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'],
+  [4, '大三元', 'Great Dragons', 'z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'],
+  [4, '門清幺九順', 'Concealed Kowloon Straight', 's1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'],
+  [6, '幺九龍／門清幺九龍', 'Kowloon Dragon / Concealed', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
+  [6, '槓三元', 'Dragon Kongs', 'z1 z1 z1 z1|z2 z2 z2 z2|z3 z3 z3 z3|p2 p3 p4|s5 s5']
+];
 const RULES_HTML = {
 zh: `  <h2>規則（目前實作）</h2>
   <p>1 對 3 電腦。每局由莊家起手，沒有風位與連莊，每局重新洗牌，分數累計。</p>
@@ -641,19 +719,20 @@ zh: `  <h2>規則（目前實作）</h2>
     <li>沒有搶槓。槓之後從牌山尾補牌。</li>
   </ul>
   ${EG('牌面示例：吃碰槓、混碰、三元大槓', [X('吃','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('碰／槓','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('混碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('小字混刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('小字混眼','p1 s1|p2 m2|s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7–9 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
-  <h3>番種（疊加，4 番封頂；0.5 番稱碎番）</h3>
+  <h3>番種（疊加，6 番封頂；0.5 番稱碎番）</h3>
   <ul>
-    <li>1 番（全番）：三元刻（中、發、白任一組刻子，明碰或暗刻都算，每組可疊加）、平胡（全順子、無中發白）、對對胡</li>
-    <li>2 番：混一色（不可含混碰、小字混刻、混眼）、門清加自摸、全大字（全部 7–9 數牌）、斷大字（沒有 7–9 數牌）、三暗刻</li>
-    <li>3 番：清一色（不可含混碰、小字混刻、混眼）、小三元（不另計中發白刻，手牌點值立刻 +30）、幺九順（同花色 123＋456＋789，其餘一組可順可碰、可不同花色）</li>
-    <li>4 番：大三元（不另計中發白刻，手牌點值立刻 +60）、四暗刻、幺九龍（同花色 123＋456＋789＋中發白各一＋同花色或三元的眼，手牌點值立刻 +50）</li>
+    <li><b>1 番（全番）</b>：三元刻（中、發、白任一組刻子，明碰或暗刻都算，每組可疊加）、平胡（全順子、無三元）、對對胡（混碰可）、混眼混一色（混一色，但眼是混眼）、混碰混一色（混一色，其中一刻為混碰；多於一刻混碰不可）</li>
+    <li><b>2 番</b>：混一色（不可混碰、小字混刻、混眼；不重複算斷一門）、不求人（門清加自摸，不重複算門清或自摸）、斷大字（整副手牌沒有 7–9）、三暗刻、七對子（可重複，如 8888 算兩對；可疊混一色、清一色；不可混眼）</li>
+    <li><b>3 番</b>：小三元（不另計三元刻，手牌點值立刻 +30）、全大字（整副手牌只有 7–9；不重複算門清）、幺九順（同花色 123＋456＋789，其餘一組可順可碰、可不同花色）</li>
+    <li><b>4 番</b>：清一色（不可混碰、混眼；不重複算斷一門無三元）、四暗刻、大三元（不另計三元刻，手牌點值立刻 +60）、門清幺九順（同幺九順但門清，手牌點值立刻 +30；不重複算門清）</li>
+    <li><b>6 番（封頂）</b>：幺九龍（同花色 123＋456＋789＋中發白各一＋同花色或三元的眼，手牌點值立刻 +30）、門清幺九龍（同上但門清，手牌點值立刻 +90）、槓三元（中發白全槓，手牌點值立刻 +90）、天胡（莊家起手即胡）、地胡（閒家胡莊家打出的第一隻牌）、人胡（閒家第一次摸牌自摸，之前無人吃碰槓）。天胡、地胡、人胡只要牌型完成即可，不需另有番種。</li>
     <li>暗刻：暗槓算暗刻；榮和時靠胡牌完成的刻子算明刻，但榮胡進眼（胡牌放進眼）不毀暗刻。</li>
-    <li>半番（碎番）：只有碎番、沒有全番不能胡；須已有 1 番才可追加，兩個半番不能起和。包括：槓（每次）、三元大補槓、門清、自摸（只給有鳴牌的手牌，已含在門清加自摸）、槓上自摸（槓後補牌自摸，與自摸及槓重疊，合共追加 1.5 番）、斷一門無三元（筒索萬缺一門且沒有中發白）、胡小字（胡的那張是 1–3）。</li>
-    <li>門清加自摸已包含門清與自摸；全大字不計門清。</li>
+    <li>半番（碎番）：只有碎番、沒有全番不能胡；須已有 1 番才可追加，兩個半番不能起和。包括：槓（每次）、三元大補槓、門清、自摸（只給有鳴牌的手牌，已含在不求人）、槓上自摸（槓後補牌自摸，與自摸及槓重疊，合共追加 1.5 番）、斷一門無三元（筒索萬缺一門且沒有中發白；混一色、清一色不重複算）、胡小字（胡的那張是 1–3）。</li>
+    <li>不求人已包含門清與自摸；全大字、門清幺九順不計門清。</li>
     <li>總番數取整數部分，所以 1+0.5+0.5＝2 番。</li>
-    <li>倍數：1 番 ×1、2 番 ×2、3 番 ×3、4 番 ×4。得分 = 全手牌點值總和（含已鳴的牌，扣除混碰被要的那張）× 倍數。</li>
+    <li>倍數 = 番數（1 番 ×1 … 6 番 ×6）。得分 = 全手牌點值總和（含已鳴的牌，扣除混碰被要的那張，加上各牌型的立刻加分）× 倍數。</li>
   </ul>
-  ${EG('牌面示例：番種', [X('1 番：三元刻','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 番：平胡','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 番：對對胡','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 番：混一色','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 番：全大字','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 番：斷大字','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 番：三暗刻','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 番：清一色','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 番：小三元','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 番：幺九順','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 番：大三元','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 番：四暗刻','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 番：幺九龍','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
+  ${EG('牌面示例：番種', HAND_EX.map(h => X(h[0] + ' 番：' + h[1], h[3])))}
   <h3>付款（暫定）</h3>
   <ul><li>自摸：其餘三家各付一份。出銃：出銃者付兩份。</li></ul>
   <h3>操作</h3>
@@ -731,51 +810,64 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     </li>
   </ul>
   ${EG('Tile examples: special actions', [X('Mixed pung (claimed tile faded)','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('Mixed triplet in hand (concealed)','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('Mixed pair','p1 s1|p2 m2|s3 m3'),X('Grand dragon kong (5 copies)','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3')])}
-  <h3>Winning hands (fan stack, capped at 4)</h3>
+  <h3>Winning hands (fans stack, capped at 6)</h3>
   <ul>
     <li><b>1 fan</b>
       <ul>
         <li><b>Dragon triplet (三元刻)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
-        <li><b>All Chows (平胡)</b>: all chows, no dragons, and the pair isn't a dragon.</li>
+        <li><b>All Chows (平胡)</b>: all chows, no dragons.</li>
         <li><b>All Triplets (對對胡)</b>: 4 triplets + pair. Mixed pungs are allowed.</li>
+        <li><b>Mixed-Pair Half Flush (混眼混一色)</b>: a Half Flush whose pair is a mixed pair.</li>
+        <li><b>Mixed-Pung Half Flush (混碰混一色)</b>: a Half Flush where one of the triplets is a mixed pung. More than one mixed pung doesn’t count.</li>
       </ul>
     </li>
     <li><b>2 fan</b>
       <ul>
-        <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed pung, mixed triplet or mixed pair.</li>
-        <li><b>Concealed Self-Draw (門清加自摸)</b>: no calls and you win by drawing.</li>
-        <li><b>All Big (全大字)</b>: only 7–9 number tiles.</li>
-        <li><b>No Big (斷大字)</b>: no 7–9 number tiles.</li>
+        <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed pung, mixed triplet or mixed pair. Doesn’t also get Missing suit.</li>
+        <li><b>Concealed Self-Draw (不求人)</b>: no calls and you win by drawing. Replaces Concealed and Self-draw.</li>
+        <li><b>No Big (斷大字)</b>: no 7–9 anywhere in the hand.</li>
         <li><b>Three Concealed Triplets (三暗刻)</b></li>
+        <li><b>Seven Pairs (七對子)</b>: seven pairs, all concealed. Four of a kind counts as two pairs (8888). No mixed pair. Can stack with Half Flush and Full Flush.</li>
       </ul>
     </li>
     <li><b>3 fan</b>
       <ul>
-        <li><b>Full Flush (清一色)</b>: one suit only, no dragons. No mixed pung, mixed triplet or mixed pair.</li>
         <li><b>Small Dragons (小三元)</b>: two dragon triplets + a pair of the third. Replaces the dragon triplet fan; hand points +30.</li>
+        <li><b>All Big (全大字)</b>: only 7–9 number tiles in the whole hand. No Concealed bonus.</li>
         <li><b>Kowloon Straight (幺九順)</b>: 123 + 456 + 789 in one suit. The remaining set is a chow or a triplet in any suit; the pair is anything.</li>
       </ul>
     </li>
     <li><b>4 fan</b>
       <ul>
-        <li><b>Great Dragons (大三元)</b>: triplets of all three dragons. Replaces the dragon triplet fan; hand points +60.</li>
+        <li><b>Full Flush (清一色)</b>: one suit only, no dragons. No mixed pung, mixed triplet or mixed pair. Doesn’t also get Missing suit, no dragons.</li>
         <li><b>Four Concealed Triplets (四暗刻)</b></li>
-        <li><b>Kowloon Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +50 (380–436 pts in total).</li>
+        <li><b>Great Dragons (大三元)</b>: triplets of all three dragons. Replaces the dragon triplet fan; hand points +60.</li>
+        <li><b>Concealed Kowloon Straight (門清幺九順)</b>: a Kowloon Straight with no open melds. Hand points +30. No Concealed bonus on top.</li>
+      </ul>
+    </li>
+    <li><b>6 fan (cap)</b>
+      <ul>
+        <li><b>Kowloon Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +30.</li>
+        <li><b>Concealed Kowloon Dragon (門清幺九龍)</b>: the same, with no open melds. Hand points +90.</li>
+        <li><b>Dragon Kongs (槓三元)</b>: kongs of all three dragons. Hand points +90.</li>
+        <li><b>Heavenly Win (天胡)</b>: the dealer wins on the starting hand.</li>
+        <li><b>Earthly Win (地胡)</b>: a non-dealer wins on the dealer’s very first discard.</li>
+        <li><b>Human Win (人胡)</b>: a non-dealer wins by self-draw on their first draw, with nobody having called a chow, pung or kong before it.</li>
+        <li>Heavenly, Earthly and Human Wins only need a complete hand; no other fan is required.</li>
       </ul>
     </li>
   </ul>
-  ${EG('Tile examples: winning hands', [X('1 fan: Dragon triplet','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 fan: All Chows','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 fan: All Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 fan: Half Flush','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 fan: All Big','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 fan: No Big','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 fan: Three Concealed Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 fan: Full Flush','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 fan: Small Dragons','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 fan: Kowloon Straight','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 fan: Great Dragons','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 fan: Four Concealed Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 fan: Kowloon Dragon','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
+  ${EG('Tile examples: winning hands', HAND_EX.map(h => X(h[0] + ' fan: ' + h[2], h[3])))}
   <h3>Minor fans (碎番, ½ fan each)</h3>
   <ul>
-    <li>Only added once you already have at least 1 full fan; two ½ fans alone can't win.</li>
+    <li>Only added once you already have at least 1 full fan; two ½ fans alone can’t win.</li>
     <li><b>Kong (槓)</b>: each kong.</li>
     <li><b>Grand dragon kong (三元大補槓)</b></li>
-    <li><b>Concealed (門清)</b>: no calls.</li>
+    <li><b>Concealed (門清)</b>: no calls. Not given with Concealed Self-Draw, All Big or Concealed Kowloon Straight.</li>
     <li><b>Self-draw (自摸)</b>: open hands only. Concealed Self-Draw already includes it.</li>
-    <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons.</li>
     <li><b>Kong self-draw (槓上自摸)</b>: you win by self-draw on the replacement tile drawn after a kong. It stacks with Self-draw and Kong, so a win like that adds 1½ fan in total.</li>
+    <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons. Half Flush and Full Flush don’t get it.</li>
     <li><b>Win on a small tile (胡小字)</b>: the winning tile is a 1–3.</li>
-    <li>Concealed Self-Draw already includes Concealed and Self-draw; All Big gets no Concealed bonus.</li>
   </ul>
   <h3>Concealed triplets</h3>
   <ul>
@@ -786,8 +878,8 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
   <h3>Scoring</h3>
   <ul>
     <li>Total fan is rounded down, so 1 + ½ + ½ = 2 fan.</li>
-    <li>Multiplier: 1 fan ×1, 2 fan ×2, 3 fan ×3, 4 fan ×4.</li>
-    <li>Score = total tile points of the whole hand (melds included, minus the claimed tile of a mixed pung) × multiplier.</li>
+    <li>Multiplier = fan (1 fan ×1 … 6 fan ×6).</li>
+    <li>Score = total tile points of the whole hand (melds included, minus the claimed tile of a mixed pung, plus any instant bonus of the hand) × multiplier.</li>
     <li>Payment (provisional): on a self-draw each of the other three pays one share; on a discard win the discarder pays two shares.</li>
   </ul>
   <h3>Controls</h3>
@@ -1179,7 +1271,7 @@ function renderResult() {
     const F = n => L(`${n} 番`, `${n} fan`);
     const rows = ev.items.map(i => `<span>${yn(i.name)}</span><span>${F(i.fan)}</span>`).join('') +
       ev.halves.map(i => `<span>${yn(i.name)}</span><span>+${F(i.fan)}</span>`).join('') +
-      `<span class="tot">${L('合計（取整、4 番封頂）', 'Total (rounded down, capped at 4)')}</span><span class="tot">${F(ev.fan)} ×${ev.mult}</span>` +
+      `<span class="tot">${L('合計（取整、6 番封頂）', 'Total (rounded down, capped at 6)')}</span><span class="tot">${F(ev.fan)} ×${ev.mult}</span>` +
       `<span>${L('全手點值' + (ev.bonus ? `（含${ev.bonusName}加分 +${ev.bonus}）` : ''), 'Hand tile points' + (ev.bonus ? ` (incl. +${ev.bonus} ${yn(ev.bonusName)} bonus)` : ''))}</span><span>${ev.tilePts}</span>`;
     const pay = res.delta.map((v, i) => `<span>${WHO[i]} <b class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v > 0 ? '+' : ''}${v}</b>${L(`（累計 ${scores[i]}）`, ` (total ${scores[i]})`)}</span>`).join('');
     d.innerHTML = `<h2>${L(`${who}${res.tsumo ? '自摸' : '食胡'}！`, `${who} won by ${res.tsumo ? 'self-draw' : 'discard'}!`)}</h2><p style="margin:0;color:var(--muted)">${how}</p>
@@ -1194,56 +1286,64 @@ function renderResult() {
   else d.querySelector('#nextBtn').onclick = () => setTimeout(play, 0);
 }
 const CHEAT_TIERS = [
-  [1, [['三元刻', '中／發／白刻子，明暗皆可，每組 +1', 'Red/Green/White triplet, open or concealed, +1 each'], ['平胡', '全順子、無中發白', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼', '4 triplets + pair']]],
-  [2, [['混一色', '一門 + 中發白', 'one suit + dragons'], ['門清加自摸', '無鳴牌、自摸', 'no calls, self-draw'], ['全大字', '全部 7–9', 'only 7–9'], ['斷大字', '沒有 7–9', 'no 7–9'], ['三暗刻', '3 組暗刻', '3 concealed triplets']]],
-  [3, [['清一色', '一門、無中發白', 'one suit, no dragons'], ['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['幺九順', '同花 123·456·789 · 其餘任一組', 'same-suit 123·456·789 + any set']]],
-  [4, [['大三元', '中發白全刻 · +60', 'all 3 dragon triplets · +60'], ['四暗刻', '4 組暗刻', '4 concealed triplets'], ['幺九龍', '同花 123·456·789 + 中發白 + 眼 · +50', 'same-suit 123·456·789 + Red·Green·White + pair · +50']]]
+  [1, [['三元刻', '中／發／白刻子，明暗皆可，每組 +1', 'Red/Green/White triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼（混碰可）', '4 triplets + pair (mixed pung ok)'], ['混眼混一色', '混一色，眼是混眼', 'half flush with a mixed pair'], ['混碰混一色', '混一色，一刻是混碰', 'half flush with one mixed pung']]],
+  [2, [['混一色', '一門 + 三元（不含混碰／混眼）', 'one suit + dragons (no mixed)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['斷大字', '沒有 7–9', 'no 7–9'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['七對子', '7 對，可重複，不可混眼', '7 pairs, 8888 ok, no mixed pair']]],
+  [3, [['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['全大字', '全部 7–9', 'only 7–9'], ['幺九順', '同花 123·456·789 · 其餘任一組', 'same-suit 123·456·789 + any set']]],
+  [4, [['清一色', '一門、無三元（不含混碰／混眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻', '4 concealed triplets'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
+  [6, [['幺九龍', '同花 123·456·789 + 中發白 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '中發白全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer’s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]
 ];
 const CHEAT_MINOR = [['槓', '每次', 'each kong'], ['三元大補槓', '補第 5 張中發白', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['槓上自摸', '槓後補牌自摸（連自摸、槓共 +1.5）', 'self-draw on the kong replacement (with kong + self-draw: +1½)'], ['斷一門無三元', '缺一門、無中發白', 'a suit missing, no dragons'], ['胡小字', '胡牌是 1–3', 'winning tile is 1–3']];
-/* 速查表即時狀態：依你目前的鳴牌／手牌標示「✓ 目前支持」或「灰色 = 已不可能」 */
+/* 速查表即時狀態：只標示「你目前已經有的」（✓ 金色），並把「已不可能」的灰掉（原因顯示在右邊） */
 function cheatStates() {
   const st = {}; if (!G) return st;
   const melds = G.melds[0], hand = G.hands[0];
   const open = melds.filter(m => m.open), chows = melds.filter(m => m.type === 'chow'), trip = melds.filter(m => m.type !== 'chow');
-  const drag = trip.filter(m => m.tiles[0].s === 'z'), suits = new Set();
-  melds.forEach(m => m.tiles.forEach(t => { if (t.s !== 'z') suits.add(t.s); }));
+  const drag = trip.filter(m => m.tiles[0].s === 'z'), mixedM = melds.filter(m => m.mixed);
+  const suits = new Set(), suitsNM = new Set();
+  melds.forEach(m => m.tiles.forEach(t => { if (t.s !== 'z') { suits.add(t.s); if (!m.mixed) suitsNM.add(t.s); } }));
   const cnt = {}; hand.forEach(t => { cnt[t.k] = (cnt[t.k] || 0) + 1; });
   const handTrips = Object.keys(cnt).filter(k => cnt[k] >= 3);
   const concTrips = handTrips.length + melds.filter(m => !m.open && m.type === 'kong').length;
   const out = (k, zh, en) => { st[k] = { s: 'out', why: L(zh, en) }; };
   const ok = k => { if (!st[k]) st[k] = { s: 'ok' }; };
-  // 已不可能
-  if (open.length) { out('門清加自摸', '已有明牌', 'you have an open meld'); out('門清', '已有明牌', 'you have an open meld'); }
+  // ---- 已不可能 ----
+  if (open.length) {
+    ['不求人', '門清', '門清幺九順', '門清幺九龍'].forEach(k => out(k, '已有明牌', 'you have an open meld'));
+    out('四暗刻', '已有明牌', 'you have an open meld');
+    out('七對子', '已有明牌', 'you have an open meld');
+  }
+  if (melds.length) { out('七對子', '已有鳴牌／槓', 'you have a meld'); out('全大字', '7–9 不能鳴牌，已有鳴牌', 'big tiles can’t be called, and you have a meld'); }
   if (open.length >= 2) out('三暗刻', '明牌太多', 'too many open melds');
-  if (open.length >= 1) out('四暗刻', '已有明牌', 'you have an open meld');
   if (chows.length) out('對對胡', '已有吃牌', 'you have a chow');
   if (trip.length) out('平胡', '已有碰／槓', 'you have a pung/kong');
-  if (melds.length) out('全大字', '7–9 不能鳴牌，已有鳴牌', 'big tiles can’t be called, and you have a meld');
-  if (suits.size >= 2) { out('混一色', '鳴牌不只一門', 'melds in 2+ suits'); out('清一色', '鳴牌不只一門', 'melds in 2+ suits'); }
+  if (suitsNM.size >= 2) { out('混一色', '鳴牌不只一門', 'melds in 2+ suits'); out('清一色', '鳴牌不只一門', 'melds in 2+ suits'); out('混眼混一色', '鳴牌不只一門', 'melds in 2+ suits'); out('混碰混一色', '鳴牌不只一門', 'melds in 2+ suits'); }
+  if (mixedM.length) { out('混一色', '已有混碰', 'you have a mixed pung'); out('清一色', '已有混碰', 'you have a mixed pung'); out('混眼混一色', '已有混碰', 'you have a mixed pung'); }
+  if (mixedM.length >= 2) out('混碰混一色', '混碰多於一刻', 'more than one mixed pung');
   if (drag.length) { out('清一色', '已有三元牌鳴牌', 'you have a dragon meld'); out('斷一門無三元', '已有三元牌鳴牌', 'you have a dragon meld'); }
   if (suits.size >= 3) out('斷一門無三元', '鳴牌三門齊', 'melds in all 3 suits');
-  if (melds.length - drag.length >= 2) out('大三元', '非三元鳴牌太多', 'too many non-dragon melds');
-  if (melds.length - drag.length >= 3 || drag.length >= 3) out('小三元', '鳴牌不合', 'your melds don’t fit');
+  const nonDrag = melds.length - drag.length;
+  if (nonDrag >= 2) out('大三元', '非三元鳴牌太多', 'too many non-dragon melds');
+  if (nonDrag >= 3 || drag.length >= 3) out('小三元', '鳴牌不合', 'your melds don’t fit');
   const chowStarts = chows.map(m => Math.min(...m.tiles.map(t => t.n))), chowSuits = new Set(chows.map(m => m.tiles[0].s));
   const badYao = chowStarts.some(n => n !== 1 && n !== 4) || chowSuits.size > 1;
   if (badYao || trip.length >= 2) out('幺九順', '鳴牌不合（只可鳴 123、456，同花）', 'melds don’t fit (only 123 & 456, same suit)');
-  if (badYao || trip.length >= 1) out('幺九龍', '鳴牌不合（只可鳴 123、456，同花，不能有碰槓）', 'melds don’t fit (only 123 & 456 same suit, no pung/kong)');
-  // 目前支持
+  if (badYao || trip.length >= 1) { out('幺九龍', '鳴牌不合（只可鳴 123、456，同花，不能有碰槓）', 'melds don’t fit (only 123 & 456 same suit, no pung/kong)'); out('門清幺九龍', '鳴牌不合', 'melds don’t fit'); }
+  if (badYao || trip.length >= 2) out('門清幺九順', '鳴牌不合', 'melds don’t fit');
+  if (melds.some(m => m.tiles[0].s === 'z' && m.type !== 'kong') || nonDrag >= 2) out('槓三元', '鳴牌不合（要中發白全槓）', 'melds don’t fit (needs kongs of all 3 dragons)');
+  if (melds.length) { out('天胡', '已有鳴牌', 'someone has called'); out('地胡', '已有鳴牌', 'someone has called'); out('人胡', '已有鳴牌', 'someone has called'); }
+  // ---- 目前已經有的（只標示已成立的，不標「可能」）----
   if (drag.length || handTrips.some(k => k[0] === 'z')) ok('三元刻');
   if (melds.some(m => m.type === 'kong')) ok('槓');
   if (melds.some(m => m.big)) ok('三元大補槓');
-  if (trip.length && !chows.length) ok('對對胡');
-  if (melds.length && !trip.length) ok('平胡');
-  if (melds.length) { ok('混一色'); if (suits.size === 1 && !drag.length) ok('清一色'); }
+  if (!open.length) ok('門清');
   if (concTrips >= 3) ok('三暗刻');
   if (concTrips >= 4) ok('四暗刻');
-  if (chows.length) { ok('幺九順'); ok('幺九龍'); }
   return st;
 }
 function cheatHTML() {
   const S = cheatStates();
-  const row = (n, zh, en) => { const x = S[n]; return `<div class="r${x ? ' ' + x.s : ''}"${x && x.why ? ` title="${x.why}"` : ''}><b>${x && x.s === 'ok' ? '✓ ' : ''}${yn(n)}</b><span>${x && x.s === 'out' ? x.why : L(zh, en)}</span></div>`; };
-  return `<div class="cs"><h2>${L('番種速查', 'Fan cheat sheet')}</h2><p class="lg"><span class="okc">✓</span> ${L('你的牌支持', 'your melds/hand support it')} · <span class="outc">${L('灰色', 'grey')}</span> ${L('＝已不可能', '= ruled out')}</p>` +
+  const row = (n, zh, en) => { const x = S[n]; return `<div class="r${x ? ' ' + x.s : ''}"${x && x.why ? ` title="${x.why}"` : ''}><b>${yn(n)}${x && x.s === 'ok' ? ' <i class="tick">✓</i>' : ''}</b><span>${x && x.s === 'out' ? x.why : L(zh, en)}</span></div>`; };
+  return `<div class="cs"><h2>${L('番種速查', 'Fan cheat sheet')}</h2><p class="lg"><span class="okc">✓</span> ${L('你目前已有', 'you already have it')} · <span class="outc">${L('灰色', 'grey')}</span> ${L('＝已不可能', '= no longer possible')}</p>` +
     CHEAT_TIERS.map(([f, hs]) => `<h3>${L(f + ' 番 ×' + f, f + ' fan ×' + f)}</h3>` + hs.map(h => row(h[0], h[1], h[2])).join('')).join('') +
     `<h3>${L('碎番 +0.5', 'Minor fans +½')} <small>${L('（要先有 1 番）', '(need ≥1 full fan)')}</small></h3>` + CHEAT_MINOR.map(h => row(h[0], h[1], h[2])).join('') +
     `<h3>${L('可鳴的牌', 'What can be called')}</h3>` +
@@ -1252,7 +1352,7 @@ function cheatHTML() {
     `<div class="r"><b>${L('槓', 'Kong')}</b><span>${L('4–6、中發白（1–3、7–9 不可）', '4–6, dragons (not 1–3, 7–9)')}</span></div>` +
     `<div class="r"><b>${L('混碰', 'Mixed pung')}</b><span>${L('1–3 同數字、不同花', '1–3, same number, 3 suits')}</span></div>` +
     `<div class="r"><b>${L('混眼', 'Mixed pair')}</b><span>${L('1–3 同數字、不同花的兩張', '1–3, same number, 2 suits')}</span></div>` +
-    `<p>${L('得分 = 全手點值（一＝9 … 九＝1）× 番數（上限 4）；番數取整數，1+0.5+0.5＝2。', 'Score = hand tile points (1 = 9 … 9 = 1) × fan (cap 4). Fan is rounded down: 1+½+½ = 2.')}</p></div>`;
+    `<p>${L('得分 = 全手點值（一＝9 … 九＝1）× 番數（上限 6）；番數取整數，1+0.5+0.5＝2。', 'Score = hand tile points (1 = 9 … 9 = 1) × fan (cap 6). Fan is rounded down: 1+½+½ = 2.')}</p></div>`;
 }
 function refreshCheat() {
   $('#cheat').innerHTML = cheatHTML();
