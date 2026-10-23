@@ -553,9 +553,11 @@ const L = (zh, en) => LANG === 'en' ? en : zh;
 const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Downstream', 'Across', 'Upstream'] };
 const NAMES = new Proxy({}, { get: (_, i) => SEAT[LANG][i] });
 const SUITEN = { p: 'Circles', s: 'Bamboo', m: 'Characters' }, DRAGEN = { 1: 'Red Dragon', 2: 'Green Dragon', 3: 'White Dragon' };
-const tn = t => LANG === 'en' ? (t.s === 'z' ? DRAGEN[t.n] : t.n + SUITN[t.s]) : tname(t);
+const SUITE1 = { p: 'Circle', s: 'Bamboo', m: 'Character' };
+const enTile = (sx, n) => sx === 'z' ? DRAGEN[n] : n + ' ' + (n === 1 || sx === 's' ? SUITE1[sx] : SUITEN[sx]);
+const tn = t => LANG === 'en' ? enTile(t.s, t.n) : tname(t);
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
-const knFull = k => LANG === 'en' ? (k[0] === 'z' ? DRAGEN[+k.slice(1)] : +k.slice(1) + SUITN[k[0]] + ' ' + SUITEN[k[0]]) : kn(k);
+const knFull = k => LANG === 'en' ? enTile(k[0], +k.slice(1)) : kn(k);
 const YAKU_EN = {'三元刻':'Dragon triplet','平和':'All Chows','對對胡':'All Triplets','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','幺九龍':'Kowloon Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
 const yn = name => { if (LANG !== 'en') return name; const m = name.match(/^(.+?)(×\d+)?$/); return (YAKU_EN[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
@@ -912,7 +914,7 @@ function hideTip() { tip.style.display = 'none'; tipK = null; clearTimeout(tipTi
 function infoHTML(k) {
   const tot = copiesOf(k), seen = seenCount(k), v = k[0] === 'z' ? 0 : 10 - +k.slice(1);
   const left = Math.max(0, tot - seen);
-  return `<b>${knFull(k)}</b>${L('　', ' · ')}${v} ${L('分', 'pts')}<br>` + L(`共 ${tot} 張，已見 ${seen}，<b>還剩 ${left} 張</b>`, `${tot} in total · ${seen} seen · <b>${left} left</b>`);
+  return `<b>${knFull(k)}</b>${L('　', ' · ')}${v} ${L('分', v === 1 ? 'pt' : 'pts')}<br>` + L(`共 ${tot} 張，已見 ${seen}，<b>還剩 ${left} 張</b>`, `${tot} in total · ${seen} seen · <b>${left} left</b>`);
 }
 function showTip(el) {
   if (!G) return; const k = el.dataset.k; if (!k) return;
