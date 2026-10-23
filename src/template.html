@@ -122,8 +122,7 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 .tile.clk:hover{transform:translateY(-.3em)}
 .tile.sel{transform:translateY(-.8em);outline:2px solid var(--gold);outline-offset:1px}
 .tile.dim{opacity:.55}
-#hand{display:flex;flex-wrap:wrap;gap:8px 3px;align-items:flex-end;padding:6px 0 8px}
-#hand.haslocks{row-gap:21px;padding-bottom:22px}
+#hand{display:flex;flex-wrap:wrap;gap:21px 3px;align-items:flex-end;padding:6px 0 22px}
 #hand .tile{--u:clamp(11px,calc((100vw - 40px) / 52),16px)}
 #hand .gap{width:.9em}
 .opp .tile.back{--u:6px}
@@ -234,14 +233,18 @@ header .meta{order:2}
   .opp .pool .tile{--u:5.9px}
   .opp .meld .tile{--u:6px}
   .opp .seat-head .meld{padding:1px}
-  .tbar{justify-content:flex-start;align-items:center;gap:8px;margin:-1px 0}
+  .tbar{justify-content:space-between;align-items:center;gap:8px;margin:-1px 0}
+  #cheatBar{order:2;display:flex;flex:none;align-items:center;gap:6px;min-height:0;height:30px;margin-right:-14px;padding:0 22px 0 12px;border:1px solid var(--line);border-right:0;border-radius:99px 0 0 99px;background:var(--table2);color:var(--gold);font-weight:700;font-size:calc(13px*var(--fs,1));touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .22s ease-out;box-shadow:-2px 2px 8px rgba(0,0,0,.3);position:relative;z-index:17}
+  #cheatBar.drag{transition:none}
+  body:has(#cheatDlg[open]) #cheatBar{transform:translateX(calc(-1 * min(340px, 86vw)))}
+  #cheatBar b{font-size:calc(12px*var(--fs,1))}
+  #cheatTab{display:none!important}
   .tbar .pill{flex:none;padding:2px 10px 2px 6px;gap:6px;font-size:calc(12px*var(--fs,1))}
   .tbar .pill svg{width:40px;height:28px}
   .tbar .pill b{font-size:calc(17px*var(--fs,1))}
   #me .zone{min-height:0;margin-top:3px}
   #myDiscards .tile,#me .melds .tile{--u:7.4px}
-  #hand{padding:4px 0 8px}
-  #hand.haslocks{padding-bottom:20px}
+  #hand{padding:4px 0 20px}
   .handbar{margin-top:3px}
   .infoarea{min-height:2.6em;margin-top:3px;align-items:start}
   #selinfo{font-size:calc(12px*var(--fs,1));line-height:1.35}
@@ -448,7 +451,20 @@ button.btn.hot:hover{background:#ecc064}
 #sortBtn .spat{flex:none;width:8.6ch;text-align:left;font-variant-numeric:tabular-nums}
 #roomChip{font-family:ui-monospace,Menlo,monospace;letter-spacing:.1em}
 .rintro{margin:6px 0 14px;font-size:1.08em;line-height:1.75}
-.exre{margin:8px 0 0;background:none;border:1px solid var(--line);color:var(--gold);border-radius:14px;padding:3px 12px;font:inherit;font-size:calc(13px*var(--fs,1));cursor:pointer}
+.exnote{margin-top:6px;font-size:calc(12px*var(--fs,1));color:var(--muted)}
+.exs{align-items:flex-end}
+.exg.cn,.exg.hc{position:relative;margin-top:13px}
+.exg.cn{padding-bottom:7px}
+.exg.cn::before,.exg.hc::before{position:absolute;left:2px;top:-13px;font-size:calc(10px*var(--fs,1));line-height:1;white-space:nowrap;font-weight:600}
+.exg.cn::before{content:"暗";color:#5fbf86}
+.exg.hc::before{content:"淡色牌 0 點";color:var(--muted)}
+:lang(en) .exg.cn::before{content:"concealed"}
+:lang(en) .exg.hc::before{content:"faded tile = 0 pts"}
+:lang(ja) .exg.cn::before{content:"暗"}
+:lang(ja) .exg.hc::before{content:"薄い牌 = 0点"}
+.exg.cn::after{content:"";position:absolute;left:1px;right:1px;bottom:0;height:3px;border-radius:2px;background:#3f9d63}
+.exre{margin-left:6px;background:none;border:0;color:var(--muted);opacity:.6;border-radius:50%;width:22px;height:22px;padding:0;font:inherit;font-size:calc(14px*var(--fs,1));line-height:1;cursor:pointer;vertical-align:middle}
+.exre:hover{opacity:1;color:var(--pg)}
 </style>
 </head>
 <body>
@@ -541,8 +557,8 @@ const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
   ? `<i class="h">${n === 3 ? '' : HON[n]}</i>`
   : `<i class="n">${n}</i><i class="ic ${ICON[sx]}">${sx === 'm' ? '萬' : ''}</i>` + (badge == null ? '' : `<i class="v">${badge}</i>`);
-const X = (label, spec) => `<div class="exrow"><span class="exl">${label}</span><span class="exs">` + spec.split('|').map(g =>
-  '<span class="exg">' + g.trim().split(/\s+/).map(t => { const c = t.endsWith('*'); t = t.replace('*', ''); return `<span class="tile xs ${t[0] === 'z' ? t : t[0]}${c ? ' cl' : ''}">${faceHTML(t[0], +t.slice(1))}</span>`; }).join('') + '</span>').join('') + '</span></div>';
+const X = (label, spec, conc) => `<div class="exrow"><span class="exl">${label}</span><span class="exs">` + spec.split('|').map((g, gi) =>
+  `<span class="exg${conc && (conc === 'all' || conc.includes(gi)) ? ' cn' : ''}${/\*/.test(g) ? ' hc' : ''}">` + g.trim().split(/\s+/).map(t => { const c = t.endsWith('*'); t = t.replace('*', ''); return `<span class="tile xs ${t[0] === 'z' ? t : t[0]}${c ? ' cl' : ''}">${faceHTML(t[0], +t.slice(1))}</span>`; }).join('') + '</span>').join('') + '</span></div>';
 const EG = (title, rows) => `<details class="eg"><summary>${title}</summary>${rows.join('')}</details>`;
 const HAND_EX = [
   [1, '三元刻', 'Dragon triplet', 'z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'],
@@ -556,11 +572,13 @@ const HAND_EX = [
   [2, '七對子', 'Seven Pairs', 'p8 p8|p8 p8|s7 s7|s9 s9|m7 m7|m9 m9|z1 z1'],
   [3, '小三元', 'Small Dragons', 'z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'],
   [3, '全大字', 'All Big', 'p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'],
-  [3, '幺九順', 'Kowloon Straight', 'p1 p2 p3|p4 p5 p6|p7 p8 p9|s5 s5 s5|m6 m6'],
+  [3, '幺九順', 'Kowloon Straight', 'p1 p2 p3|p4 p5 p6|p7 p8 p9|s5 s5 s5|m6 m6', 'p'],
+  [3, '幺九順', 'Kowloon Straight', 'p1 p2 p3|p4 p5 p6|p7 p8 p9|s3 s4 s5|z1 z1', 'c'],
   [4, '清一色', 'Full Flush', 'p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'],
   [4, '四暗刻', 'Four Concealed Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'],
   [4, '大三元', 'Great Dragons', 'z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'],
-  [4, '門清幺九順', 'Concealed Kowloon Straight', 's1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'],
+  [4, '門清幺九順', 'Concealed Kowloon Straight', 's1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6', 'p'],
+  [4, '門清幺九順', 'Concealed Kowloon Straight', 's1 s2 s3|s4 s5 s6|s7 s8 s9|p3 p4 p5|z2 z2', 'c'],
   [6, '幺九龍／門清幺九龍', 'Kowloon Dragon / Concealed', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
   [6, '槓三元', 'Dragon Kongs', 'z1 z1 z1 z1|z2 z2 z2 z2|z3 z3 z3 z3|p2 p3 p4|s5 s5']
 ];
@@ -583,14 +601,15 @@ const EXGEN = {
   '七對子': () => { const ks = []; while (ks.length < 7) { const k = exPick(EXS) + (2 + exR(8)); if (!ks.includes(k)) ks.push(k); } return ks.map(k => k + ' ' + k); },
   '小三元': () => { const d = exPick([[1, 2, 3], [2, 3, 1], [3, 1, 2]]); return [exPg('z', d[0]), exPg('z', d[1]), `z${d[2]} z${d[2]}`, exRch(), exSet(exPick(EXS))]; },
   '全大字': () => [exSet2(), exSet2(), exSet2(), exSet2(), exRpr(undefined, 7, 9)],
-  '幺九順': () => { const x = exPick(EXS); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), exSet(exPick(EXS)), exRpr()]; },
+  '幺九順': k => { const x = exPick(EXS); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), exFourth(k), k === 'c' ? (z => `z${z} z${z}`)(1 + exR(3)) : exRpr()]; },
   '清一色': () => { const x = exPick(EXS); return [exSet(x), exSet(x), exSet(x), exSet(x), exRpr(x)]; },
   '四暗刻': () => [exRpg(), exRpg(), exRpg(), exRpg(), exRpr()],
   '大三元': () => [exPg('z', 1), exPg('z', 2), exPg('z', 3), exRch(), exRpr()],
-  '門清幺九順': () => { const x = exPick(EXS); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), exSet(exPick(EXS)), exRpr()]; },
+  '門清幺九順': k => { const x = exPick(EXS); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), exFourth(k), k === 'c' ? (z => `z${z} z${z}`)(1 + exR(3)) : exRpr()]; },
   '幺九龍／門清幺九龍': () => { const x = exPick(EXS), n = exR(8) ? 3 + exR(7) : 0, pr = n ? `${x}${n} ${x}${n}` : (z => `z${z} z${z}`)(1 + exR(3)); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), 'z1 z2 z3', pr]; },
   '槓三元': () => [exPg('z', 1) + ' z1', exPg('z', 2) + ' z2', exPg('z', 3) + ' z3', exRch(), exRpr()]
 };
+const exFourth = k => { const y = exPick(EXS); return k === 'p' ? exRpg(y) : k === 'c' ? exRch(y) : exSet(y); };
 function exSet2() { const x = exPick(EXS); return exR(2) ? exPg(x, 7 + exR(3)) : exCh(x, 7); }
 const EXOPEN = { '對對胡': [0, 1], '大三元': [0, 1, 2], '槓三元': [0, 1, 2], '幺九順': [3] };
 function exCheck(name, tier, groups) {
@@ -612,12 +631,17 @@ function exCheck(name, tier, groups) {
 }
 function exRandom(h) {
   const g = EXGEN[h[1]]; if (!g) return h[3];
-  for (let i = 0; i < 300; i++) { const r = exCheck(h[1], h[0], g()); if (r) return r; }
+  for (let i = 0; i < 300; i++) { const r = exCheck(h[1], h[0], g(h[4])); if (r) return r; }
   return h[3];
 }
-const exLabel = (lang, h) => lang === 'en' ? h[0] + ' fan: ' + h[2] : lang === 'ja' ? h[0] + ' 翻：' + (YAKU_JA[h[1]] || h[1]) : h[0] + ' 番：' + h[1];
-const handRows = (lang, rand) => HAND_EX.map(h => X(exLabel(lang, h), rand ? exRandom(h) : h[3])).join('');
-const EGH = (title, lang, btn) => `<details class="eg"><summary>${title}</summary><button class="exre" data-re="${lang}">↻ ${btn}</button><div class="exwrap">${handRows(lang)}</div></details>`;
+const EXSUF = { p: { zh: '（第四組為刻子）', en: ' (4th meld: triplet)', ja: '（4組目：刻子）' }, c: { zh: '（第四組為順子）', en: ' (4th meld: sequence)', ja: '（4組目：順子）' } };
+const exLabel = (lang, h) => (lang === 'en' ? h[0] + ' fan: ' + h[2] : lang === 'ja' ? h[0] + ' 翻：' + (YAKU_JA[h[1]] || h[1]) : h[0] + ' 番：' + h[1]) + (h[4] ? EXSUF[h[4]][lang] : '');
+const pairLast = spec => { const g = spec.split('|'), two = g.filter(x => x.trim().split(/\s+/).length === 2); return two.length === 1 ? [...g.filter(x => x !== two[0]), two[0]].join('|') : spec; };
+const EXCONC = { '三暗刻': [0, 1, 2], '四暗刻': [0, 1, 2, 3], '門清幺九順': 'all', '七對子': 'all' };
+const exampleRow = (lang, i, rand) => X(exLabel(lang, HAND_EX[i]), pairLast(rand ? exRandom(HAND_EX[i]) : HAND_EX[i][3]), EXCONC[HAND_EX[i][1]]).replace('</span><span class="exs">', `<button type="button" class="exre" data-re="${lang}" data-i="${i}" aria-label="shuffle" title="↻">↻</button></span><span class="exs">`);
+const exampleRows = lang => HAND_EX.map((h, i) => exampleRow(lang, i)).join('');
+const EXNOTE = { zh: '綠線＝這組必須是暗牌（不可吃碰）', en: 'Green line = this group must stay concealed (no chow/pung calls)', ja: '緑の線＝この組は暗（鳴き不可）' };
+const EGH = (title, lang, btn) => `<details class="eg"><summary>${title}</summary><div class="exnote">${EXNOTE[lang]}</div><div class="exwrap">${exampleRows(lang)}</div></details>`;
 
 const RULES_HTML = {
 zh: `  <h2>規則（目前實作）</h2>
@@ -1658,7 +1682,7 @@ $('#newBtn').onclick = () => {
   if (isHost()) startVote(0);
   else { try { ROOM.conn.send({ t: 'rreq' }); toast('已向其他玩家發出請求…', 'Asking the other players…'); } catch (e) {} }
 };
-$('#rules').addEventListener('click', e => { const b = e.target.closest('[data-re]'); if (b) b.parentElement.querySelector('.exwrap').innerHTML = handRows(b.dataset.re, true); });
+$('#rules').addEventListener('click', e => { const b = e.target.closest('[data-re]'); if (b) { const row = b.closest('.exrow'); row.outerHTML = exampleRow(b.dataset.re, +b.dataset.i, true); } });
 $('#rulesBtn').onclick = () => $('#rules').showModal();
 function syncCheatTab() {
   const o = $('#cheatDlg').open; $('#cheatTab b').textContent = o ? '▶' : '◀'; $('#cheatTabTxt').textContent = o ? L('收起', 'Hide') : L('速查', 'Cheat sheet');
@@ -1666,37 +1690,38 @@ function syncCheatTab() {
 }
 $('#cheatBar').onclick = $('#cheatTab').onclick = () => { const d = $('#cheatDlg'); if (d.open) d.close(); else d.show(); syncCheatTab(); };
 $('#cheatDlg').addEventListener('close', syncCheatTab);
-/* 手機：速查標籤可拖出／推回，點一下也可開關 */
+/* 手機：速查標籤可拖出／推回（標籤貼著面板邊緣一起滑），點一下也可開關 */
 {
-  const tab = $('#cheatTab'), dlg = $('#cheatDlg'); let st = null;
+  const dlg = $('#cheatDlg');
   const W = () => Math.min(340, innerWidth * .86);
-  const put = p => { dlg.style.transform = `translateX(${(1 - p) * 100}%)`; tab.style.right = p * W() + 'px'; };
-  const clean = () => { for (const e of [dlg, tab]) { e.style.transform = e.style.right = e.style.transition = ''; } tab.style.animation = ''; };
-  dlg.addEventListener('close', () => { dlg.style.animation = ''; });
-  tab.addEventListener('pointerdown', e => {
-    st = { x: e.clientX, open: dlg.open, moved: false, last: e.clientX, v: 0 };
-    tab.setPointerCapture(e.pointerId);
-  });
-  tab.addEventListener('pointermove', e => {
-    if (!st) return;
-    const dx = e.clientX - st.x;
-    if (!st.moved && Math.abs(dx) < 6) return;
-    if (!st.moved) { st.moved = true; tab.classList.add('drag'); dlg.style.animation = 'none'; dlg.style.transition = 'none'; if (!dlg.open) { dlg.style.transform = 'translateX(100%)'; dlg.show(); } }
-    st.v = e.clientX - st.last; st.last = e.clientX;
-    put(Math.max(0, Math.min(1, (st.open ? 1 : 0) - dx / W())));
-  });
-  const end = e => {
-    if (!st) return; const s0 = st; st = null; tab.classList.remove('drag');
-    if (!s0.moved) return;
-    tab.dataset.skip = 1; setTimeout(() => delete tab.dataset.skip, 60);
-    const p = dlg.style.transform.match(/translateX\(([\d.]+)%\)/); const cur = 1 - (p ? +p[1] / 100 : 0);
-    const open = s0.v < -3 ? true : s0.v > 3 ? false : cur > .5;
-    dlg.style.transition = tab.style.transition = 'transform .2s ease-out, right .2s ease-out';
-    put(open ? 1 : 0);
-    setTimeout(() => { clean(); if (!open) dlg.close(); syncCheatTab(); }, 210);
+  const attach = (el, put, clean) => {
+    let st = null;
+    el.addEventListener('pointerdown', e => { st = { x: e.clientX, open: dlg.open, moved: false, last: e.clientX, v: 0, p: dlg.open ? 1 : 0 }; el.setPointerCapture(e.pointerId); });
+    el.addEventListener('pointermove', e => {
+      if (!st) return;
+      const dx = e.clientX - st.x;
+      if (!st.moved && Math.abs(dx) < 6) return;
+      if (!st.moved) { st.moved = true; el.classList.add('drag'); dlg.style.animation = 'none'; dlg.style.transition = 'none'; if (!dlg.open) { dlg.style.transform = 'translateX(100%)'; dlg.show(); } }
+      st.v = e.clientX - st.last; st.last = e.clientX;
+      st.p = Math.max(0, Math.min(1, (st.open ? 1 : 0) - dx / W()));
+      dlg.style.transform = `translateX(${(1 - st.p) * 100}%)`; put(st.p);
+    });
+    const end = () => {
+      if (!st) return; const s0 = st; st = null; el.classList.remove('drag');
+      if (!s0.moved) return;
+      el.dataset.skip = 1; setTimeout(() => delete el.dataset.skip, 60);
+      const open = s0.v < -3 ? true : s0.v > 3 ? false : s0.p > .5;
+      dlg.style.transition = el.style.transition = 'transform .2s ease-out, right .2s ease-out';
+      dlg.style.transform = `translateX(${open ? 0 : 100}%)`; put(open ? 1 : 0);
+      setTimeout(() => { dlg.style.transform = dlg.style.transition = ''; clean(); if (!open) dlg.close(); syncCheatTab(); }, 210);
+    };
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+    el.addEventListener('click', e => { if (el.dataset.skip) e.stopImmediatePropagation(); }, true);
   };
-  tab.addEventListener('pointerup', end); tab.addEventListener('pointercancel', end);
-  tab.addEventListener('click', e => { if (tab.dataset.skip) { e.stopImmediatePropagation(); } }, true);
+  dlg.addEventListener('close', () => { dlg.style.animation = ''; });
+  const tab = $('#cheatTab'), bar = $('#cheatBar');
+  attach(tab, p => { tab.style.right = p * W() + 'px'; }, () => { tab.style.right = tab.style.transition = tab.style.animation = ''; });
+  attach(bar, p => { bar.style.transform = `translateX(${-p * W()}px)`; }, () => { bar.style.transform = bar.style.transition = ''; });
 }
 
 /* ============ 線上房間 / Online rooms (PeerJS WebRTC, host-authoritative) ============ */
