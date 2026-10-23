@@ -6,4 +6,7 @@ const engine = fs.readFileSync(path.join(root, 'src/engine.js'), 'utf8')
 const html = fs.readFileSync(path.join(root, 'src/template.html'), 'utf8').replace('/*__ENGINE__*/', engine);
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(root, 'dist/index.html'), html);
+// GitHub Pages serves from /docs
+fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+fs.writeFileSync(path.join(root, 'docs/index.html'), html);
 console.log('built dist/index.html', html.length, 'bytes');

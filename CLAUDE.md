@@ -8,7 +8,7 @@ Wilson writes rules in Traditional Chinese; UI and rules text are Traditional Ch
 ## Layout
 - `src/engine.js`   pure game logic (no DOM): deck, claims, win detection, fan scoring, bots, `simGame()` headless sim
 - `src/template.html` UI + CSS; contains `/*__ENGINE__*/` placeholder
-- `scripts/build.js` inlines engine into template -> `dist/index.html` (publishable single file)
+- `scripts/build.js` inlines engine into template -> `dist/index.html` and `docs/index.html` (publishable single file; GitHub Pages serves `docs/`)
 - `scripts/sim.js`   bot-only simulation stats (use before changing any fan/point rule)
 - Commands: `npm run build`, `npm run sim`
 
