@@ -47,6 +47,8 @@ button.btn.ghost{background:transparent;color:var(--pg);border-color:var(--pgm)}
 .seat.active{border-color:var(--gold)}
 .seat-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px;color:var(--muted)}
 .seat-head b{color:var(--text);font-size:14px}
+.seat-head .total{color:var(--muted);font-size:12px;background:rgba(0,0,0,.2);padding:2px 8px;border-radius:99px}
+.seat-head .total b{color:var(--gold);font-size:14px}
 .seat-head .score{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--text)}
 .row{display:flex;flex-wrap:wrap;gap:3px;align-items:flex-end;min-height:20px}
 .melds{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0}
@@ -197,7 +199,7 @@ details.eg summary{cursor:pointer;color:var(--gold);font-size:14px;font-weight:5
   <div class="table">
     <div id="opps"></div>
     <section class="seat" id="me">
-      <div class="seat-head"><b id="meName">你</b><span id="meTag"></span><span class="score" id="meScore"></span></div>
+      <div class="seat-head"><b id="meName">你</b><span id="meTag"></span><span id="meTotal" class="total"></span><span class="score" id="meScore"></span></div>
       <div class="zone">
         <div class="pool" id="myDiscards"></div>
         <div class="melds" id="myMelds"></div>
@@ -472,6 +474,10 @@ function render() {
   $('#me').classList.toggle('active', G.turn === 0);
   $('#meScore').textContent = scores[0];
   $('#meTag').textContent = G.dealer === 0 ? L('莊', 'Dealer') : '';
+  let myPts = G.hands[0].reduce((a, t) => a + val(t), 0);
+  G.melds[0].forEach(m => m.tiles.forEach(t => { if (!(m.mixed && t.id === m.claimed)) myPts += val(t); }));
+  const mt = $('#meTotal'); mt.innerHTML = `${L('手牌點值', 'Hand points')} <b>${myPts}</b>`;
+  mt.title = L('手牌＋鳴牌的點值總和（未乘番數；混碰被要的那張不計）', 'Tile points of hand + melds, before fan multiplier (claimed tile of a mixed pung excluded)');
   const pd = $('#myDiscards'); pd.innerHTML = '';
   G.discards[0].forEach(t => pd.appendChild(tileEl(t, { sm: true, cls: G.last && G.last.t.id === t.id ? 'last' : '' })));
   const mm = $('#myMelds'); mm.innerHTML = ''; G.melds[0].forEach(m => mm.appendChild(meldEl(m, 'md')));
