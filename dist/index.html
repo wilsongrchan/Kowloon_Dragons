@@ -113,6 +113,14 @@ dialog ul{margin:4px 0;padding-left:1.2em}
 dialog li{margin:2px 0}
 dialog li>ul{margin:2px 0 6px;opacity:.92}
 dialog li b{color:var(--ivory)}
+details.eg{margin:8px 0 4px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:rgba(0,0,0,.12)}
+details.eg summary{cursor:pointer;color:var(--gold);font-size:14px;font-weight:500}
+.exrow{display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.exl{flex:0 0 11em;font-size:13px;color:var(--muted)}
+.exs{display:flex;flex-wrap:wrap;gap:6px 10px}
+.exg{display:flex;padding:2px;border-radius:5px;background:rgba(0,0,0,.18)}
+.xt{width:28px;height:34px;object-fit:contain;display:block}
+.xt.cl{opacity:.5;outline:1px dashed var(--gold);outline-offset:-1px;border-radius:3px}
 .fanlist{display:grid;grid-template-columns:1fr auto;gap:2px 16px;max-width:360px;font-variant-numeric:tabular-nums}
 .fanlist .tot{border-top:1px solid var(--line);padding-top:4px;margin-top:2px;font-weight:700}
 .reveal{margin-top:10px;display:grid;gap:8px}
@@ -497,8 +505,11 @@ const SUITEN = { p: 'Circles', s: 'Bamboo', m: 'Characters' }, DRAGEN = { 1: 'Re
 const tn = t => LANG === 'en' ? (t.s === 'z' ? HON[t.n] : t.n + SUITN[t.s]) : tname(t);
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? (k[0] === 'z' ? DRAGEN[+k.slice(1)] + ' ' + HON[+k.slice(1)] : +k.slice(1) + SUITN[k[0]] + ' ' + SUITEN[k[0]]) : kn(k);
-const YAKU_EN = {'中發白刻子':'Dragon pung','平和':'All Chows','對對胡':'All Pungs','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Pungs','四暗刻':'Four Concealed Pungs','小三元':'Small Three Dragons','大三元':'Big Three Dragons','幺九順':'Yaojiu Straight','幺九龍':'Yaojiu Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
+const YAKU_EN = {'中發白刻子':'Dragon triplet','平和':'All Chows','對對胡':'All Pungs','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Pungs','四暗刻':'Four Concealed Pungs','小三元':'Small Three Dragons','大三元':'Big Three Dragons','幺九順':'Yaojiu Straight','幺九龍':'Yaojiu Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
 const yn = name => { if (LANG !== 'en') return name; const m = name.match(/^(.+?)(×\d+)?$/); return (YAKU_EN[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
+const X = (label, spec) => `<div class="exrow"><span class="exl">${label}</span><span class="exs">` + spec.split('|').map(g =>
+  '<span class="exg">' + g.trim().split(/\s+/).map(t => { const c = t.endsWith('*'); t = t.replace('*', ''); return `<img class="xt${c ? ' cl' : ''}" src="tiles/${t}.png" alt="${t}">`; }).join('') + '</span>').join('') + '</span></div>';
+const EG = (title, rows) => `<details class="eg"><summary>${title}</summary>${rows.join('')}</details>`;
 const RULES_HTML = {
 zh: `  <h2>規則（目前實作）</h2>
   <p>1 對 3 電腦。每局由莊家起手，沒有風位與連莊，每局重新洗牌，分數累計。</p>
@@ -518,6 +529,7 @@ zh: `  <h2>規則（目前實作）</h2>
     <li>多人同時碰（例如 5、6 或中發白）：棄牌者的下家優先，再對家，再上家。胡牌最優先，吃最後。</li>
     <li>沒有搶槓。槓之後從牌山尾補牌。</li>
   </ul>
+  ${EG('牌面示例：吃碰槓、混碰、三元大槓', [X('吃（被吃的牌變淡）','s2 s3 s4*|p4* p5 p6|m1 m2* m3'),X('碰／槓','p5 p5 p5*|s6 s6 s6 s6|z1 z1 z1*'),X('混碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('小字混刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7–9 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
   <h3>番種（疊加，4 番封頂；0.5 番稱碎番）</h3>
   <ul>
     <li>1 番（全番）：中發白刻子（每組可疊加）、平和（全順子、無中發白）、對對胡</li>
@@ -530,6 +542,7 @@ zh: `  <h2>規則（目前實作）</h2>
     <li>總番數取整數部分，所以 1+0.5+0.5＝2 番。</li>
     <li>倍數：1 番 ×1、2 番 ×2、3 番 ×3、4 番 ×4。得分 = 全手牌點值總和（含已鳴的牌，扣除混碰被要的那張）× 倍數。</li>
   </ul>
+  ${EG('牌面示例：番種', [X('1 番：中發白刻子','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 番：平和','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 番：對對胡','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 番：混一色','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 番：全大字','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 番：斷大字','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 番：三暗刻','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 番：清一色','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 番：小三元','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 番：幺九順','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 番：大三元','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 番：四暗刻','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 番：幺九龍','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
   <h3>付款（暫定）</h3>
   <ul><li>自摸：其餘三家各付一份。出銃：出銃者付兩份。</li></ul>
   <h3>操作</h3>
@@ -576,6 +589,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     </li>
     <li><b>Win (胡)</b> beats pung and kong, and a chow comes last. No robbing the kong.</li>
   </ul>
+  ${EG('Tile examples: chow, pung, kong', [X('Chow (claimed tile faded)','s2 s3 s4*|p4* p5 p6|m1 m2* m3'),X('Pung / kong','p5 p5 p5*|s6 s6 s6 s6|z1 z1 z1*'),X('Never claimable (7–9)','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
   <h3>Special actions</h3>
   <ul>
     <li><b>Mixed pung (混碰)</b>
@@ -599,11 +613,12 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
       </ul>
     </li>
   </ul>
+  ${EG('Tile examples: special actions', [X('Mixed pung (claimed tile faded)','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('Mixed triplet in hand (concealed)','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('Grand dragon kong (5 copies)','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3')])}
   <h3>Winning hands (fan stack, capped at 4)</h3>
   <ul>
     <li><b>1 fan</b>
       <ul>
-        <li><b>Dragon pung (中發白刻子)</b>: each dragon pung counts, and they stack.</li>
+        <li><b>Dragon triplet (中發白刻子)</b>: each triplet of 中, 發 or 白 counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
         <li><b>All Chows (平和)</b>: all chows, no dragons, and the pair isn't a dragon.</li>
         <li><b>All Pungs (對對胡)</b>: 4 pungs + pair. Mixed pungs are allowed.</li>
       </ul>
@@ -620,18 +635,19 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     <li><b>3 fan</b>
       <ul>
         <li><b>Full Flush (清一色)</b>: one suit only, no dragons.</li>
-        <li><b>Small Three Dragons (小三元)</b>: two dragon pungs + a pair of the third. Replaces the dragon pung fan; hand points +20.</li>
+        <li><b>Small Three Dragons (小三元)</b>: two dragon triplets + a pair of the third. Replaces the dragon triplet fan; hand points +20.</li>
         <li><b>Yaojiu Straight (幺九順)</b>: 123 + 456 + 789 in one suit. The remaining set is a chow or a pung in any suit; the pair is anything.</li>
       </ul>
     </li>
     <li><b>4 fan</b>
       <ul>
-        <li><b>Big Three Dragons (大三元)</b>: pungs of all three dragons. Replaces the dragon pung fan; hand points +40.</li>
+        <li><b>Big Three Dragons (大三元)</b>: triplets of all three dragons. Replaces the dragon triplet fan; hand points +40.</li>
         <li><b>Four Concealed Pungs (四暗刻)</b></li>
         <li><b>Yaojiu Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of 中 發 白 + a pair of a same-suit number or a dragon. Hand points +40 (340–396 pts in total).</li>
       </ul>
     </li>
   </ul>
+  ${EG('Tile examples: winning hands', [X('1 fan: Dragon triplet','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 fan: All Chows','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 fan: All Pungs','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 fan: Half Flush','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 fan: All Big','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 fan: No Big','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 fan: Three Concealed Pungs','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 fan: Full Flush','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 fan: Small Three Dragons','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 fan: Yaojiu Straight','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 fan: Big Three Dragons','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 fan: Four Concealed Pungs','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 fan: Yaojiu Dragon','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
   <h3>Minor fans (碎番, ½ fan each)</h3>
   <ul>
     <li>Only added once you already have at least 1 full fan; two ½ fans alone can't win.</li>
