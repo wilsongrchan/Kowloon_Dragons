@@ -545,7 +545,7 @@ zh: `  <h2>規則（目前實作）</h2>
     <li>多人同時碰（例如 5、6 或中發白）：棄牌者的下家優先，再對家，再上家。胡牌最優先，吃最後。</li>
     <li>沒有搶槓。槓之後從牌山尾補牌。</li>
   </ul>
-  ${EG('牌面示例：吃碰槓、混碰、三元大槓', [X('吃（被吃的牌變淡）','s2 s3 s4*|p4* p5 p6|m1 m2* m3'),X('碰／槓','p5 p5 p5*|s6 s6 s6 s6|z1 z1 z1*'),X('混碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('小字混刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7–9 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
+  ${EG('牌面示例：吃碰槓、混碰、三元大槓', [X('吃','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('碰／槓','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('混碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('小字混刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7–9 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
   <h3>番種（疊加，4 番封頂；0.5 番稱碎番）</h3>
   <ul>
     <li>1 番（全番）：中發白刻子（每組可疊加）、平和（全順子、無中發白）、對對胡</li>
@@ -605,7 +605,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     </li>
     <li><b>Win (胡)</b> beats pung and kong, and a chow comes last. No robbing the kong.</li>
   </ul>
-  ${EG('Tile examples: chow, pung, kong', [X('Chow (claimed tile faded)','s2 s3 s4*|p4* p5 p6|m1 m2* m3'),X('Pung / kong','p5 p5 p5*|s6 s6 s6 s6|z1 z1 z1*'),X('Never claimable (7–9)','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
+  ${EG('Tile examples: chow, pung, kong', [X('Chow','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('Pung / kong','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('Never claimable (7–9)','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
   <h3>Special actions</h3>
   <ul>
     <li><b>Mixed pung (混碰)</b>
