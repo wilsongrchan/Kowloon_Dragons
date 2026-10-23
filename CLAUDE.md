@@ -24,8 +24,8 @@ Hand 13, win 14: 4 sets + pair.
 - Fan = floor(total incl. halves) so 1+0.5+0.5 = 2.
 - 1番: 三元刻(each, stackable), 平胡 (all chows, no dragons), 對對胡(混碰 ok)
 - 2番: 混一色, 門清加自摸, 全大字(all tiles 7-9), 斷大字(no 7-9), 三暗刻
-- 3番: 清一色, 小三元 (no extra 中發白刻; hand tile sum +20 before multiplier), 幺九順 (same suit 123+456+789; remaining set chow or pong, any suit; pair any)
-- 4番: 大三元 (no extra 中發白刻; hand tile sum +40 before multiplier), 四暗刻, 幺九龍 (same suit 123+456+789 + one each of 中發白 + a pair of a same-suit number or a dragon, i.e. that tile type has 3 copies; hand tile sum +40 before multiplier -> 340-396 pts)
+- 3番: 清一色, 小三元 (no extra 中發白刻; hand tile sum +30 before multiplier), 幺九順 (same suit 123+456+789; remaining set chow or pong, any suit; pair any)
+- 4番: 大三元 (no extra 中發白刻; hand tile sum +60 before multiplier), 四暗刻, 幺九龍 (same suit 123+456+789 + one each of 中發白 + a pair of a same-suit number or a dragon, i.e. that tile type has 3 copies; hand tile sum +50 before multiplier -> 380-436 pts)
 - 暗刻: ankan counts as concealed; on ron, the triplet completed by the winning tile counts as open, BUT 榮胡進眼 doesn't ruin concealed triplets (if the winning tile can sit in the pair or a chow, the triplet stays concealed).
 - Half fan 碎番 (+0.5, need >=1 real fan first): 槓 (each), 三元大補槓, 門清, 斷一門無三元 (missing one of 筒/索/萬 AND no 中發白), 自摸 (only open hands; 門清加自摸 already includes it), 胡小字 (winning tile is a 小字 1-3)
 - 無混吃無混碰 was DELETED as a 碎番 by Wilson (no longer exists).
@@ -40,7 +40,7 @@ Hand 13, win 14: 4 sets + pair.
 - Payment placeholder: tsumo each pays 1x; ron discarder pays 2x (RULES.RON_MULT). No dealer bonus/wind rotation.
 - Bots are naive (no defense, random claims) - for rule testing only.
 
-## Sim findings (current rules: linear x1-x4; 小三元 +20, 大三元 +40, 幺九龍 +40)
+## Sim findings (bonuses now 小三元 +30, 大三元 +60, 幺九龍 +50 — Wilson's change; figures below were measured with the old +20/+40/+40 and are slightly stale: per-hand averages for 小三元/大三元/幺九龍 rise by ~10/20/10 pts × 3-4. Bot sim 20k games: old avg 86.5 pts, new avg 87.4 pts, fan split unchanged ~32/32/21/15%)
 Bots (10k games): ~96% win rate, avg 87 pts. Fan split 1番 32 / 2番 32 / 3番 21 / 4番 15 %. Avg score by actual fan: 39 / 80 / 126 / 149.
 Generated concealed hands, avg score ron/tsumo: 全大字 71/112 (weakest by design), 混一色 158/184, 對對胡 178/196, 小三元 177/188, 四暗刻 192/195, 清一色 197/228, 斷大字 235/328, 大三元 245/247, 幺九順 251/260, 幺九龍 362/362.
 Tier overlap: only ~21% of 2番 hands score below the 1番 median (was 39% with x1.5/x2/x3).

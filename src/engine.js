@@ -86,8 +86,8 @@ function evaluateHand(melds, concealed, tsumo, winTile) {
     for (const su of ['p', 's', 'm']) {
       const keys = []; for (let n = 1; n <= 9; n++) keys.push(su + n); keys.push('z1', 'z2', 'z3');
       if (keys.every(k => c0[k] >= 1) && keys.some(k => c0[k] === 3)) {
-        const points = Math.round((pts + 40) * 4);
-        return { ok: true, items: [{ name: '幺九龍', fan: 4 }], halves: [], base: 4, total: 4, fan: 4, mult: 4, tilePts: pts + 40, bonus: 40, bonusName: '幺九龍', points, pair: null, tsumo };
+        const points = Math.round((pts + 50) * 4);
+        return { ok: true, items: [{ name: '幺九龍', fan: 4 }], halves: [], base: 4, total: 4, fan: 4, mult: 4, tilePts: pts + 50, bonus: 50, bonusName: '幺九龍', points, pair: null, tsumo };
       }
     }
   }
@@ -108,8 +108,8 @@ function evaluateHand(melds, concealed, tsumo, winTile) {
     const dr = dragonSets.length;
     const pairHon = d.pair[0] === 'z';
     let bonus = 0, bonusName = null;
-    if (dr === 3) { add('大三元', 4); bonus = 40; bonusName = '大三元'; }
-    else if (dr === 2 && pairHon && !dragonSets.some(s => s.k === d.pair)) { add('小三元', 3); bonus = 20; bonusName = '小三元'; }
+    if (dr === 3) { add('大三元', 4); bonus = 60; bonusName = '大三元'; }
+    else if (dr === 2 && pairHon && !dragonSets.some(s => s.k === d.pair)) { add('小三元', 3); bonus = 30; bonusName = '小三元'; }
     else for (let i = 0; i < dr; i++) add('三元刻', 1);
     if (sets.every(s => s.kind === 'chow') && !(RULES.PAIR_HONOR_BREAKS_PINGHU && pairHon)) add('平胡', 1);
     if (sets.every(s => s.kind === 'pong')) add('對對胡', 1);
