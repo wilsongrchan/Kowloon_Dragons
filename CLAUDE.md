@@ -7,6 +7,7 @@ Wilson writes rules in Traditional Chinese; UI and rules text are Traditional Ch
 
 ## Layout
 - `src/engine.js`   pure game logic (no DOM): deck, claims, win detection, fan scoring, bots, `simGame()` headless sim
+- `src/tiles/` tile PNGs (p/s/m 1-9, z1-3 = 中發白), copied from Mahjong201, downscaled; build copies them to dist/tiles and docs/tiles
 - `src/template.html` UI + CSS; contains `/*__ENGINE__*/` placeholder
 - `scripts/build.js` inlines engine into template -> `dist/index.html` and `docs/index.html` (publishable single file; GitHub Pages serves `docs/`)
 - `scripts/sim.js`   bot-only simulation stats (use before changing any fan/point rule)

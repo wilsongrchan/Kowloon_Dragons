@@ -9,4 +9,5 @@ fs.writeFileSync(path.join(root, 'dist/index.html'), html);
 // GitHub Pages serves from /docs
 fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
 fs.writeFileSync(path.join(root, 'docs/index.html'), html);
+for (const out of ['dist', 'docs']) fs.cpSync(path.join(root, 'src/tiles'), path.join(root, out, 'tiles'), { recursive: true });
 console.log('built dist/index.html', html.length, 'bytes');

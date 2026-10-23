@@ -60,20 +60,15 @@ button.btn.ghost{background:transparent;color:var(--pg);border-color:var(--pgm)}
 .backs{display:flex;gap:1px;flex-wrap:wrap}
 
 /* tiles: sized by font-size so everything scales together */
-.tile{--u:14px;font-size:var(--u);width:3em;height:4.2em;border-radius:.4em;position:relative;flex:none;
-  background:linear-gradient(170deg,#fbf6e4,var(--ivory) 55%,#e9dfc0);color:#222;
-  box-shadow:0 .22em 0 var(--jade-d),0 .35em .5em rgba(0,0,0,.35);border:1px solid var(--ivory-edge);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--face);font-weight:900;line-height:1;margin-bottom:.25em;padding:0}
+.tile{--u:14px;font-size:var(--u);width:3.3em;height:4em;position:relative;flex:none;
+  display:flex;align-items:center;justify-content:center;line-height:1;margin-bottom:.25em;padding:0;
+  background:none;border:0;border-radius:.4em;font-family:var(--face);font-weight:900}
 .tile.sm{--u:9px}
 .tile.md{--u:11px}
+.tile img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 .15em .2em rgba(0,0,0,.35))}
 .tile i{font-style:normal;display:block}
-.tile .n{font-size:1.5em}
-.tile .su{font-size:1.1em;margin-top:.15em}
-.tile .h{font-size:2.1em}
-.tile .v{position:absolute;top:.22em;right:.3em;font:700 .66em var(--ui);color:var(--gold-d);margin:0}
-.tile.p{color:var(--blue)} .tile.s{color:var(--green)} .tile.m{color:var(--red)}
-.tile.z1{color:var(--red)} .tile.z2{color:var(--green)}
-.tile.z3 .h{font-size:1em;width:1.3em;height:1.8em;border:.14em solid var(--blue);border-radius:.2em;margin:0}
+.tile .v{position:absolute;top:-.1em;right:-.15em;min-width:1.35em;height:1.35em;padding:0 .2em;border-radius:99px;background:rgba(14,21,28,.82);
+  font:700 .7em/1.35em var(--ui);text-align:center;color:var(--gold);margin:0}
 .tile{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .tile.dragging{opacity:.25}
 .dragghost{position:fixed;z-index:60;pointer-events:none;margin:0;transform:translate(-50%,-62%) scale(1.15);box-shadow:0 .5em 1.2em rgba(0,0,0,.55)}
@@ -86,14 +81,14 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 #discardBtn{width:100%;margin-top:8px;padding:11px 14px;font-size:16px}
 .handbar{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}
 .handbar .hint{margin-right:auto;font-size:12px;color:var(--muted)}
-.tile.back{background:repeating-linear-gradient(45deg,var(--jade) 0 .35em,#2f8660 .35em .7em);border:1px solid var(--jade-d);box-shadow:0 .2em 0 #153f2c}
+.tile.back{background:repeating-linear-gradient(45deg,var(--jade) 0 .35em,#2f8660 .35em .7em);border:1px solid var(--jade-d);box-shadow:0 .2em 0 #153f2c;height:3.6em;width:2.8em}
 .tile.last{outline:2px solid var(--gold);outline-offset:1px}
 .tile.clk{cursor:pointer;transition:transform .12s}
 .tile.clk:hover{transform:translateY(-.3em)}
 .tile.sel{transform:translateY(-.8em);outline:2px solid var(--gold);outline-offset:1px}
 .tile.dim{opacity:.55}
 #hand{display:flex;flex-wrap:wrap;gap:3px;align-items:flex-end;padding:10px 0 4px}
-#hand .tile{--u:clamp(11px,calc((100vw - 40px) / 48),16px)}
+#hand .tile{--u:clamp(11px,calc((100vw - 40px) / 52),16px)}
 #hand .gap{width:.9em}
 .opp .tile.back{--u:7px}
 .opp .zone{min-height:2.4em}
@@ -110,6 +105,8 @@ dialog h2{font:900 22px var(--face);margin:0 0 8px}
 dialog h3{font-size:14px;margin:14px 0 4px;color:var(--gold)}
 dialog ul{margin:4px 0;padding-left:1.2em}
 dialog li{margin:2px 0}
+dialog li>ul{margin:2px 0 6px;opacity:.92}
+dialog li b{color:var(--ivory)}
 .fanlist{display:grid;grid-template-columns:1fr auto;gap:2px 16px;max-width:360px;font-variant-numeric:tabular-nums}
 .fanlist .tot{border-top:1px solid var(--line);padding-top:4px;margin-top:2px;font-weight:700}
 .reveal{margin-top:10px;display:grid;gap:8px}
@@ -223,42 +220,131 @@ zh: `  <h2>規則（目前實作）</h2>
     <li>滑鼠移到牌上（手機點一下牌）會顯示這種牌共幾張、已見幾張、還剩幾張（已見＝你的手牌＋所有棄牌＋所有鳴牌）。</li>
     <li>電腦的策略很簡單（不防守，會隨機吃碰），只適合測規則。</li></ul>`,
 en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
-  <p>Kowloon Dragons is a tile game from the mahjong family. It needs its own 150-tile set, not a regular mahjong set. In this test page you play against 3 computer players. Each hand starts with the dealer; there are no winds or dealer streaks. The wall is reshuffled every hand and scores carry over.</p>
+  <p>Kowloon Dragons is a tile game from the mahjong family. It needs its own 150-tile set, not a regular mahjong set. On this page you play against 3 computer players. A hand starts with the dealer; there are no winds or dealer streaks. The wall is reshuffled every hand and scores carry over.</p>
+  <h3>Goal</h3>
+  <ul>
+    <li>Hand of 13 tiles; you win on the 14th with <b>4 sets + 1 pair</b> (a set is a chow or a pung/kong).</li>
+    <li>You need at least <b>1 full fan</b> to win. Minor fans (½) alone don't count.</li>
+  </ul>
   <h3>Tiles and points</h3>
   <ul>
-    <li>Circles (筒), Bamboo (索) and Characters (萬): 45 tiles each, with n copies of number n. Dragons 中 發 白: 5 each. 150 tiles in total.</li>
-    <li>Point value = 10 − number (1 = 9 pts … 9 = 1 pt). Dragons are worth 0. The small gold number on a tile is its value.</li>
+    <li>Circles (筒), Bamboo (索), Characters (萬): 45 tiles each, with <b>n copies of number n</b>.</li>
+    <li>Dragons 中 發 白: 5 copies each. 150 tiles in total.</li>
+    <li>Point value = 10 − number: 1 = 9 pts … 9 = 1 pt. Dragons = 0. The small gold badge on a tile is its value.</li>
+    <li>Small tiles = 1–3. Middle tiles = 4–6. Big tiles = 7–9.</li>
   </ul>
-  <h3>Chow, pung, kong</h3>
+  <h3>Calling a discard</h3>
   <ul>
-    <li>Big tiles (7–9) can never be chowed, punged or konged, and can't be concealed-konged either. They never enter the meld area.</li>
-    <li>Mixed pung (混碰): numbers 1–3 only, same number in different suits (hold 1筒 + 1索 and claim 1萬; hold two 2索 and claim 2筒). The claimed tile scores 0 (dashed outline); the two tiles from your hand still score.</li>
-    <li>Mixed triplet in hand (小字混刻): three tiles of the same number 1–3 in different suits can also be formed inside your closed hand without calling, as a concealed triplet. It counts like any other triplet (All Pungs, Three/Four Concealed Pungs and so on).</li>
-    <li>No mixed chow. Chows are same-suit only, only from the player on your left, and may not contain 7–9 (holding 5-6 you can't chow a 7; holding 7-8 you can't chow a 6). So only 123, 234, 345 and 456 can be claimed.</li>
-    <li>Small tiles (1–3) can't be konged or concealed-konged. There is no mixed kong. A kong must be the same suit and number (4–6, or a dragon).</li>
-    <li>Grand dragon kong (三元大槓): after a concealed or added kong of a dragon, a 5th copy can be added (press Kong) for an extra ½ fan.</li>
-    <li>If several players can pung the same discard (e.g. a 5, a 6 or a dragon): the discarder's right-hand player goes first, then across, then left. A win beats a pung or kong, and a chow comes last.</li>
-    <li>No robbing the kong. After a kong you draw a replacement tile from the end of the wall.</li>
+    <li><b>Chow (吃)</b>
+      <ul>
+        <li>Same suit only, and only from the player on your left.</li>
+        <li>The chow can't contain a 7–9. Holding 5-6 you can't chow a 7; holding 7-8 you can't chow a 6.</li>
+        <li>So only <b>123, 234, 345 and 456</b> can be claimed. A 789 chow is fine inside your closed hand.</li>
+        <li>No mixed chow.</li>
+      </ul>
+    </li>
+    <li><b>Pung (碰)</b>
+      <ul>
+        <li>Allowed for 1–6 and dragons. Big tiles (7–9) can never be punged.</li>
+        <li>If several players can pung the same discard, priority is: the discarder's right-hand player, then across, then left.</li>
+      </ul>
+    </li>
+    <li><b>Kong (槓)</b>
+      <ul>
+        <li>Allowed for 4–6 and dragons, same suit and number only. No mixed kong.</li>
+        <li>Small tiles (1–3) and big tiles (7–9) can't be konged or concealed-konged.</li>
+        <li>After a kong you draw a replacement tile from the end of the wall.</li>
+      </ul>
+    </li>
+    <li><b>Win (胡)</b> beats pung and kong, and a chow comes last. No robbing the kong.</li>
   </ul>
-  <h3>Hands and fan (they stack, capped at 4 fan; ½ fan is a "minor fan")</h3>
+  <h3>Special actions</h3>
   <ul>
-    <li>1 fan (full fan): Dragon pung (each pung stacks), All Chows 平和 (all chows, no dragons, the pair can't be a dragon), All Pungs 對對胡</li>
-    <li>2 fan: Half Flush 混一色, Concealed Self-Draw 門清加自摸, All Big 全大字 (only 7–9 number tiles), No Big 斷大字 (no 7–9 number tiles), Three Concealed Pungs 三暗刻</li>
-    <li>3 fan: Full Flush 清一色, Small Three Dragons 小三元 (replaces the dragon pungs; hand points +20), Yaojiu Straight 幺九順 (123 + 456 + 789 in one suit; the remaining set can be a chow or a pung, in any suit)</li>
-    <li>4 fan: Big Three Dragons 大三元 (replaces the dragon pungs; hand points +40), Four Concealed Pungs 四暗刻, Yaojiu Dragon 幺九龍 (123 + 456 + 789 in one suit + one each of 中 發 白 + a pair of a same-suit number or a dragon; hand points +40)</li>
-    <li>Concealed pungs: a concealed kong counts. On a discard win, a pung completed by the winning tile counts as open, but a win that completes the pair (or fits into a chow) doesn't ruin it.</li>
-    <li>Minor fans (½ fan each): Kong (each), Grand dragon kong, Concealed 門清, Self-draw 自摸 (open hands only; Concealed Self-Draw already includes it), Missing suit with no dragons 斷一門無三元 (one of the three suits absent and no dragons), Win on a small tile 胡小字 (the winning tile is a 1–3). Minor fans can only be added once you have at least 1 full fan, and two ½ fans alone can't win.</li>
+    <li><b>Mixed pung (混碰)</b>
+      <ul>
+        <li>Numbers 1–3 only: the same number in three different suits.</li>
+        <li>Example: hold 1筒 + 1索 and claim a 1萬, or hold two 2索 and claim a 2筒.</li>
+        <li>The claimed tile scores 0 (dashed outline); the tiles from your hand still score.</li>
+      </ul>
+    </li>
+    <li><b>Mixed triplet in hand (小字混刻)</b>
+      <ul>
+        <li>The same three-suit set of a 1–3 number can also be formed inside your closed hand, with no call.</li>
+        <li>It counts as a concealed triplet for All Pungs, Three Concealed Pungs and Four Concealed Pungs.</li>
+        <li>On a discard win, a mixed triplet completed by the winning tile counts as open, unless that tile could sit in the pair or a chow.</li>
+      </ul>
+    </li>
+    <li><b>Grand dragon kong (三元大槓)</b>
+      <ul>
+        <li>After a concealed kong or added kong of a dragon, you can add the 5th copy (press Kong).</li>
+        <li>Worth an extra ½ fan. Each dragon has 5 copies; this must be self-drawn.</li>
+      </ul>
+    </li>
+  </ul>
+  <h3>Winning hands (fan stack, capped at 4)</h3>
+  <ul>
+    <li><b>1 fan</b>
+      <ul>
+        <li><b>Dragon pung (中發白刻子)</b>: each dragon pung counts, and they stack.</li>
+        <li><b>All Chows (平和)</b>: all chows, no dragons, and the pair isn't a dragon.</li>
+        <li><b>All Pungs (對對胡)</b>: 4 pungs + pair. Mixed pungs are allowed.</li>
+      </ul>
+    </li>
+    <li><b>2 fan</b>
+      <ul>
+        <li><b>Half Flush (混一色)</b>: one suit plus dragons.</li>
+        <li><b>Concealed Self-Draw (門清加自摸)</b>: no calls and you win by drawing.</li>
+        <li><b>All Big (全大字)</b>: only 7–9 number tiles.</li>
+        <li><b>No Big (斷大字)</b>: no 7–9 number tiles.</li>
+        <li><b>Three Concealed Pungs (三暗刻)</b></li>
+      </ul>
+    </li>
+    <li><b>3 fan</b>
+      <ul>
+        <li><b>Full Flush (清一色)</b>: one suit only, no dragons.</li>
+        <li><b>Small Three Dragons (小三元)</b>: two dragon pungs + a pair of the third. Replaces the dragon pung fan; hand points +20.</li>
+        <li><b>Yaojiu Straight (幺九順)</b>: 123 + 456 + 789 in one suit. The remaining set is a chow or a pung in any suit; the pair is anything.</li>
+      </ul>
+    </li>
+    <li><b>4 fan</b>
+      <ul>
+        <li><b>Big Three Dragons (大三元)</b>: pungs of all three dragons. Replaces the dragon pung fan; hand points +40.</li>
+        <li><b>Four Concealed Pungs (四暗刻)</b></li>
+        <li><b>Yaojiu Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of 中 發 白 + a pair of a same-suit number or a dragon. Hand points +40 (340–396 pts in total).</li>
+      </ul>
+    </li>
+  </ul>
+  <h3>Minor fans (碎番, ½ fan each)</h3>
+  <ul>
+    <li>Only added once you already have at least 1 full fan; two ½ fans alone can't win.</li>
+    <li><b>Kong (槓)</b>: each kong.</li>
+    <li><b>Grand dragon kong (三元大補槓)</b></li>
+    <li><b>Concealed (門清)</b>: no calls.</li>
+    <li><b>Self-draw (自摸)</b>: open hands only. Concealed Self-Draw already includes it.</li>
+    <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons.</li>
+    <li><b>Win on a small tile (胡小字)</b>: the winning tile is a 1–3.</li>
     <li>Concealed Self-Draw already includes Concealed and Self-draw; All Big gets no Concealed bonus.</li>
-    <li>Total fan is rounded down, so 1 + ½ + ½ = 2 fan.</li>
-    <li>Multiplier: 1 fan ×1, 2 fan ×2, 3 fan ×3, 4 fan ×4. Score = total tile points of the whole hand (melds included, minus the claimed tile of a mixed pung) × multiplier.</li>
   </ul>
-  <h3>Payment (provisional)</h3>
-  <ul><li>Self-draw: each of the other three players pays one share. Discard win: the discarder pays two shares.</li></ul>
+  <h3>Concealed pungs</h3>
+  <ul>
+    <li>A concealed kong counts as concealed.</li>
+    <li>On a discard win, a pung completed by the winning tile counts as open.</li>
+    <li>But if the winning tile could instead sit in the pair or in a chow, the pung stays concealed.</li>
+  </ul>
+  <h3>Scoring</h3>
+  <ul>
+    <li>Total fan is rounded down, so 1 + ½ + ½ = 2 fan.</li>
+    <li>Multiplier: 1 fan ×1, 2 fan ×2, 3 fan ×3, 4 fan ×4.</li>
+    <li>Score = total tile points of the whole hand (melds included, minus the claimed tile of a mixed pung) × multiplier.</li>
+    <li>Payment (provisional): on a self-draw each of the other three pays one share; on a discard win the discarder pays two shares.</li>
+  </ul>
   <h3>Controls</h3>
-  <ul><li>Tap a tile to select it and see its info; on a phone, tap again to unselect. To discard, press the Discard button under your hand. It discards only the selected tile. With a mouse, clicking a selected tile again also discards it.</li>
+  <ul>
+    <li>Tap a tile to select it and see its info; on a phone, tap again to unselect. To discard, press the Discard button under your hand. It discards only the selected tile. With a mouse, clicking a selected tile again also discards it.</li>
     <li>Reorder your hand: drag with the mouse, or long-press and drag on a phone. You can also select a tile and use ◀ ▶. "Sort" goes back to auto-sort.</li>
     <li>Hover over a tile (tap it on a phone) to see how many copies exist, how many you can see and how many remain. Seen = your hand + all discards + all melds.</li>
-    <li>The computer players are simple (no defense, random calls). They are there to test the rules.</li></ul>`
+    <li>The computer players are simple (no defense, random calls). They are there to test the rules.</li>
+  </ul>`
 };
 let G = null, scores = [0, 0, 0, 0], dealer = 0, runId = 0;
 const UI = { mode: null, resolve: null, sel: null, drawnId: null, manual: false, order: [], suppressClick: false };
@@ -270,9 +356,7 @@ function tileEl(t, o = {}) {
   d.className = 'tile ' + (t.s === 'z' ? 'z' + t.n : t.s) + (o.sm ? ' sm' : '') + (o.md ? ' md' : '') + (o.btn ? ' clk' : '') + (o.cls ? ' ' + o.cls : '');
   if (o.btn) d.type = 'button';
   d.setAttribute('aria-label', tn(t)); d.dataset.id = t.id; d.dataset.k = t.k;
-  d.innerHTML = t.s === 'z'
-    ? `<i class="h">${t.n === 3 ? '' : HON[t.n]}</i>`
-    : `<i class="v">${val(t)}</i><i class="n">${LANG === 'en' ? t.n : NUM[t.n]}</i><i class="su">${SUITN[t.s]}</i>`;
+  d.innerHTML = `<img src="tiles/${t.s}${t.n}.png" alt="" draggable="false">` + (t.s === 'z' ? '' : `<i class="v">${val(t)}</i>`);
   return d;
 }
 function backEl() { const d = document.createElement('div'); d.className = 'tile back'; return d; }
