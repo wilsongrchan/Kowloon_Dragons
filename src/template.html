@@ -58,7 +58,7 @@ button.btn.ghost{background:transparent;color:var(--pg);border-color:var(--pgm)}
 .seat-head b{color:var(--text);font-size:calc(14px*var(--fs,1))}
 .ruby-x{}
 rt{font-size:.55em;font-weight:400;color:var(--muted);letter-spacing:0}
-.dealer{display:inline-block;background:#f3ecd6;color:#2a1f08;border-radius:99px;padding:1px 9px;font-weight:700;font-size:calc(12px*var(--fs,1));line-height:1.5;letter-spacing:.04em;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.dealer{display:inline-block;margin-left:10px;background:#f3ecd6;color:#2a1f08;border-radius:99px;padding:1px 9px;font-weight:700;font-size:calc(12px*var(--fs,1));line-height:1.5;letter-spacing:.04em;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 .seat-head .total{color:var(--muted);font-size:calc(12px*var(--fs,1));background:rgba(0,0,0,.2);padding:2px 8px;border-radius:99px}
 .seat-head .total b{color:var(--gold);font-size:calc(14px*var(--fs,1))}
 .seat-head .score{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted);font-size:calc(12px*var(--fs,1));white-space:nowrap;display:flex;align-items:baseline;gap:5px}
@@ -417,7 +417,7 @@ button.btn.icn:hover{background:rgba(128,128,128,.18)}
 button.btn.icn svg{display:block}
 #landing button.btn.icn{color:var(--text);border-color:var(--muted)}
 .xform{position:sticky;top:0;height:0;z-index:5;text-align:right;overflow:visible;margin:0}
-.xbtn{width:34px;height:34px;margin:-8px -8px 0 0;border-radius:50%;border:2px solid var(--muted);background:var(--table);color:var(--text);font:700 calc(15px*var(--fs,1)) var(--ui);cursor:pointer;line-height:1;padding:0}
+.xbtn{display:inline-grid;place-items:center;vertical-align:top;width:34px;height:34px;margin:-8px -8px 0 0;border-radius:50%;border:2px solid var(--muted);background:var(--table);color:var(--text);font:700 calc(15px*var(--fs,1)) var(--ui);cursor:pointer;line-height:1;padding:0}
 .xbtn:hover{background:var(--table2)}
 dialog .xform + h2,dialog .xform + h3{padding-right:38px}
 #lobby .card .xclose{position:absolute;top:10px;right:10px;margin:0}
@@ -944,8 +944,8 @@ function render() {
     const s = document.createElement('section'); s.className = 'seat opp ' + (seat === 2 ? 'across' : seat === 3 ? 'left' : 'right') + (G.turn === seat ? ' active' : '');
     const rel = seat === 3 ? L('可吃', 'you can chow from them') : seat === 1 ? L('', 'plays after you') : '';
     const dealerB = G.dealer === seat ? `<span class="dealer">${L('莊', 'Dealer')}</span>` : '';
-    const tag = (online() ? `<span class="nm">${ROOM.names[(seat + mySeat) % 4]}</span>` : '') + dealerB;
-    s.innerHTML = `<div class="seat-head"><b>${NAMES[seat]}</b>${tag}<span>${rel}</span><span class="tclk" data-v="${seat}"></span><span class="score">${L('分數', 'Points')} <b>${scores[seat]}</b></span></div>`;
+    const tag = online() ? `<span class="nm">${ROOM.names[(seat + mySeat) % 4]}</span>` : '';
+    s.innerHTML = `<div class="seat-head"><b>${NAMES[seat]}${dealerB}</b>${tag}<span>${rel}</span><span class="tclk" data-v="${seat}"></span><span class="score">${L('分數', 'Points')} <b>${scores[seat]}</b></span></div>`;
     const ml = document.createElement('div'); ml.className = 'melds'; G.melds[seat].forEach(m => ml.appendChild(meldEl(m, 'sm')));
     s.querySelector('.seat-head').insertBefore(ml, s.querySelector('.score'));
     const bk = document.createElement('div'); bk.className = 'backs'; for (let i = 0; i < G.hands[seat].length; i++) bk.appendChild(backEl()); s.appendChild(bk);
@@ -1518,7 +1518,8 @@ function refreshCheat() {
   $('#cheatDlg').innerHTML = XBTN() + cheatHTML();
 }
 /* ---- 語言 / Language ---- */
-const XBTN = () => `<form method="dialog" class="xform"><button class="xbtn" aria-label="${L('關閉', 'Close')}" title="${L('關閉', 'Close')}">✕</button></form>`;
+const X_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+const XBTN = () => `<form method="dialog" class="xform"><button class="xbtn" aria-label="${L('關閉', 'Close')}" title="${L('關閉', 'Close')}">${X_SVG}</button></form>`;
 const tag = (sel, txt) => { const b = $(sel); b.setAttribute('aria-label', txt); b.title = txt; };
 function applyLang() {
   document.documentElement.lang = LANG === 'en' ? 'en' : LANG === 'ja' ? 'ja' : 'zh-Hant';
@@ -1821,7 +1822,7 @@ function renderLobby() {
         <p class="note ctr">${L('全員準備後，由房主開始遊戲。', 'The host starts once everyone is ready.')}</p>`;
   const ico = (id, inner, label) => `<button class="btn icn" id="${id}" type="button" title="${label}" aria-label="${label}">${inner}</button>`;
   const top = pre ? `<div class="ltop"><span class="lname">${L('幺九龍', 'Kowloon Dragons')}</span><div class="licons">${ico('lbLang', $('#langBtn').innerHTML, L('切換語言', 'Switch language'))}${ico('lbRules', '?', L('規則', 'Rules'))}${ico('lbSet', $('#setBtn').innerHTML, L('設定', 'Settings'))}</div></div>` : '';
-  d.innerHTML = `${top}<div class="card">${pre ? '' : `<button type="button" class="xbtn xclose" id="lbClose" aria-label="${L('關閉', 'Close')}">✕</button>`}
+  d.innerHTML = `${top}<div class="card">${pre ? '' : `<button type="button" class="xbtn xclose" id="lbClose" aria-label="${L('關閉', 'Close')}">${X_SVG}</button>`}
     <div class="lhead"><span class="lbl">${L('房間代碼', 'Room code')}</span><span class="code">${ROOM.code}</span><button class="btn sm" id="lbCopy" type="button" title="${L('複製邀請連結', 'Copy invite link')}">${L('複製連結', 'Copy link')}</button></div>
     ${rows}
     ${settings}
