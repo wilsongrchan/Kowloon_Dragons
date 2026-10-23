@@ -548,7 +548,7 @@ const SUITEN = { p: 'Circles', s: 'Bamboo', m: 'Characters' }, DRAGEN = { 1: 'Re
 const tn = t => LANG === 'en' ? (t.s === 'z' ? DRAGEN[t.n] : t.n + SUITN[t.s]) : tname(t);
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? (k[0] === 'z' ? DRAGEN[+k.slice(1)] : +k.slice(1) + SUITN[k[0]] + ' ' + SUITEN[k[0]]) : kn(k);
-const YAKU_EN = {'中發白刻子':'Dragon triplet','平和':'All Chows','對對胡':'All Pungs','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Pungs','四暗刻':'Four Concealed Pungs','小三元':'Small Three Dragons','大三元':'Big Three Dragons','幺九順':'Yaojiu Straight','幺九龍':'Yaojiu Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
+const YAKU_EN = {'中發白刻子':'Dragon triplet','平和':'All Chows','對對胡':'All Triplets','混一色':'Half Flush','清一色':'Full Flush','全大字':'All Big','斷大字':'No Big','門清加自摸':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','小三元':'Small Three Dragons','大三元':'Big Three Dragons','幺九順':'Yaojiu Straight','幺九龍':'Yaojiu Dragon','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','斷一門無三元':'Missing suit, no dragons','胡小字':'Win on small tile'};
 const yn = name => { if (LANG !== 'en') return name; const m = name.match(/^(.+?)(×\d+)?$/); return (YAKU_EN[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -601,7 +601,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
   <p>Kowloon Dragons is a tile game from the mahjong family. It needs its own 150-tile set, not a regular mahjong set. On this page you play against 3 computer players. A hand starts with the dealer; there are no winds or dealer streaks. The wall is reshuffled every hand and scores carry over.</p>
   <h3>Goal</h3>
   <ul>
-    <li>Hand of 13 tiles; you win on the 14th with <b>4 sets + 1 pair</b> (a set is a chow or a pung/kong).</li>
+    <li>Hand of 13 tiles; you win on the 14th with <b>4 sets + 1 pair</b> (a set is a chow or a triplet; a kong counts as one set).</li>
     <li>You need at least <b>1 full fan</b> to win. Minor fans (½) alone don't count.</li>
   </ul>
   <h3>Tiles and points</h3>
@@ -649,7 +649,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     <li><b>Mixed triplet in hand (小字混刻)</b>
       <ul>
         <li>The same three-suit set of a 1–3 number can also be formed inside your closed hand, with no call.</li>
-        <li>It counts as a concealed triplet for All Pungs, Three Concealed Pungs and Four Concealed Pungs.</li>
+        <li>It counts as a concealed triplet for All Triplets, Three Concealed Triplets and Four Concealed Triplets.</li>
         <li>On a discard win, a mixed triplet completed by the winning tile counts as open, unless that tile could sit in the pair or a chow.</li>
       </ul>
     </li>
@@ -667,7 +667,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
       <ul>
         <li><b>Dragon triplet (中發白刻子)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
         <li><b>All Chows (平和)</b>: all chows, no dragons, and the pair isn't a dragon.</li>
-        <li><b>All Pungs (對對胡)</b>: 4 pungs + pair. Mixed pungs are allowed.</li>
+        <li><b>All Triplets (對對胡)</b>: 4 triplets + pair. Mixed pungs are allowed.</li>
       </ul>
     </li>
     <li><b>2 fan</b>
@@ -676,25 +676,25 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
         <li><b>Concealed Self-Draw (門清加自摸)</b>: no calls and you win by drawing.</li>
         <li><b>All Big (全大字)</b>: only 7–9 number tiles.</li>
         <li><b>No Big (斷大字)</b>: no 7–9 number tiles.</li>
-        <li><b>Three Concealed Pungs (三暗刻)</b></li>
+        <li><b>Three Concealed Triplets (三暗刻)</b></li>
       </ul>
     </li>
     <li><b>3 fan</b>
       <ul>
         <li><b>Full Flush (清一色)</b>: one suit only, no dragons.</li>
         <li><b>Small Three Dragons (小三元)</b>: two dragon triplets + a pair of the third. Replaces the dragon triplet fan; hand points +20.</li>
-        <li><b>Yaojiu Straight (幺九順)</b>: 123 + 456 + 789 in one suit. The remaining set is a chow or a pung in any suit; the pair is anything.</li>
+        <li><b>Yaojiu Straight (幺九順)</b>: 123 + 456 + 789 in one suit. The remaining set is a chow or a triplet in any suit; the pair is anything.</li>
       </ul>
     </li>
     <li><b>4 fan</b>
       <ul>
         <li><b>Big Three Dragons (大三元)</b>: triplets of all three dragons. Replaces the dragon triplet fan; hand points +40.</li>
-        <li><b>Four Concealed Pungs (四暗刻)</b></li>
+        <li><b>Four Concealed Triplets (四暗刻)</b></li>
         <li><b>Yaojiu Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +40 (340–396 pts in total).</li>
       </ul>
     </li>
   </ul>
-  ${EG('Tile examples: winning hands', [X('1 fan: Dragon triplet','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 fan: All Chows','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 fan: All Pungs','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 fan: Half Flush','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 fan: All Big','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 fan: No Big','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 fan: Three Concealed Pungs','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 fan: Full Flush','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 fan: Small Three Dragons','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 fan: Yaojiu Straight','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 fan: Big Three Dragons','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 fan: Four Concealed Pungs','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 fan: Yaojiu Dragon','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
+  ${EG('Tile examples: winning hands', [X('1 fan: Dragon triplet','z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'),X('1 fan: All Chows','p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'),X('1 fan: All Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'),X('2 fan: Half Flush','p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'),X('2 fan: All Big','p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'),X('2 fan: No Big','p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'),X('2 fan: Three Concealed Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'),X('3 fan: Full Flush','p1 p2 p3|p4 p5 p6|p4 p5 p6|p5 p5 p5|p3 p3'),X('3 fan: Small Three Dragons','z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'),X('3 fan: Yaojiu Straight','s1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'),X('4 fan: Big Three Dragons','z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'),X('4 fan: Four Concealed Triplets','p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'),X('4 fan: Yaojiu Dragon','m1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5')])}
   <h3>Minor fans (碎番, ½ fan each)</h3>
   <ul>
     <li>Only added once you already have at least 1 full fan; two ½ fans alone can't win.</li>
@@ -706,11 +706,11 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     <li><b>Win on a small tile (胡小字)</b>: the winning tile is a 1–3.</li>
     <li>Concealed Self-Draw already includes Concealed and Self-draw; All Big gets no Concealed bonus.</li>
   </ul>
-  <h3>Concealed pungs</h3>
+  <h3>Concealed triplets</h3>
   <ul>
     <li>A concealed kong counts as concealed.</li>
-    <li>On a discard win, a pung completed by the winning tile counts as open.</li>
-    <li>But if the winning tile could instead sit in the pair or in a chow, the pung stays concealed.</li>
+    <li>On a discard win, a triplet completed by the winning tile counts as open.</li>
+    <li>But if the winning tile could instead sit in the pair or in a chow, the triplet stays concealed.</li>
   </ul>
   <h3>Scoring</h3>
   <ul>
