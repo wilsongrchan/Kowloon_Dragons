@@ -51,6 +51,7 @@ Known: concealed tsumo stacks hit the 4番 cap easily (斷大字+門清自摸 ~3
 Prefer one change at a time, simulate before changing scoring, and keep Wilson's rule text as source of truth.
 
 ## UI features (src/template.html)
+- Table layout: 對家 on top, 上家 (left) and 下家 (right) side by side, you at the bottom (#opps grid in template.html).
 - Hand reordering: mouse drag, touch long-press drag, select + ◀ ▶ buttons, 整理 button resets to auto-sort. State: UI.manual / UI.order.
 - Selection: tap a hand tile = select (highlight + info line #selinfo under the hand); tap again = unselect (touch). Discard ONLY via the 打出 button (#discardBtn); on mouse, clicking an already-selected tile also discards.
 - Hover (desktop) or tap (phone, non-hand tiles) any tile -> tooltip with total copies / seen / remaining (seen = own hand + all discards + all melds). Tooltip element #tip.

@@ -91,6 +91,12 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 #hand .tile{--u:clamp(11px,calc((100vw - 40px) / 52),16px)}
 #hand .gap{width:.9em}
 .opp .tile.back{--u:7px}
+#opps{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"across across" "left right";gap:8px;align-items:start}
+.opp.across{grid-area:across}.opp.left{grid-area:left}.opp.right{grid-area:right}
+.opp.left,.opp.right{min-width:0}
+.opp .seat-head{flex-wrap:wrap;gap:4px 8px}
+.opp.left .zone,.opp.right .zone{flex-direction:column;gap:6px}
+.opp.left .zone .melds,.opp.right .zone .melds{max-width:none;justify-content:flex-start;padding:0;border-left:0}
 .opp .zone{min-height:2.4em}
 .actions{display:flex;flex-wrap:wrap;gap:8px;min-height:40px;margin-top:8px}
 .status{margin:8px 0 0;color:var(--muted);min-height:1.5em;font-size:14px}
@@ -384,10 +390,9 @@ function render() {
   if (!G) return;
   $('#wall').textContent = L('牌山 ', 'Wall ') + G.wall.length;
   const opps = $('#opps'); opps.innerHTML = '';
-  opps.style.display = 'grid'; opps.style.gap = '8px';
-  for (const seat of [3, 2, 1]) {
-    const s = document.createElement('section'); s.className = 'seat opp' + (G.turn === seat ? ' active' : '');
-    const tag = seat === 3 ? L('上家・你可吃他的牌', 'you can chow from them') : seat === 1 ? L('下家', 'plays after you') : L('對家', 'opposite');
+  for (const seat of [2, 3, 1]) {
+    const s = document.createElement('section'); s.className = 'seat opp ' + (seat === 2 ? 'across' : seat === 3 ? 'left' : 'right') + (G.turn === seat ? ' active' : '');
+    const tag = seat === 3 ? L('上家・可吃', 'can chow') : seat === 1 ? L('下家', 'next') : '';
     s.innerHTML = `<div class="seat-head"><b>${NAMES[seat]}</b><span>${tag}</span><span class="score">${scores[seat]}</span></div>`;
     const bk = document.createElement('div'); bk.className = 'backs'; for (let i = 0; i < G.hands[seat].length; i++) bk.appendChild(backEl()); s.appendChild(bk);
     const zone = document.createElement('div'); zone.className = 'zone';
