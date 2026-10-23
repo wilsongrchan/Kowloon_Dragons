@@ -62,3 +62,4 @@ Prefer one change at a time, simulate before changing scoring, and keep Wilson's
 - Cheat sheet (番種速查): sidebar `#cheat` on >=1180px, header button `#cheatBtn` -> `#cheatDlg` dialog below that. Content from `CHEAT_TIERS` / `CHEAT_MINOR` / `cheatHTML()` in template.html; update with rule changes (along with both rules texts).
 - Result dialog: big gold score (.hero) under the title; muted gold dragon SVG as #result background (data URI, opacity .24).
 - Play table also has the muted dragon as background (--dragon-t, stronger than the result dialog --dragon); seat panels are semi-transparent. Each seat header shows a labeled bigger score (分數/Points). On <=520px bot called tiles move to their own row under the header.
+- Cheat sheet is live: cheatStates() (template.html) reads your melds/hand each render() -> gold "✓" = supported by your melds/hand, grey+strikethrough = ruled out (reason shown). Keep its rules in sync with rule changes.
