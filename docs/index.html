@@ -120,6 +120,7 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 #opps{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"across across" "left right";gap:8px;align-items:start}
 .opp.across{grid-area:across;justify-self:center;width:calc(50% - 4px)}.opp.left{grid-area:left}.opp.right{grid-area:right}
 .opp.left,.opp.right{min-width:0}
+.seat-head span:empty{display:none}
 .opp .seat-head{flex-wrap:nowrap;align-items:flex-start;gap:4px 8px}
 .opp .seat-head>b,.opp .seat-head>span{flex:none}
 .opp .seat-head .melds{flex:0 1 auto;min-width:0}
@@ -801,7 +802,7 @@ function render() {
   const opps = $('#opps'); opps.innerHTML = '';
   for (const seat of [2, 3, 1]) {
     const s = document.createElement('section'); s.className = 'seat opp ' + (seat === 2 ? 'across' : seat === 3 ? 'left' : 'right') + (G.turn === seat ? ' active' : '');
-    const tag = seat === 3 ? L('上家・可吃', 'you can chow from them') : seat === 1 ? L('下家', 'plays after you') : '';
+    const tag = seat === 3 ? L('可吃', 'you can chow from them') : seat === 1 ? L('', 'plays after you') : '';
     s.innerHTML = `<div class="seat-head"><b>${NAMES[seat]}</b><span>${tag}</span><span class="score">${L('分數', 'Points')} <b>${scores[seat]}</b></span></div>`;
     const ml = document.createElement('div'); ml.className = 'melds'; G.melds[seat].forEach(m => ml.appendChild(meldEl(m, 'sm')));
     s.querySelector('.seat-head').insertBefore(ml, s.querySelector('.score'));
