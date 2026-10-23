@@ -234,10 +234,7 @@ header .meta{order:2}
   .opp .pool .tile{--u:5.9px}
   .opp .meld .tile{--u:6px}
   .opp .seat-head .meld{padding:1px}
-  .tbar{justify-content:space-between;align-items:center;gap:8px;margin:-1px 0}
-  #cheatBar{display:flex;flex:1;align-items:center;justify-content:center;gap:8px;min-height:0;height:34px;padding:0 10px;border:1px solid var(--line);border-radius:99px;background:rgba(0,0,0,.18);color:var(--gold);font-weight:700;font-size:calc(14px*var(--fs,1))}
-  #cheatBar b{font-size:calc(13px*var(--fs,1))}
-  #cheatTab{display:none!important}
+  .tbar{justify-content:flex-start;align-items:center;gap:8px;margin:-1px 0}
   .tbar .pill{flex:none;padding:2px 10px 2px 6px;gap:6px;font-size:calc(12px*var(--fs,1))}
   .tbar .pill svg{width:40px;height:28px}
   .tbar .pill b{font-size:calc(17px*var(--fs,1))}
@@ -314,6 +311,8 @@ body:has(#cheatDlg[open]) #cheatTab{right:min(340px,86vw);animation:none}
   #cheatTab{display:flex;align-items:center;gap:4px;position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:17;transition:right .22s ease-out;padding:14px 6px 14px 9px;border:1px solid var(--line);border-right:0;border-radius:12px 0 0 12px;background:var(--table2);color:var(--gold);font:700 calc(13px*var(--fs,1)) var(--ui);cursor:pointer;writing-mode:vertical-rl;box-shadow:-2px 2px 10px rgba(0,0,0,.35);animation:tabnudge 2.6s ease-in-out 1s 3}
   #cheatTab b{writing-mode:horizontal-tb;font-size:calc(16px*var(--fs,1));line-height:1}
   #cheatTab:hover{background:#38505f}
+  #cheatTab{touch-action:none;user-select:none;-webkit-user-select:none}
+  #cheatTab.drag{transition:none;animation:none}
 }
 @keyframes tabnudge{0%,100%{transform:translate(0,-50%)}50%{transform:translate(-6px,-50%)}}
 @media (prefers-reduced-motion: reduce){.tile.clk{transition:none}#cheatTab{animation:none}}
@@ -448,6 +447,8 @@ button.btn.hot:hover{background:#ecc064}
 #sortBtn .sw{flex:none;min-width:2.1em;text-align:left}
 #sortBtn .spat{flex:none;width:8.6ch;text-align:left;font-variant-numeric:tabular-nums}
 #roomChip{font-family:ui-monospace,Menlo,monospace;letter-spacing:.1em}
+.rintro{margin:6px 0 14px;font-size:1.08em;line-height:1.75}
+.exre{margin:8px 0 0;background:none;border:1px solid var(--line);color:var(--gold);border-radius:14px;padding:3px 12px;font:inherit;font-size:calc(13px*var(--fs,1));cursor:pointer}
 </style>
 </head>
 <body>
@@ -474,7 +475,7 @@ button.btn.hot:hover{background:#ecc064}
         <div class="melds" id="myMelds"></div>
       </div>
       <div class="handbar">
-        <span class="hint">拖曳或長按牌來排序</span>
+        <span class="hint">按住牌拖曳來排序</span>
         <button class="btn sm" id="leftBtn" type="button" aria-label="向左移" disabled>◀</button>
         <button class="btn sm" id="rightBtn" type="button" aria-label="向右移" disabled>▶</button>
         <button class="btn sm" id="sortBtn" type="button">整理</button>
@@ -563,8 +564,64 @@ const HAND_EX = [
   [6, '幺九龍／門清幺九龍', 'Kowloon Dragon / Concealed', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
   [6, '槓三元', 'Dragon Kongs', 'z1 z1 z1 z1|z2 z2 z2 z2|z3 z3 z3 z3|p2 p3 p4|s5 s5']
 ];
+/* ---- 番種示例「換一組」：隨機生成，並用 evaluateHand 驗證確實是該番種 ---- */
+const exR = n => Math.floor(Math.random() * n), exPick = a => a[exR(a.length)], EXS = ['p', 's', 'm'];
+const exCh = (x, a) => `${x}${a} ${x}${a + 1} ${x}${a + 2}`, exPg = (x, n) => `${x}${n} ${x}${n} ${x}${n}`;
+const exRch = (x = exPick(EXS), lo = 1, hi = 7) => exCh(x, lo + exR(hi - lo + 1));
+const exRpg = (x = exPick(EXS), lo = 3, hi = 9) => exPg(x, lo + exR(hi - lo + 1));
+const exRpr = (x = exPick(EXS), lo = 2, hi = 9) => { const n = lo + exR(hi - lo + 1); return `${x}${n} ${x}${n}`; };
+const exSet = x => exR(2) ? exRch(x) : exRpg(x), exDpg = () => exPg('z', 1 + exR(3));
+const EXGEN = {
+  '三元刻': () => [exDpg(), exRch(), exRch(), exRch(), exRpr()],
+  '平胡': () => [exRch(), exRch(), exRch(), exRch(), exRpr()],
+  '對對胡': () => [exRpg(), exRpg(), exRpg(), exRpg(), exRpr()],
+  '彩眼混一色': () => { const x = exPick(EXS), o = exPick(EXS.filter(q => q !== x)), n = 1 + exR(3); return [`${x}${n} ${o}${n}`, exRch(x), exRch(x), exR(2) ? exDpg() : exSet(x), exSet(x)]; },
+  '彩碰混一色': () => { const x = exPick(EXS), n = 1 + exR(3), o = EXS.filter(q => q !== x); return [`${x}${n} ${o[0]}${n} ${o[1]}${n}`, exRch(x), exRch(x), exR(2) ? exDpg() : exRch(x), exR(3) ? exRpr(x) : exPick(['z1 z1', 'z2 z2', 'z3 z3'])]; },
+  '混一色': () => { const x = exPick(EXS); return [exSet(x), exSet(x), exR(2) ? exDpg() : exSet(x), exDpg(), exR(2) ? exRpr(x) : 'z' + (1 + exR(3)) + ' z' + (1 + exR(3))]; },
+  '斷大字': () => [exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRpg(undefined, 3, 6), exRpr(undefined, 2, 6)],
+  '三暗刻': () => [exRpg(), exRpg(), exRpg(), exRch(), exRpr()],
+  '七對子': () => { const ks = []; while (ks.length < 7) { const k = exPick(EXS) + (2 + exR(8)); if (!ks.includes(k)) ks.push(k); } return ks.map(k => k + ' ' + k); },
+  '小三元': () => { const d = exPick([[1, 2, 3], [2, 3, 1], [3, 1, 2]]); return [exPg('z', d[0]), exPg('z', d[1]), `z${d[2]} z${d[2]}`, exRch(), exSet(exPick(EXS))]; },
+  '全大字': () => [exSet2(), exSet2(), exSet2(), exSet2(), exRpr(undefined, 7, 9)],
+  '幺九順': () => { const x = exPick(EXS); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), exSet(exPick(EXS)), exRpr()]; },
+  '清一色': () => { const x = exPick(EXS); return [exSet(x), exSet(x), exSet(x), exSet(x), exRpr(x)]; },
+  '四暗刻': () => [exRpg(), exRpg(), exRpg(), exRpg(), exRpr()],
+  '大三元': () => [exPg('z', 1), exPg('z', 2), exPg('z', 3), exRch(), exRpr()],
+  '門清幺九順': () => { const x = exPick(EXS); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), exSet(exPick(EXS)), exRpr()]; },
+  '幺九龍／門清幺九龍': () => { const x = exPick(EXS), n = exR(8) ? 3 + exR(7) : 0, pr = n ? `${x}${n} ${x}${n}` : (z => `z${z} z${z}`)(1 + exR(3)); return [exCh(x, 1), exCh(x, 4), exCh(x, 7), 'z1 z2 z3', pr]; },
+  '槓三元': () => [exPg('z', 1) + ' z1', exPg('z', 2) + ' z2', exPg('z', 3) + ' z3', exRch(), exRpr()]
+};
+function exSet2() { const x = exPick(EXS); return exR(2) ? exPg(x, 7 + exR(3)) : exCh(x, 7); }
+const EXOPEN = { '對對胡': [0, 1], '大三元': [0, 1, 2], '槓三元': [0, 1, 2], '幺九順': [3] };
+function exCheck(name, tier, groups) {
+  const cnt = {}; let id = 0;
+  const gs = groups.map(g => g.split(' ').map(k => { cnt[k] = (cnt[k] || 0) + 1; return { id: id++, s: k[0], n: +k.slice(1), k }; }));
+  for (const k in cnt) if (cnt[k] > (k[0] === 'z' ? 5 : +k.slice(1))) return null;
+  const melds = [], conc = [];
+  gs.forEach((g, i) => {
+    const op = (EXOPEN[name] || []).includes(i);
+    if (g.length === 4) melds.push({ type: 'kong', tiles: g, open: op, mixed: false, claimed: null, big: true });
+    else if (op) melds.push({ type: g[0].k === g[1].k ? 'pong' : 'chow', tiles: g, open: true, mixed: false, claimed: null, big: false });
+    else conc.push(...g);
+  });
+  const wt = gs[gs.length - 1][0];
+  const ev = evaluateHand(melds, conc, false, wt, false, null);
+  if (!ev.ok) return null;
+  const names = name.split('／'), extra = ev.items.filter(i => !names.includes(i.name)).reduce((a, i) => a + i.fan, 0);
+  return ev.items.some(i => names.includes(i.name)) && extra <= (name === '四暗刻' ? 1 : 0) ? groups.join('|') : null;
+}
+function exRandom(h) {
+  const g = EXGEN[h[1]]; if (!g) return h[3];
+  for (let i = 0; i < 300; i++) { const r = exCheck(h[1], h[0], g()); if (r) return r; }
+  return h[3];
+}
+const exLabel = (lang, h) => lang === 'en' ? h[0] + ' fan: ' + h[2] : lang === 'ja' ? h[0] + ' 翻：' + (YAKU_JA[h[1]] || h[1]) : h[0] + ' 番：' + h[1];
+const handRows = (lang, rand) => HAND_EX.map(h => X(exLabel(lang, h), rand ? exRandom(h) : h[3])).join('');
+const EGH = (title, lang, btn) => `<details class="eg"><summary>${title}</summary><button class="exre" data-re="${lang}">↻ ${btn}</button><div class="exwrap">${handRows(lang)}</div></details>`;
+
 const RULES_HTML = {
 zh: `  <h2>規則（目前實作）</h2>
+  <p class="rintro">幺九龍是一款全新的麻將類遊戲，邀請你試玩！對比傳統麻將，幺九龍最大的特點是每張牌都附有點數，而且數量不一，每次摸牌都是新的機會！幺九龍在傳統的番種上更添加全新番種，變化多樣，節奏輕快，適合所有玩過或沒有玩過傳統麻將的玩家。</p>
   <p>1 對 3 電腦。每局由莊家起手，沒有風位與連莊，每局重新洗牌，分數累計。</p>
   <h3>牌與分值</h3>
   <ul>
@@ -631,7 +688,7 @@ zh: `  <h2>規則（目前實作）</h2>
       </ul>
     </li>
   </ul>
-  ${EG('牌面示例：番種', HAND_EX.map(h => X(h[0] + ' 番：' + h[1], h[3])))}
+  ${EGH('牌面示例：番種', 'zh', '換一組')}
   <h3>半番（碎番，每項 +0.5 番）</h3>
   <ul>
     <li>必須已有至少 1 番才能追加；只有碎番、沒有全番不能胡，兩個半番不能起胡。</li>
@@ -651,7 +708,7 @@ zh: `  <h2>規則（目前實作）</h2>
   </ul>
   <h3>計分</h3>
   <ul>
-    <li>總番數取整數部分，所以 1+0.5+0.5＝2 番。</li>
+    <li>總番數取整數部分，所以 1+0.5+0.5＝2 番，1+0.5＝1.5 番則算 1 番。</li>
     <li>倍數 = 番數（1 番 ×1 … 6 番 ×6）。</li>
     <li>得分 = 全手牌點值總和（含已鳴的牌，扣除彩碰被要的那張，加上各牌型的立刻加分）× 倍數。</li>
     <li>付款（暫定）：自摸，其餘三家各付一份；出銃，出銃者付兩份。</li>
@@ -662,6 +719,7 @@ zh: `  <h2>規則（目前實作）</h2>
     <li>滑鼠移到牌上（手機點一下牌）會顯示這種牌共幾張、已見幾張、還剩幾張（已見＝你的手牌＋所有棄牌＋所有鳴牌）。</li>
     <li>電腦的策略很簡單（不防守，會隨機吃碰），只適合測規則。</li></ul>`,
 en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
+  <p class="rintro">Kowloon Dragons is a brand-new game from the mahjong family, and you're invited to try it! Its biggest difference from traditional mahjong is that every tile carries a point value and the number of copies varies, so every draw is a fresh opportunity. On top of the traditional scoring patterns, it adds brand-new ones: lots of variety, a light and quick pace, and a good fit for anyone, whether or not you've played traditional mahjong.</p>
   <p>Kowloon Dragons is a tile game from the mahjong family. It needs its own 150-tile set, not a regular mahjong set. On this page you play against 3 computer players. A hand starts with the dealer; there are no winds or dealer streaks. The wall is reshuffled every hand and scores carry over.</p>
   <h3>Goal</h3>
   <ul>
@@ -778,7 +836,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
       </ul>
     </li>
   </ul>
-  ${EG('Tile examples: winning hands', HAND_EX.map(h => X(h[0] + ' fan: ' + h[2], h[3])))}
+  ${EGH('Tile examples: winning hands', 'en', 'Shuffle')}
   <h3>Minor fans (碎番, ½ fan each)</h3>
   <ul>
     <li>Only added once you already have at least 1 full fan; two ½ fans alone can’t win.</li>
@@ -798,7 +856,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
   </ul>
   <h3>Scoring</h3>
   <ul>
-    <li>Total fan is rounded down, so 1 + ½ + ½ = 2 fan.</li>
+    <li>Total fan is rounded down, so 1 + ½ + ½ = 2 fan, while 1 + ½ = 1.5 counts as 1 fan.</li>
     <li>Multiplier = fan (1 fan ×1 … 6 fan ×6).</li>
     <li>Score = total tile points of the whole hand (melds included, minus the claimed tile of a mixed pung, plus any instant bonus of the hand) × multiplier.</li>
     <li>Payment (provisional): on a self-draw each of the other three pays one share; on a discard win the discarder pays two shares.</li>
@@ -812,6 +870,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
   </ul>`
 };
 RULES_HTML.ja = `  <h2>ルール（現在の実装）</h2>
+  <p class="rintro">幺九龍は麻雀系の新しいゲームです。ぜひ遊んでみてください！従来の麻雀との一番の違いは、すべての牌に点数があり、枚数もまちまちなところ。ツモるたびに新しいチャンスがあります。従来の役に加えて新しい役もあり、バリエーション豊かでテンポよく進むので、麻雀経験のある方もない方も楽しめます。</p>
   <p>あなた1人 vs CPU3人。毎局、親から配牌が始まります。風や連荘はなく、毎局シャッフルし直し、点数は累計されます。</p>
   <h3>牌と点数</h3>
   <ul>
@@ -879,7 +938,7 @@ RULES_HTML.ja = `  <h2>ルール（現在の実装）</h2>
       </ul>
     </li>
   </ul>
-  ${EG('牌の例：役', HAND_EX.map(h => X(h[0] + ' 翻：' + yn(h[1]), h[3])))}
+  ${EGH('牌の例：役', 'ja', '別の例')}
   <h3>無役翻（各 +0.5翻）</h3>
   <ul>
     <li>先に1翻が必要です。無役翻だけでは和了できず（役にならない翻）、0.5翻が2つでも起こしになりません。</li>
@@ -899,7 +958,7 @@ RULES_HTML.ja = `  <h2>ルール（現在の実装）</h2>
   </ul>
   <h3>計算</h3>
   <ul>
-    <li>翻数の合計は小数を切り捨て。1＋0.5＋0.5＝2翻。</li>
+    <li>翻数の合計は小数を切り捨て。1＋0.5＋0.5＝2翻、1＋0.5＝1.5翻は1翻。</li>
     <li>倍率 ＝ 翻数（1翻×1 … 6翻×6）。</li>
     <li>得点 ＝ 手牌の点の合計（副露を含み、彩ポンで鳴いた1枚を除き、役ごとの即時ボーナスを加えたもの）× 倍率。</li>
     <li>支払い（暫定）：ツモは他の3家が1人分ずつ、ロンは放銃者が2人分払います。</li>
@@ -1522,7 +1581,7 @@ function cheatHTML() {
     `<div class="r"><b>${L('彩碰', 'Mixed pung')}</b><span>${L('1–3 同數字、不同花', '1–3, same number, 3 suits')}</span></div>` +
     `<h3>${L('可榮胡的牌', 'What can be won on')}</h3>` +
     `<div class="r"><b>${L('彩眼', 'Mixed pair')}</b><span>${L('1–3 同數字、不同花的兩張；不可鳴，只可榮胡', '1–3, same number, 2 suits; can’t be called, only won on')}</span></div>` +
-    `<p>${L('得分 = 全手點值（一＝9 … 九＝1）× 番數（上限 6）；番數取整數，1+0.5+0.5＝2。', 'Score = hand tile points (1 = 9 … 9 = 1) × fan (cap 6). Fan is rounded down: 1+½+½ = 2.')}</p></div>`;
+    `<p>${L('得分 = 全手點值（一＝9 … 九＝1）× 番數（上限 6）；番數取整數，1+0.5+0.5＝2、1+0.5＝1.5 算 1。', 'Score = hand tile points (1 = 9 … 9 = 1) × fan (cap 6). Fan is rounded down: 1+½+½ = 2, 1+½ = 1.')}</p></div>`;
 }
 function refreshCheat() {
   $('#cheat').innerHTML = cheatHTML();
@@ -1543,7 +1602,7 @@ function applyLang() {
   if (typeof renderLanding === 'function') renderLanding();
   if (typeof updateOnlineBtn === 'function') { updateOnlineBtn(); renderLobby(); }
   $('#newBtn').textContent = L('重新開局', 'New game');
-  $('.handbar .hint').textContent = L('拖曳或長按牌來排序', 'Drag or long-press to reorder');
+  $('.handbar .hint').textContent = L('按住牌拖曳來排序', 'Hold and drag to reorder');
   $('#leftBtn').setAttribute('aria-label', L('向左移', 'Move left')); $('#rightBtn').setAttribute('aria-label', L('向右移', 'Move right'));
   $('#logSum').textContent = L('牌局記錄', 'Game log');
   $('#meName').textContent = NAMES[0];
@@ -1599,6 +1658,7 @@ $('#newBtn').onclick = () => {
   if (isHost()) startVote(0);
   else { try { ROOM.conn.send({ t: 'rreq' }); toast('已向其他玩家發出請求…', 'Asking the other players…'); } catch (e) {} }
 };
+$('#rules').addEventListener('click', e => { const b = e.target.closest('[data-re]'); if (b) b.parentElement.querySelector('.exwrap').innerHTML = handRows(b.dataset.re, true); });
 $('#rulesBtn').onclick = () => $('#rules').showModal();
 function syncCheatTab() {
   const o = $('#cheatDlg').open; $('#cheatTab b').textContent = o ? '▶' : '◀'; $('#cheatTabTxt').textContent = o ? L('收起', 'Hide') : L('速查', 'Cheat sheet');
@@ -1606,6 +1666,38 @@ function syncCheatTab() {
 }
 $('#cheatBar').onclick = $('#cheatTab').onclick = () => { const d = $('#cheatDlg'); if (d.open) d.close(); else d.show(); syncCheatTab(); };
 $('#cheatDlg').addEventListener('close', syncCheatTab);
+/* 手機：速查標籤可拖出／推回，點一下也可開關 */
+{
+  const tab = $('#cheatTab'), dlg = $('#cheatDlg'); let st = null;
+  const W = () => Math.min(340, innerWidth * .86);
+  const put = p => { dlg.style.transform = `translateX(${(1 - p) * 100}%)`; tab.style.right = p * W() + 'px'; };
+  const clean = () => { for (const e of [dlg, tab]) { e.style.transform = e.style.right = e.style.transition = ''; } tab.style.animation = ''; };
+  dlg.addEventListener('close', () => { dlg.style.animation = ''; });
+  tab.addEventListener('pointerdown', e => {
+    st = { x: e.clientX, open: dlg.open, moved: false, last: e.clientX, v: 0 };
+    tab.setPointerCapture(e.pointerId);
+  });
+  tab.addEventListener('pointermove', e => {
+    if (!st) return;
+    const dx = e.clientX - st.x;
+    if (!st.moved && Math.abs(dx) < 6) return;
+    if (!st.moved) { st.moved = true; tab.classList.add('drag'); dlg.style.animation = 'none'; dlg.style.transition = 'none'; if (!dlg.open) { dlg.style.transform = 'translateX(100%)'; dlg.show(); } }
+    st.v = e.clientX - st.last; st.last = e.clientX;
+    put(Math.max(0, Math.min(1, (st.open ? 1 : 0) - dx / W())));
+  });
+  const end = e => {
+    if (!st) return; const s0 = st; st = null; tab.classList.remove('drag');
+    if (!s0.moved) return;
+    tab.dataset.skip = 1; setTimeout(() => delete tab.dataset.skip, 60);
+    const p = dlg.style.transform.match(/translateX\(([\d.]+)%\)/); const cur = 1 - (p ? +p[1] / 100 : 0);
+    const open = s0.v < -3 ? true : s0.v > 3 ? false : cur > .5;
+    dlg.style.transition = tab.style.transition = 'transform .2s ease-out, right .2s ease-out';
+    put(open ? 1 : 0);
+    setTimeout(() => { clean(); if (!open) dlg.close(); syncCheatTab(); }, 210);
+  };
+  tab.addEventListener('pointerup', end); tab.addEventListener('pointercancel', end);
+  tab.addEventListener('click', e => { if (tab.dataset.skip) { e.stopImmediatePropagation(); } }, true);
+}
 
 /* ============ 線上房間 / Online rooms (PeerJS WebRTC, host-authoritative) ============ */
 const cleanName = n => (n || '').replace(/[<>&"'`\\]/g, '').trim().slice(0, 12);
