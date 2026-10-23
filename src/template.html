@@ -349,6 +349,7 @@ body:has(#cheatDlg[open]) #cheatTab{right:min(340px,86vw);animation:none}
 #landing .chips span{font-size:calc(12px*var(--fs,1));color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
 #landing .btn.ghost{color:var(--text);border-color:var(--line)}
 #landing .btn.primary small{opacity:.85;color:#3a2a08}
+#landing .foot a{color:var(--gold);text-decoration:underline;text-underline-offset:3px}
 #landing .foot{position:relative;font-size:calc(12px*var(--fs,1));color:var(--muted);text-align:center}
 .brand h1{cursor:pointer}
 html[lang=ja]{--ui:"Noto Sans JP","Hiragino Sans","Yu Gothic","Noto Sans TC",system-ui,sans-serif;--face:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","Noto Serif TC",serif}
@@ -428,6 +429,13 @@ dialog .xform + h2,dialog .xform + h3{padding-right:38px}
 #langMenu button:hover{background:rgba(255,255,255,.1)}
 #langMenu button.on{color:var(--gold);font-weight:700}
 #langMenu i{font-style:normal;color:var(--gold)}
+#fbDlg{max-width:min(460px,94vw)}
+#fbDlg textarea,#fbDlg input,#fbDlg select{width:100%;box-sizing:border-box;font:500 calc(15px*var(--fs,1)) var(--ui);padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:#16222c;color:var(--text);margin:0 0 8px}
+#fbDlg textarea{resize:vertical;min-height:110px}
+#fbDlg .fbnote{color:var(--muted);margin:2px 0 10px}
+#fbDlg .fbnote.small{font-size:calc(12px*var(--fs,1));margin:0 0 8px}
+#fbDlg .fbstat{min-height:1.4em;margin:0 0 8px;color:var(--gold);font-size:calc(13px*var(--fs,1))}
+#fbDlg #fbSend{width:100%;padding:11px}
 #toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:80;background:#0e151c;color:#f3ecd6;border:1px solid var(--gold);border-radius:99px;padding:8px 16px;font-size:calc(14px*var(--fs,1));opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:92vw;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 #voteDlg{max-width:min(380px,92vw)}
@@ -489,6 +497,7 @@ button.btn.hot:hover{background:#ecc064}
 <dialog id="result"></dialog>
 <dialog id="rules"></dialog>
 <dialog id="setDlg"></dialog>
+<dialog id="fbDlg"></dialog>
 <dialog id="voteDlg"></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 <dialog id="cheatDlg"></dialog>
@@ -1950,7 +1959,8 @@ function renderSettings() {
   const chip = (grp, v, zh, en, on) => `<button type="button" class="chip ${on ? 'on' : ''}" data-set="${grp}:${v}">${L(zh, en)}</button>`;
   d.innerHTML = `${XBTN()}<h2>${L('設定', 'Settings')}</h2>
     <h3>${L('外觀', 'Appearance')}</h3><div class="chips">${chip('theme', 'auto', '自動', 'Auto', PREF.theme === 'auto')}${chip('theme', 'light', '淺色', 'Light', PREF.theme === 'light')}${chip('theme', 'dark', '深色', 'Dark', PREF.theme === 'dark')}</div>
-    <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小 S', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中 M', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大 L', 'Large', PREF.fs === 'l')}</div>`;
+    <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小 S', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中 M', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大 L', 'Large', PREF.fs === 'l')}</div>
+    <h3>${L('意見回饋', 'Feedback')}</h3><button type="button" class="btn sm" id="stFb">${L('意見回饋', 'Feedback')} …</button>`;
 }
 $('#setDlg').addEventListener('click', e => {
   const b = e.target.closest('button[data-set]'); if (!b) return;
@@ -1960,6 +1970,48 @@ $('#setDlg').addEventListener('click', e => {
   savePref(); applyLang();
 });
 $('#setBtn').onclick = () => { renderSettings(); $('#setDlg').showModal(); };
+/* ===== 意見回饋（Web3Forms：免後端，寄到你的信箱）。把 access key 貼到 FEEDBACK_KEY ===== */
+const FEEDBACK_KEY = '81cd3f95-d21b-44ef-8a6d-b62638cd14d9';
+function renderFeedback() {
+  const d = $('#fbDlg'); if (!d) return;
+  const off = !FEEDBACK_KEY;
+  d.innerHTML = `${XBTN()}<h2>${L('意見回饋', 'Send feedback')}</h2>
+    <p class="fbnote">${L('遊戲有問題或想法？告訴我！', 'Found a bug or have an idea? Tell me!')}</p>
+    <div class="fbrow"><select id="fbCat" aria-label="${L('類型', 'Type')}"><option value="bug">${L('錯誤', 'Bug')}</option><option value="idea">${L('建議', 'Idea')}</option><option value="other">${L('其他', 'Other')}</option></select></div>
+    <textarea id="fbMsg" maxlength="1500" rows="5" placeholder="${L('請描述你遇到的問題或想法…', 'Describe the problem or your idea…')}"></textarea>
+    <input id="fbContact" maxlength="80" placeholder="${L('聯絡方式（選填，方便回覆）', 'Contact (optional, so I can reply)')}" autocomplete="off">
+    <input id="fbBot" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0">
+    <p class="fbnote small">${L('會一併附上語言與裝置資訊，不會附上其他個人資料。', 'Language and device info is attached. Nothing else personal.')}</p>
+    <p class="fbstat" id="fbStat">${off ? L('意見回饋功能尚未開通', 'Feedback is not set up yet.') : ''}</p>
+    <button type="button" class="btn primary" id="fbSend" ${off ? 'disabled' : ''}>${L('送出', 'Send')}</button>`;
+}
+function openFeedback() { renderFeedback(); if (!$('#fbDlg').open) $('#fbDlg').showModal(); }
+$('#fbDlg').addEventListener('click', async e => {
+  if (e.target.id !== 'fbSend') return;
+  const msg = $('#fbMsg').value.trim(), st = $('#fbStat'), btn = e.target;
+  if ($('#fbBot').value) return;                                   // 機械人陷阱
+  if (!msg) { st.textContent = L('請先輸入內容', 'Please write something first.'); return; }
+  let last = 0; try { last = +localStorage.getItem('yjl-fbt') || 0; } catch (x) {}
+  if (Date.now() - last < 30000) { st.textContent = L('請稍等一下再送出', 'Please wait a moment before sending again.'); return; }
+  btn.disabled = true; st.textContent = L('傳送中…', 'Sending…');
+  try {
+    const r = await fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({
+      access_key: FEEDBACK_KEY, subject: 'Kowloon Dragons feedback: ' + $('#fbCat').value, from_name: 'Kowloon Dragons',
+      message: msg, contact: $('#fbContact').value.trim(), category: $('#fbCat').value,
+      language: LANG + (LANG === 'zh' ? '-' + PREF.script : ''), theme: PREF.theme, textSize: PREF.fs, viewport: innerWidth + 'x' + innerHeight,
+      mode: ROOM.mode + (ROOM.code ? ' ' + ROOM.code : ''), page: location.href.split('?')[0], userAgent: navigator.userAgent,
+    }) });
+    const j = await r.json();
+    if (!j.success) throw new Error('x');
+    try { localStorage.setItem('yjl-fbt', Date.now()); } catch (x) {}
+    $('#fbMsg').value = ''; st.textContent = L('已送出，謝謝你！', 'Sent. Thank you!');
+  } catch (x) { st.textContent = L('送出失敗，請稍後再試', 'Could not send. Try again later.'); }
+  btn.disabled = false;
+});
+document.addEventListener('click', e => {
+  if (e.target.closest('#stFb')) { $('#setDlg').close(); openFeedback(); }
+  else if (e.target.closest('#lnFb')) { e.preventDefault(); openFeedback(); }
+});
 /* ===== 首頁 / landing ===== */
 const LAND = { join: false };
 function hideLanding() { $('#landing').hidden = true; }
@@ -1982,7 +2034,7 @@ function renderLanding() {
       </div>
       <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragon · 6 fan cap')}</span></div>
     </div>
-    <div class="foot">${L('試玩版 · 規則仍在調整', 'Playtest · rules still changing')}</div>`;
+    <div class="foot">${L('試玩版 · 規則仍在調整', 'Playtest · rules still changing')} · <a href="#" id="lnFb">${L('意見回饋', 'Feedback')}</a></div>`;
   const c = $('#lnCode'); if (c) c.addEventListener('input', () => { c.value = c.value.toUpperCase().replace(/[^A-Z]/g, ''); });
 }
 $('#landing').addEventListener('click', e => {
