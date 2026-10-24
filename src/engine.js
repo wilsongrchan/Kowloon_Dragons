@@ -205,7 +205,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
     if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全小字', 3);
     if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷小字', 2);
     if (isConcealed && tsumo) add('不求人', 2);
-    cands.push(finish(items, bonus, bonusName, { pair: d.pair }));
+    cands.push(finish(items, bonus, bonusName, { pair: d.pair, sets: d.sets }));
   }
   // 天胡／地胡／人胡：手牌成形即可（不需另有番種），固定 6 番
   if (special && shapeOk) cands.push(fixed([{ name: special, fan: 6 }], 0, special));
