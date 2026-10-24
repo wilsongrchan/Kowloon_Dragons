@@ -1231,17 +1231,20 @@ function compactLocks(rest) {
   }
   return out;
 }
-// 從 items[i] 起，相鄰、同數字（1–3）、不同花色的 2–3 張牌（可鎖成彩眼／彩刻）
+// 從 items[i] 起，相鄰、同數字（小字）的牌：2 張不同花色＝彩眼；3 張（至少 2 門花色，如 兩張同花＋一張別花）＝彩刻
 function mixRun(items, i) {
   const a = items[i]; if (a.lock || a.tiles[0].s === 'z' || a.tiles[0].n > 3) return [];
   const run = [a.tiles[0]];
   for (let j = i + 1; j < items.length && run.length < 3; j++) {
     const b = items[j]; if (b.lock) break; const t = b.tiles[0];
-    if (t.s !== 'z' && t.n === run[0].n && !run.some(x => x.s === t.s)) run.push(t); else break;
+    if (t.s !== 'z' && t.n === run[0].n) run.push(t); else break;
   }
-  return run.length >= 2 ? run : [];
+  const suits = r => new Set(r.map(x => x.s)).size;
+  if (run.length === 3 && suits(run) >= 2) return run;
+  const two = run.slice(0, 2);
+  return two.length === 2 && suits(two) === 2 ? two : [];
 }
-// 「彩組」：把手上落單的 7–9 同數字不同花色的牌湊成彩刻（3 門）／彩眼（2 門），排在一起並鎖定
+// 「彩組」：把手上落單的 7–9 同數字、不同花色的牌湊成彩刻（3 張，至少 2 門，可含兩張同花）／彩眼（2 張不同花），排在一起並鎖定
 function mixGroups() {
   if (!G) return [];
   const hand = G.hands[0].filter(t => t.id !== UI.drawnId), lk = new Set(UI.locks.flat());
@@ -1249,11 +1252,17 @@ function mixGroups() {
   for (let n = 1; n <= 3; n++) {
     // 每門的可用牌（已鎖定的不動；同花色已有 3 張以上的真刻子不拆）
     const by = ['p', 's', 'm'].map(sx => hand.filter(t => t.k === sx + n && !lk.has(t.id)));
-    const av = by.map(a => a.length >= 3 ? [] : a);
-    const tri = Math.min(...av.map(a => a.length));
-    for (let r = 0; r < tri; r++) groups.push(av.map(a => a[r].id));
-    const left = av.map(a => a.slice(tri)).filter(a => a.length === 1);
-    if (left.length >= 2) groups.push(left.map(a => a[0].id));
+    const av = by.map(a => a.length >= 3 ? [] : a.slice());
+    for (;;) {
+      const have = av.map((a, i) => i).filter(i => av[i].length > 0), total = av.reduce((x, a) => x + a.length, 0);
+      if (have.length < 2 || total < 3) break;
+      const g = [];
+      if (have.length === 3) have.forEach(i => g.push(av[i].shift().id));
+      else { const [x, y] = av[have[0]].length >= av[have[1]].length ? have : [have[1], have[0]]; g.push(av[x].shift().id, av[x].shift().id, av[y].shift().id); }
+      groups.push(g);
+    }
+    const left = av.filter(a => a.length > 0);
+    if (left.length === 2 && left.every(a => a.length === 1)) groups.push(left.map(a => a[0].id));
   }
   return groups;
 }
