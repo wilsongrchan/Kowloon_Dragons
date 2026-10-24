@@ -5,6 +5,13 @@ Names: Chinese title 幺九龍; English title **Kowloon Dragons** (九龍 = Kowl
 Wilson's self-designed mahjong-inspired game. Single-page test-play site: 1 human vs 3 simple bots.
 Wilson writes rules in Traditional Chinese; UI and rules text are Traditional Chinese. Keep game terms in Chinese.
 
+## NUMBER ORDER FLIPPED (Wilson, 2026-10-24) — read this first
+The shown numbers are reversed: displayed d = 10 - n, so there are (10 - d) copies of number d (nine 1s ... one 9) and the tile value equals its face number (一=1 ... 九=9); the gold point badge is hidden (`.tile .v{display:none}`). It is a DISPLAY layer only: `src/engine.js` keeps the legacy internal numbering n (n copies, value 10 - n, key 'p1' = displayed 九筒). Everything below this section is written in ENGINE numbering; convert to the screen with d = 10 - n:
+- engine 1-3 (rare, mixed pung/triplet/pair, no kong, 胡 bonus tile) = shown 7-9 = 大字牌; engine 7-9 (never claimable) = shown 1-3 = 小字牌. Claimable chows are shown 456/567/678/789; pung is 4-9, kong 4-6.
+- Renamed yaku: 全大字 -> 全小字 (all shown 1-3), 斷大字 -> 斷小字 (no shown 1-3), 胡小字 -> 胡大字 (win on shown 7-9). English All Small / No Small / Win on a big tile. Japanese 全小字 / 断小字 / 大字和了.
+- Display code: `dnum`, `tn`, `ORD` flip in template.html; `X()` reverses each group's tile order so sequences read 1->9; chow melds are reversed in `meldEl`; `seqTiles`/chow labels sort descending by engine n. Rules examples (`X('..','p1 p2 p3')`, EXGEN) stay in engine numbering and show flipped automatically. New text must use shown numbers.
+- Tagline is now 九張一，一張九，要不要來打兩手？ (ja 九は一枚、一は九枚。一局、打たない？). `X()` also sorts number groups ascending by shown number (`exOrder`, dragon groups and the final pair stay in place).
+
 ## Layout
 - `src/engine.js`   pure game logic (no DOM): deck, claims, win detection, fan scoring, bots, `simGame()` headless sim
 - `src/template.html` UI + CSS; contains `/*__ENGINE__*/` placeholder
@@ -22,30 +29,30 @@ Hand 13, win 14: 4 sets + pair.
 - 一番起胡 (needs >=1 fan from real conditions; two half-fans alone cannot win).
 - FINAL RULE SET (Wilson, 2026-10-23): cap 6 fan, multiplier = fan (x1..x6). Score = (hand tile points + instant bonus) x multiplier.
 - Fan = floor(total incl. halves) so 1+0.5+0.5 = 2; need >=1 full fan from real conditions (halves alone can't win).
-- 1番: 三元刻 (each, stackable; open pung or concealed triplet), 平胡 (all chows, no dragons), 對對胡 (彩碰 ok), 彩眼混一色 (half OR full flush whose pair is a 彩眼, at least one tile of the pair must be the main suit; first 三元刻 not counted), 彩碰混一色 (half OR full flush with exactly ONE 彩碰, at least one tile of it must be the main suit (e.g. 2p 2p 2m in a p hand); more not allowed; first 三元刻 not counted)
-- 2番: 混一色 (no 彩碰/彩刻/彩眼; no 斷一門; first 三元刻 not counted — the 1st dragon triplet is absorbed, 2nd/3rd still count), 不求人 (concealed + tsumo; replaces 門清/自摸), 斷大字 (no 7-9), 三暗刻, 七對子 (7 pairs, 8888 = two pairs, may stack 混一色/清一色, NO mixed pair, fully concealed, no 門清 half)
-- 3番: 小三元 (+30 hand pts), 全大字 (all 7-9; no 門清 half), 幺九順 (same suit 123+456+789; remaining set chow or pung any suit; pair any; open hand)
+- 1番: 三元刻 (each, stackable; open pung or concealed triplet), 平胡 (all chows, no dragons), 對對胡 (彩碰 ok), 彩眼混一色 (half OR full flush whose pair is a 彩眼, at least one tile of the pair must be the main suit; first 三元刻 not counted), 彩碰混一色 (half OR full flush with exactly ONE 彩碰, at least one tile of it must be the main suit (engine 2p 2p 2m = shown 8筒8筒8萬 in a 筒 hand); more not allowed; first 三元刻 not counted)
+- 2番: 混一色 (no 彩碰/彩刻/彩眼; no 斷一門; first 三元刻 not counted — the 1st dragon triplet is absorbed, 2nd/3rd still count), 不求人 (concealed + tsumo; replaces 門清/自摸), 斷小字 (no 7-9), 三暗刻, 七對子 (7 pairs, 8888 = two pairs, may stack 混一色/清一色, NO mixed pair, fully concealed, no 門清 half)
+- 3番: 小三元 (+30 hand pts), 全小字 (all 7-9; no 門清 half), 幺九順 (same suit 123+456+789; remaining set chow or pung any suit; pair any; open hand)
 - 4番: 清一色 (no mixed; no 斷一門無三元), 四暗刻, 大三元 (+60), 門清幺九順 (concealed 幺九順, +30, no 門清 half)
 - 6番 (cap): 幺九龍 (+30; claimed 123/456 chows of that suit allowed), 門清幺九龍 (+90, no open melds), 槓三元 (kongs of all 3 dragons, +90), 天胡 (dealer wins on starting 14), 地胡 (non-dealer wins on the dealer's first discard), 人胡 (non-dealer wins by tsumo on their first draw, no calls before). 天胡/地胡/人胡 need only a complete shape (no other fan), flat 6 fan, pts x6, no bonus. Engine tracks g.drawN / g.discardN / g.calls for these.
 - 暗刻: ankan counts as concealed; on ron, the triplet completed by the winning tile counts as open, BUT 榮胡進眼 doesn't ruin concealed triplets (if the winning tile can sit in the pair or a chow, the triplet stays concealed).
-- Half fan 碎番 (+0.5, need >=1 real fan first): 槓上自摸 (self-draw on the replacement tile after a kong; stacks with 自摸 and 槓, so +1.5 in total; engine: g.lastDrawRep -> evaluateHand kongDraw), 槓 (each), 三元大補槓, 門清, 斷一門無三元 (missing one of 筒/索/萬 AND no 中發白), 自摸 (only open hands; 門清加自摸 already includes it), 胡小字 (winning tile is a 小字 1-3)
+- Half fan 碎番 (+0.5, need >=1 real fan first): 槓上自摸 (self-draw on the replacement tile after a kong; stacks with 自摸 and 槓, so +1.5 in total; engine: g.lastDrawRep -> evaluateHand kongDraw), 槓 (each), 三元大補槓, 門清, 斷一門無三元 (missing one of 筒/索/萬 AND no 中發白), 自摸 (only open hands; 門清加自摸 already includes it), 胡大字 (winning tile is a 小字 1-3)
 - 無彩吃無彩碰 was DELETED as a 碎番 by Wilson (no longer exists).
-- 不求人 (was 門清加自摸) already includes 門清 and 自摸; 全大字, 七對子 and 門清幺九順 do not get the 門清 half. Cheat sheet shows 門清幺九順/門清幺九龍 as one-line rows (just the bonus) to save space.
+- 不求人 (was 門清加自摸) already includes 門清 and 自摸; 全小字, 七對子 and 門清幺九順 do not get the 門清 half. Cheat sheet shows 門清幺九順/門清幺九龍 as one-line rows (just the bonus) to save space.
 
 ## Implementation assumptions (NOT yet decided by Wilson; change in engine.js `RULES` / `evaluateHand`)
 - 幺九龍: 12 distinct tiles + two more copies of a same-suit number or dragon (3 copies of it; 一/二 impossible) - confirmed by Wilson's wording.
 - 自摸 half-fan not given on top of 不求人 (assumed; given only to open hands).
 - 平胡 pair cannot be honor. 斷一門無三元 does not stack with 清一色 (混一色 has honors so already excluded).
-- 全大字 + 不求人 still stack (3+2). 斷一門 and 無三元 are ONE combined half fan (斷一門無三元) - not split (balance test: splitting inflated scores ~20%).
+- 全小字 + 不求人 still stack (3+2). 斷一門 and 無三元 are ONE combined half fan (斷一門無三元) - not split (balance test: splitting inflated scores ~20%).
 - 吃 only from player on your left; no mixed 槓; no robbing the kong.
 - Payment placeholder: tsumo each pays 1x; ron discarder pays 2x (RULES.RON_MULT). No dealer bonus/wind rotation.
 - Bots are naive (no defense, random claims) - for rule testing only.
 
 ## Sim findings (bonuses now 小三元 +30, 大三元 +60, 幺九龍 +50 — Wilson's change; figures below were measured with the old +20/+40/+40 and are slightly stale: per-hand averages for 小三元/大三元/幺九龍 rise by ~10/20/10 pts × 3-4. Bot sim 20k games: old avg 86.5 pts, new avg 87.4 pts, fan split unchanged ~32/32/21/15%)
 Bots (10k games): ~96% win rate, avg 87 pts. Fan split 1番 32 / 2番 32 / 3番 21 / 4番 15 %. Avg score by actual fan: 39 / 80 / 126 / 149.
-Generated concealed hands, avg score ron/tsumo: 全大字 71/112 (weakest by design), 混一色 158/184, 對對胡 178/196, 小三元 177/188, 四暗刻 192/195, 清一色 197/228, 斷大字 235/328, 大三元 245/247, 幺九順 251/260, 幺九龍 362/362.
+Generated concealed hands, avg score ron/tsumo: 全小字 71/112 (weakest by design), 混一色 158/184, 對對胡 178/196, 小三元 177/188, 四暗刻 192/195, 清一色 197/228, 斷小字 235/328, 大三元 245/247, 幺九順 251/260, 幺九龍 362/362.
 Tier overlap: only ~21% of 2番 hands score below the 1番 median (was 39% with x1.5/x2/x3).
-Known: concealed tsumo stacks hit the 4番 cap easily (斷大字+門清自摸 ~328); 1.5番 floors to 1番 so the 0.5 -> 2番 cliff now doubles the score. Wilson accepted 全大字 being low (博弈) and 斷大字 as is.
+Known: concealed tsumo stacks hit the 4番 cap easily (斷小字+門清自摸 ~328); 1.5番 floors to 1番 so the 0.5 -> 2番 cliff now doubles the score. Wilson accepted 全小字 being low (博弈) and 斷小字 as is.
 
 ## Working style
 Prefer one change at a time, simulate before changing scoring, and keep Wilson's rule text as source of truth.

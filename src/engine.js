@@ -116,14 +116,14 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
       const bigs = melds.filter(m => m.big).length;
       if (bigs) halves.push({ name: '三元大補槓×' + bigs, fan: 0.5 * bigs });
       if (tsumo && kongDraw) halves.push({ name: '槓上自摸', fan: 0.5 }); // 槓後補牌自摸：與自摸、槓重疊，合計追加 1.5 番
-      // 不求人已包含門清與自摸；全大字、門清幺九順、七對子不重複算門清
-      const noMen = has('不求人') || has('全大字') || has('門清幺九順') || has('七對子');
+      // 不求人已包含門清與自摸；全小字、門清幺九順、七對子不重複算門清
+      const noMen = has('不求人') || has('全小字') || has('門清幺九順') || has('七對子');
       if (isConcealed) { if (!tsumo && !noMen) halves.push({ name: '門清', fan: 0.5 }); }
       else if (tsumo) halves.push({ name: '自摸', fan: 0.5 });
       // 斷一門無三元：缺筒索萬其中一門，且沒有中發白；清一色／混一色不重複
       const suits = new Set(allTiles.filter(t => t.s !== 'z').map(t => t.s));
       if (suits.size < 3 && suits.size !== 1 && !allTiles.some(t => t.s === 'z')) halves.push({ name: '斷一門無三元', fan: 0.5 });
-      if (winTile && winTile.s !== 'z' && winTile.n <= 3) halves.push({ name: '胡小字', fan: 0.5 });
+      if (winTile && winTile.s !== 'z' && winTile.n <= 3) halves.push({ name: '胡大字', fan: 0.5 });
     }
     const total = base + halves.reduce((a, h) => a + h.fan, 0);
     const fan = Math.min(CAP, Math.floor(total)), mult = fan;
@@ -151,8 +151,8 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
       const items = [{ name: '七對子', fan: 2 }];
       const fl = flushOf(sp.pairs.flatMap(k => [k, k]), 0, 0); if (fl) items.push(fl);
       if (isConcealed && tsumo) items.push({ name: '不求人', fan: 2 });
-      if (concealed.every(t => t.s !== 'z' && t.n >= 7)) items.push({ name: '全大字', fan: 3 });
-      if (concealed.every(t => t.s === 'z' || t.n <= 6)) items.push({ name: '斷大字', fan: 2 });
+      if (concealed.every(t => t.s !== 'z' && t.n >= 7)) items.push({ name: '全小字', fan: 3 });
+      if (concealed.every(t => t.s === 'z' || t.n <= 6)) items.push({ name: '斷小字', fan: 2 });
       cands.push(finish(items, 0, null, { pair: 'seven' }));
     }
   }
@@ -202,8 +202,8 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
     const fl = flushOf(normalKeys, sets.filter(s => s.mixed).length, pairMixed ? 1 : 0, mixSuits); if (fl) items.push(fl);
     // 混一色／彩眼混一色／彩碰混一色：第一副三元刻不另計（已包含在混一色內）
     if (fl && fl.name !== '清一色') { const di = items.findIndex(x => x.name === '三元刻'); if (di >= 0) items.splice(di, 1); }
-    if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全大字', 3);
-    if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷大字', 2);
+    if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全小字', 3);
+    if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷小字', 2);
     if (isConcealed && tsumo) add('不求人', 2);
     cands.push(finish(items, bonus, bonusName, { pair: d.pair }));
   }
