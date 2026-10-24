@@ -2848,7 +2848,20 @@ const musicApply = () => PREF.music !== 'off' ? MUSIC.start() : MUSIC.stop();
 document.addEventListener('visibilitychange', () => { if (PREF.music !== 'off') document.hidden ? MUSIC.stop() : MUSIC.start(); if (!document.hidden) SFX.unlock(); });
 // 瀏覽器要求在使用者操作中才能出聲（iPhone 還會中途把聲音暫停）：每次點擊都確認音效／音樂有在跑
 let warmed = false;
-['pointerdown', 'touchend', 'keydown', 'click'].forEach(ev => document.addEventListener(ev, () => { SFX.unlock(); if (PREF.music !== 'off') MUSIC.start(); if (!warmed && PREF.sfx !== 'off') { warmed = true; MUSIC.warm(); } }, { capture: true, passive: true }));
+// iPhone：靜音鍵會讓 Web Audio 完全沒聲音；把音訊類型設為「播放」並循環播放一段無聲 <audio>，就會像一般影音一樣不受靜音鍵影響
+let keepEl;
+function keepAudio() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  try {
+    if (!keepEl) {
+      const n = 4410, b = new DataView(new ArrayBuffer(44 + n * 2)), w = (o, t) => { for (let i = 0; i < t.length; i++) b.setUint8(o + i, t.charCodeAt(i)); };
+      w(0, 'RIFF'); b.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true); b.setUint32(24, 44100, true); b.setUint32(28, 88200, true); b.setUint16(32, 2, true); b.setUint16(34, 16, true); w(36, 'data'); b.setUint32(40, n * 2, true);
+      keepEl = new Audio(URL.createObjectURL(new Blob([b], { type: 'audio/wav' }))); keepEl.loop = true; keepEl.volume = .01;
+    }
+    if (keepEl.paused) keepEl.play().catch(() => {});
+  } catch (e) {}
+}
+['pointerdown', 'touchend', 'keydown', 'click'].forEach(ev => document.addEventListener(ev, () => { if (PREF.music !== 'off' || PREF.sfx !== 'off') keepAudio(); SFX.unlock(); if (PREF.music !== 'off') MUSIC.start(); if (!warmed && PREF.sfx !== 'off') { warmed = true; MUSIC.warm(); } }, { capture: true, passive: true }));
 function savePref() { try { for (const k in PREF) localStorage.setItem('yjl-' + k, PREF[k]); localStorage.setItem('yjl-lang', LANG); } catch (e) {} }
 function renderSettings() {
   const d = $('#setDlg'); if (!d) return;
