@@ -1593,7 +1593,10 @@ RULES_HTML.ja = `  <h2>ルール（現在の実装）</h2>
     <li>手牌の並べ替え：PCはマウスでドラッグ、スマホは牌を長押ししてドラッグ。牌を選んで ◀ ▶ で動かすこともできます。「理牌」で自動並べ替えに戻ります。</li>
     <li>牌にマウスを乗せる（スマホは牌をタップ）と、その牌が全部で何枚か、何枚見えているか、残り何枚かが表示されます（見えている＝手牌＋すべての捨て牌＋すべての副露）。</li>
     <li>CPUの戦略は単純です（守備はせず、ランダムに鳴きます）。ルールの確認用です。</li></ul>`;
-let G = null, scores = [0, 0, 0, 0], dealer = 0, runId = 0;
+// 電腦對戰的累計分數存在這個瀏覽器（localStorage yjl-scores）；「重新開局」會歸零
+const loadSoloScores = () => { try { const a = JSON.parse(localStorage.getItem('yjl-scores')); if (Array.isArray(a) && a.length === 4 && a.every(Number.isFinite)) return a; } catch (e) {} return [0, 0, 0, 0]; };
+const saveSoloScores = () => { try { if (ROOM.mode === 'solo') localStorage.setItem('yjl-scores', JSON.stringify(scores)); } catch (e) {} };
+let G = null, scores = loadSoloScores(), dealer = 0, runId = 0;
 const UI = { mode: null, resolve: null, sel: null, drawnId: null, manual: false, order: [], suppressClick: false };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const fast = () => new URLSearchParams(location.search).has('fast');
@@ -2158,7 +2161,7 @@ function showResult(win) {
   setTimeout(() => { go(); el.remove(); }, 1700);
 }
 function finish(res) {
-  res.delta.forEach((v, i) => scores[i] += v);
+  res.delta.forEach((v, i) => scores[i] += v); saveSoloScores();
   UI.result = res;
   const ev = res.ev;
   log(() => { const who = WHO[res.winner], how = res.tsumo ? L('自摸', 'self-draw (Zimo)') : L(`${WHO[res.from]}出銃`, `discard from ${WHO[res.from]} (Ron)`); return L(`${who}胡牌（${how}）${evTxt(ev)}`, `${who} won (${how}) ${evTxt(ev)}`); });
@@ -2308,7 +2311,7 @@ $('#langBtn').onclick = e => openLangMenu(e.currentTarget);
 let toastTm = null;
 function toast(zh, en) { const t = $('#toast'); t.textContent = L(zh, en); t.classList.add('on'); clearTimeout(toastTm); toastTm = setTimeout(() => t.classList.remove('on'), 3800); }
 const humanSeats = () => [0, 1, 2, 3].filter(i => i === 0 || ROOM.kind[i] === 'human');
-function restartNow() { scores = [0, 0, 0, 0]; dealer = 0; $('#result').close?.(); play(); }
+function restartNow() { scores = [0, 0, 0, 0]; saveSoloScores(); dealer = 0; $('#result').close?.(); play(); }
 function showVote(name, onAnswer) {
   const d = $('#voteDlg');
   d.innerHTML = `<h2>${L('重新開局？', 'Restart the game?')}</h2><p>${L(`<b>${name}</b> 想重新開局（分數歸零）。你同意嗎？`, `<b>${name}</b> wants to restart the game (scores reset). Agree?`)}</p><div class="vb"><button class="btn" data-v="0">${L('不同意', 'Decline')}</button><button class="btn primary" data-v="1">${L('同意', 'Agree')}</button></div>`;
@@ -2434,7 +2437,7 @@ function toSolo(keepMsg) {
   Object.assign(ROOM, { afk: {}, seen: {}, mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, started: false, conn: null, vote: null, ready: [true, false, false, false], tc: null, zooming: false });
   CLK.act = {};
   if (!keepMsg) ROOM.msg = '';
-  mySeat = 0; scores = [0, 0, 0, 0]; dealer = 0; UI.mode = null; UI.cancelClaim = null;
+  mySeat = 0; scores = loadSoloScores(); dealer = 0; UI.mode = null; UI.cancelClaim = null;
   $('#newBtn').style.display = ''; updateOnlineBtn(); renderLobby();
   play();
 }
