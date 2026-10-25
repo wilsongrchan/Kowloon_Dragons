@@ -8,6 +8,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;900&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet">
+<script>
+/* ?soundtest：在所有音訊輸出前面接一個（靜音的）分析器，用來量每種音效的實際音量 */
+if (/[?&]soundtest\b/.test(location.search)) (function () {
+  const oc = AudioNode.prototype.connect; window.__an = [];
+  AudioNode.prototype.connect = function (d, ...a) {
+    try {
+      if (d instanceof AudioDestinationNode) {
+        const c = this.context;
+        if (!c.__an) { const an = c.createAnalyser(); an.fftSize = 1024; const z = c.createGain(); z.gain.value = 0; oc.call(an, z); oc.call(z, c.destination); c.__an = an; window.__an.push(an); }
+        oc.call(this, c.__an);
+      }
+    } catch (e) {}
+    return oc.call(this, d, ...a);
+  };
+})();
+</script>
 <style>
 :root{
   --dragon-full:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%2220 0 300 280%22%3E%3Cg opacity=%221%22 fill=%22%23e0b04e%22 stroke=%22%23e0b04e%22 stroke-width=%221%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M96.3 89.2L97.7 88.7L99.3 88.2L101.2 87.7L103.4 87.1L105.8 86.4L108.3 85.7L111 85L113.8 84.3L116.8 83.5L119.8 82.8L122.9 82L126 81.3L129.1 80.6L132.3 79.9L135.4 79.2L138.3 78.6L141.2 78L144.2 77.5L147.3 76.8L150.4 76.4L153.6 76L156.9 75.5L160.2 75.1L163.6 74.7L167 74.4L170.3 74.1L173.7 73.8L177.1 73.6L180.5 73.4L183.8 73.3L187.1 73.3L190.3 73.4L193.4 73.6L196.4 73.8L199.4 74L202.5 74.3L205.5 74.6L208.5 75L211.5 75.4L214.5 75.9L217.4 76.5L220.4 77.1L223.2 77.9L226.1 78.7L228.9 79.6L231.7 80.7L234.4 81.8L237 83.1L239.5 84.5L241.9 85.9L244.3 87.5L246.7 89.2L248.9 90.9L251.2 92.8L253.3 94.7L255.4 96.7L257.4 98.9L259.2 101.1L261 103.3L262.6 105.7L264 108.2L265.3 110.8L266.4 113.6L267.2 116.4L267.8 119.3L268.1 122.2L268.1 125.1L268 127.9L267.7 130.8L267.3 133.7L266.6 136.5L265.9 139.3L264.9 142.1L263.9 144.8L262.7 147.5L261.3 150.2L259.8 152.7L258.1 155.2L256.3 157.6L254.3 159.9L251.9 162.2L249.2 164.2L246.5 165.9L243.7 167.4L240.8 168.8L238 170L235.1 171.1L232.3 172.1L229.5 173.1L226.8 174.1L224.1 175.1L221.6 176L219.2 177L216.9 178L214.9 179L212.9 180.1L210.5 181.3L208 182.6L205.4 183.9L202.9 185.3L200.4 186.6L197.9 187.9L195.6 189.3L193.4 190.6L191.3 191.9L189.4 193.3L187.7 194.6L186.3 195.8L185.1 197L184.2 198.1L183.6 199.1L183.1 200L182.8 201.2L182.6 202.6L182.5 204.3L182.6 206.3L182.8 208.4L183.3 210.6L183.9 212.9L184.6 215.3L185.5 217.7L186.5 220L187.6 222.3L188.8 224.5L190.1 226.5L191.4 228.4L192.8 230.1L194.1 231.6L195.6 233L197.3 234.4L199.2 235.8L201.3 237.1L203.6 238.3L206 239.5L208.5 240.7L211.1 241.7L213.8 242.6L216.5 243.5L219.2 244.2L221.9 244.9L224.6 245.4L227.2 245.8L229.7 246.1L232 246.3L234.4 246.3L236.8 246.2L239.3 245.9L241.9 245.5L244.5 245L247.1 244.4L249.7 243.7L252.3 242.9L254.9 242L257.4 241L259.8 240L262 238.9L264.2 237.8L266.2 236.6L268.1 235.4L269.7 234.2L271.2 233L272.5 231.7L273.8 230.2L275 228.7L276.2 227L277.2 225.2L278.2 223.4L279 221.5L279.9 219.6L280.6 217.7L281.2 215.8L281.8 213.8L282.3 212L282.8 210.1L283.2 208.3L283.5 206.7L283.7 205.1L283.8 203.6L283.7 201.9L283.5 200.2L283.3 198.5L282.9 196.7L282.5 195L282 193.3L281.5 191.6L280.9 190L280.4 188.5L279.9 187L279.5 185.7L279.1 184.4L278.8 183.3L278.6 182.4L281.4 181.6L281.7 182.4L282.1 183.3L282.6 184.5L283.2 185.7L283.8 187.1L284.4 188.7L285.1 190.3L285.8 192L286.4 193.8L287 195.6L287.5 197.5L288 199.4L288.3 201.4L288.6 203.4L288.6 205.4L288.5 207.3L288.3 209.2L288 211.1L287.6 213.1L287.2 215.2L286.7 217.3L286.1 219.5L285.5 221.7L284.7 223.8L283.8 226L282.9 228.2L281.8 230.3L280.6 232.4L279.2 234.4L277.7 236.3L276.1 238.1L274.3 239.8L272.4 241.3L270.3 242.8L268.1 244.3L265.7 245.7L263.2 247.1L260.6 248.4L257.9 249.6L255.2 250.7L252.3 251.8L249.5 252.7L246.5 253.6L243.6 254.3L240.7 254.9L237.7 255.3L234.8 255.6L232 255.7L229.1 255.7L226.1 255.5L223.1 255.2L220.1 254.8L217 254.2L213.8 253.5L210.7 252.7L207.6 251.8L204.6 250.8L201.6 249.6L198.7 248.4L195.9 247L193.2 245.5L190.6 243.9L188.1 242.2L185.9 240.4L183.8 238.3L181.8 236.1L179.9 233.7L178.1 231.2L176.4 228.6L174.9 225.8L173.4 223L172.1 220.1L171 217.1L170 214.1L169.2 211.1L168.6 208.1L168.3 205.1L168.1 202L168.3 199L168.9 196L169.9 192.9L171.3 190.1L173 187.5L174.9 185.1L177 182.9L179.2 180.8L181.6 178.9L184 177L186.5 175.2L189 173.5L191.5 171.8L194 170.2L196.4 168.6L198.7 167L200.9 165.5L203.1 163.9L205.7 162.3L208.6 160.8L211.4 159.4L214.3 158.2L217.2 157L220 155.9L222.8 154.9L225.4 153.9L228 152.9L230.4 151.9L232.6 150.9L234.6 149.9L236.3 148.9L237.7 147.9L238.8 147L239.7 146.1L240.6 145L241.6 143.6L242.5 142.1L243.4 140.6L244.2 138.9L245 137.1L245.6 135.4L246.1 133.6L246.6 131.8L246.9 130L247.1 128.3L247.2 126.7L247.3 125.1L247.2 123.8L247 122.6L246.8 121.6L246.5 120.7L246 119.6L245.4 118.5L244.6 117.3L243.7 116L242.6 114.7L241.4 113.4L240.1 112L238.7 110.7L237.1 109.4L235.5 108.1L233.9 106.9L232.2 105.8L230.4 104.7L228.7 103.7L227 102.9L225.3 102.1L223.6 101.4L221.7 100.8L219.7 100.2L217.6 99.6L215.3 99.1L213 98.6L210.7 98.2L208.2 97.9L205.7 97.6L203.1 97.3L200.5 97.1L197.8 96.9L195.1 96.8L192.4 96.6L189.7 96.6L187 96.6L184.3 96.6L181.5 96.8L178.6 97L175.7 97.2L172.6 97.5L169.5 97.9L166.4 98.3L163.3 98.7L160.1 99.1L157 99.6L153.8 100.1L150.7 100.5L147.6 100.8L144.6 101.1L141.7 101.4L138.8 101.6L135.9 101.9L132.9 102.3L129.9 102.7L126.9 103.1L123.8 103.5L120.8 103.9L117.9 104.4L115.1 104.8L112.3 105.2L109.8 105.6L107.3 105.9L105.1 106.2L103.1 106.5L101.3 106.7L99.7 106.8ZM121.6 85.1C121.1 65.3 128.4 55.4 147.5 50.5C138.2 62.2 138.8 73.5 138.9 82ZM206.1 77.6C211.5 61.8 220.3 56 236.7 57.2C226.2 64 223.7 73.1 221.5 79.9ZM231.2 83.6C240.8 71.1 250.4 68.6 264.7 74.6C253.4 77.5 248.4 84.9 244.5 90.3ZM251.8 97.2C264.4 89.7 273.8 90.9 284.2 100.8C273.3 99.5 266.6 104.3 261.4 107.7ZM264.7 117.4C278.2 119.4 284.4 125.7 286.3 138.9C279.1 131.8 271.5 131.4 265.7 130.9ZM262.1 141.7C271.9 149.7 273.9 157.7 269.5 169.1C266.9 160.2 261 156.4 256.6 153.4ZM246.7 162.5C249.2 173.8 246.1 180.8 236.5 186.7C239.6 178.8 237.4 172.7 235.9 168.1ZM222.5 172.2C223.9 182.7 220.5 189 211.5 193.7C214.7 186.8 213.1 181.2 212 176.9ZM94 76Q92 46 124 18Q112 46 112 80ZM74 81Q64 54 82 22Q84 50 90 76ZM112 76Q128 62 162 52Q134 76 122 86ZM78 122Q78 136 84 152Q86 138 92 126ZM216.7 11.4L216.8 13.7L216.7 16.4L216.5 19.4L216.1 22.7L215.6 26.3L214.5 29.8L212.5 33.1L210.4 36.7L208.3 40.4L206.1 44.2L203.8 48L201.5 52L199.1 55.9L196.8 59.8L194.3 63.8L181.1 56.3L183.2 52.2L185.3 48.2L187.2 44.2L189.2 40.2L191.1 36.2L192.9 32.3L194.6 28.5L196.3 24.9L197.8 21.3L199.9 18.3L202.5 15.8L204.9 13.6L207.2 11.6L209.4 9.9L211.3 8.6ZM162.5 114.2L159.5 118.6L156.6 122.9L153.7 127.2L150.8 131.4L147.8 135.7L144.9 139.9L141.9 144.1L138.9 148.2L135.9 152.3L133 156.3L130.1 160.2L127.3 164L124.5 167.7L121.8 171.2L119.3 174.7L116.8 178L114.4 181.2L112 184.3L109.6 187.4L107.3 190.5L105 193.4L102.8 196.2L100.6 198.9L98.6 201.5L96.6 203.9L94.8 206.1L93.2 208.2L91.7 210L90.3 211.5L89.2 212.9L86.8 211.1L87.7 209.6L88.8 207.9L90.1 205.9L91.5 203.7L93.1 201.3L94.8 198.8L96.6 196.1L98.6 193.2L100.5 190.2L102.6 187.1L104.7 183.9L106.9 180.7L109 177.4L111.2 174L113.4 170.6L115.8 167L118.2 163.3L120.7 159.4L123.3 155.4L125.9 151.4L128.6 147.2L131.3 143L134 138.8L136.7 134.4L139.4 130.1L142.1 125.8L144.8 121.4L147.4 117.1L150 112.6L152.6 108.1Z%22/%3E%3Cpath fill-rule=%22evenodd%22 d=%22M128 82C112 70 92 72 74 81C58 84 40 82 34 92C29 99 34 106 42 106L58 107L63 115L69 107L75 116L81 108L92 110C108 112 122 116 130 112C138 102 136 90 128 82ZM84 86Q94 78 106 87Q94 92 84 86ZM48 113C62 120 80 127 104 127C116 127 124 120 130 112L116 115C92 119 68 113 54 109Z%22/%3E%3Cpath fill=%22none%22 stroke-width=%225.5%22 stroke-linecap=%22round%22 d=%22M90 214L89.6 212.1L89 210.3L88 208.6L86.9 207.2L85.5 206L84 205L82.4 204.4L80.7 204L79 203.9L77.3 204.1L75.8 204.5L74.3 205.2L73.1 206.1L72 207.1L71.1 208.3L70.4 209.6L70 211L69.8 212.4L69.9 213.7L70.2 215L70.6 216.2L71.3 217.3L72.1 218.2L73 219L74 219.6L75 220L76.1 220.2L77.2 220.2L78.2 220.1L79.1 219.7L80 219.3L80.7 218.7L81.3 218L81.8 217.3L82.1 216.5L82.3 215.8L82.3 215L82.2 214.3L82 213.6L81.7 213L81.3 212.5L80.8 212.1L80.3 211.8L79.8 211.6L79.3 211.6L78.8 211.6L78.4 211.7L78 211.8M193 134L193.4 131.8L194.2 129.8L195.2 128L196.6 126.4L198.2 125.1L199.9 124.1L201.8 123.4L203.7 123L205.6 123L207.4 123.3L209.1 123.9L210.7 124.8L212.1 125.9L213.2 127.2L214 128.6L214.6 130.2L214.9 131.7L215 133.3L214.7 134.8L214.3 136.2L213.6 137.5L212.7 138.6L211.7 139.5L210.5 140.2L209.3 140.7L208.1 140.9L206.8 141L205.6 140.8L204.6 140.4L203.6 139.9L202.7 139.2L202.1 138.4L201.5 137.5L201.2 136.6L201.1 135.7L201.1 134.8L201.2 133.9L201.5 133.2L201.9 132.5L202.4 131.9L203 131.5L203.6 131.2L204.2 131L204.8 131L205.4 131.1L205.9 131.2L206.4 131.5L206.7 131.8%22/%3E%3C/g%3E%3C/svg%3E");
@@ -324,6 +340,10 @@ header .meta{order:2}
 #lobby .note{font-size:calc(12px*var(--fs,1));color:var(--muted);margin-top:10px}
 #lobby .err{color:var(--neg);min-height:1.4em;margin:6px 0 0;font-size:calc(13px*var(--fs,1))}
 #roomPill{display:none}
+#setDlg .vol{display:flex;gap:10px;align-items:center;margin-top:10px}
+#setDlg .vol span{color:var(--muted);font-size:calc(13px*var(--fs,1))}
+#setDlg .vol input{flex:1;min-width:0;accent-color:var(--gold)}
+#setDlg .vol output{min-width:3.2em;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
 #cheat{display:none}
 .cs{background:var(--table);color:var(--text);border-radius:14px;padding:14px 14px 12px;font-size:calc(13px*var(--fs,1));line-height:1.4}
 .cs h2{font:900 calc(17px*var(--fs,1)) var(--face);margin:0 0 6px}
@@ -1018,7 +1038,7 @@ const JA_EXACT = {
   '無法連線到配對伺服器，請稍後再試': 'マッチングサーバーに接続できません。しばらくしてからお試しください', '請輸入房間代碼': 'ルームIDを入力してください',
   '找不到這個房間（或連線被擋）': 'ルームが見つかりません（または接続がブロックされています）', '找不到這個房間': 'ルームが見つかりません', '連線失敗': '接続に失敗しました',
   '遊戲已開始，無法加入': 'ゲームはすでに始まっています', '房間已滿': 'ルームは満席です', '自動': '自動', '淺色': 'ライト', '深色': 'ダーク',
-  '小': '小', '中': '中', '大': '大',
+  '小': '小', '中': '中', '大': '大', '音量': '音量', '背景音樂音量': 'BGM音量',
   /* cheat sheet: descriptions & reasons */
   '紅中／發財／白板刻子，明暗皆可，每組 +1': '白・發・中の刻子。明暗どちらも可、1組ごとに +1', '全順子、無三元': '順子のみ・三元牌なし',
   '4 刻 + 眼（彩碰可）': '刻子4組＋雀頭（彩ポン可）', '混一色或清一色，眼是彩眼，至少一張為主色（首副三元刻不另計）': '混一色／清一色で雀頭が彩雀頭、主色1枚以上（最初の三元刻は別計算しない）',
@@ -1031,7 +1051,7 @@ const JA_EXACT = {
   '莊家起手即胡': '親の配牌でそのまま和了', '閒家胡莊家第一隻打出的牌': '子が親の第1打でロン', '閒家第一次摸牌自摸，之前無人吃碰槓': '子が最初のツモで和了（それまで誰も鳴いていない）',
   '每次': '1回ごと', '補第 5 張紅中、發財、白板': '5枚目の白發中を加える', '無鳴牌': '副露なし', '只限有鳴牌': '副露がある手のみ',
   '槓後補牌自摸（連自摸、槓共 +1.5）': 'カン後の補充牌でツモ（ツモ・カンと合わせて +1.5）', '缺一門、無紅中、發財、白板': '1色欠け・三元牌なし', '胡牌是 7–9': '和了牌が7〜9',
-  '已有明牌': 'すでに副露あり', '已有鳴牌／槓': 'すでに副露／カンあり', '1–3 不能鳴牌，已有鳴牌': '1〜3は鳴けず、すでに副露あり', '明牌太多': '副露が多すぎます',
+  '已有鳴牌／槓': 'すでに副露／カンあり', '1–3 不能鳴牌，已有鳴牌': '1〜3は鳴けず、すでに副露あり', '鳴牌太多': '副露が多すぎます',
   '已有吃牌': 'すでにチーあり', '已有碰／槓': 'すでにポン／カンあり', '鳴牌不只一門': '副露が2色以上', '已有彩碰': 'すでに彩ポンあり', '彩碰多於一刻': '彩ポンが2組以上',
   '已有三元牌鳴牌': '三元牌の副露あり', '鳴牌三門齊': '副露が3色そろっている', '非三元鳴牌太多': '三元牌以外の副露が多すぎます', '鳴牌不合': '副露が合いません',
   '鳴牌不合（只可鳴 456、789，同花）': '副露が合いません（鳴けるのは同色の456・789のみ）', '鳴牌不合（只可鳴 456、789，同花，不能有碰槓）': '副露が合いません（同色の456・789のみ、ポン／カン不可）',
@@ -1095,7 +1115,7 @@ function jaRuby(html) {
 }
 
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
-const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on' };
+const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '100' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
 const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
@@ -2204,12 +2224,12 @@ function cheatStates() {
   const ok = k => { if (!st[k]) st[k] = { s: 'ok' }; };
   // ---- 已不可能 ----
   if (open.length) {
-    ['不求人', '門清', '門清幺九順', '門清幺九龍'].forEach(k => out(k, '已有明牌', 'you have an open meld'));
-    out('四暗刻', '已有明牌', 'you have an open meld');
-    out('七對子', '已有明牌', 'you have an open meld');
+    ['不求人', '門清', '門清幺九順', '門清幺九龍'].forEach(k => out(k, '已有鳴牌', 'you have an open meld'));
+    out('四暗刻', '已有鳴牌', 'you have an open meld');
+    out('七對子', '已有鳴牌', 'you have an open meld');
   }
   if (melds.length) { out('七對子', '已有鳴牌／槓', 'you have a meld'); out('全小字', '1–3 不能鳴牌，已有鳴牌', 'small tiles can’t be called, and you have a meld'); }
-  if (open.length >= 2) out('三暗刻', '明牌太多', 'too many open melds');
+  if (open.length >= 2) out('三暗刻', '鳴牌太多', 'too many open melds');
   if (chows.length) out('對對胡', '已有吃牌', 'you have a chow');
   if (trip.length) out('平胡', '已有碰／槓', 'you have a pung/kong');
   if (suitsNM.size >= 2) { out('混一色', '鳴牌不只一門', 'melds in 2+ suits'); out('清一色', '鳴牌不只一門', 'melds in 2+ suits'); out('彩眼混一色', '鳴牌不只一門', 'melds in 2+ suits'); out('彩碰混一色', '鳴牌不只一門', 'melds in 2+ suits'); }
@@ -2723,7 +2743,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
 const MUSIC = (() => {
   const SC = [0, 2, 4, 7, 9], BEAT = 0.4167, BARS = 9; // 9 小節 × 8 拍 × 0.4167 秒 ＝ 30 秒一圈
   const freq = d => 293.66 * Math.pow(2, (SC[((d % 5) + 5) % 5] + 12 * Math.floor(d / 5)) / 12);
-  let ctx, master, wet, timer, nextT = 0, bar = 0, deg = 5, on = false, rng;
+  let ctx, master, wet, timer, nextT = 0, bar = 0, deg = 5, on = false, rng, mvol = 1, svol = 1;
   const seeded = () => { let a = 0x9e3779b9; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
   const impulse = c => { const n = Math.floor(c.sampleRate * 2.4), b = c.createBuffer(2, n, c.sampleRate); for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6); } return b; };
   function build(c, dest) {
@@ -2783,12 +2803,16 @@ const MUSIC = (() => {
   let stg;
   function tick() { while (nextT < ctx.currentTime + 1.2) { schedBar(ctx, wet, nextT); nextT += BEAT * 8; } }
   return {
+    // 音量（0–1 倍；1 ＝ 原本大小）：背景音樂、胡牌音效各自調整
+    setVol(f) { mvol = f; try { if (on && wet) wet.m.gain.setTargetAtTime(.8 * mvol, ctx.currentTime, .05); } catch (e) {} },
+    setStingVol(f) { svol = f; try { if (stg) stg.m.gain.value = .75 * svol; } catch (e) {} },
+    playing() { return on; },
     start() {
       if (on) { try { if (ctx.state !== 'running') ctx.resume(); } catch (e) {} return; }
       on = true;
       try {
         if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); wet = build(ctx, ctx.destination); }
-        ctx.resume(); wet.m.gain.cancelScheduledValues(ctx.currentTime); wet.m.gain.setTargetAtTime(.8, ctx.currentTime, .6);
+        ctx.resume(); wet.m.gain.cancelScheduledValues(ctx.currentTime); wet.m.gain.setTargetAtTime(.8 * mvol, ctx.currentTime, .6);
         bar = 0; rng = null; nextT = ctx.currentTime + .2; tick(); timer = setInterval(tick, 250);
       } catch (e) { on = false; }
     },
@@ -2800,7 +2824,7 @@ const MUSIC = (() => {
     warm() {
       try {
         if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); wet = build(ctx, ctx.destination); }
-        if (!stg) { stg = build(ctx, ctx.destination); stg.m.gain.value = .75; }
+        if (!stg) { stg = build(ctx, ctx.destination); stg.m.gain.value = .75 * svol; }
         if (ctx.state !== 'running') ctx.resume();
         [-5, 0, 5, 6, 7, 8, 9, 10, 11, 12, 13].forEach((d, i) => setTimeout(() => { try { ksBuf(ctx, freq(d)); } catch (e) {} }, 40 * i));
       } catch (e) {}
@@ -2808,7 +2832,7 @@ const MUSIC = (() => {
     sting() {
       try {
         if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); wet = build(ctx, ctx.destination); }
-        if (!stg) { stg = build(ctx, ctx.destination); stg.m.gain.value = .75; }
+        if (!stg) { stg = build(ctx, ctx.destination); stg.m.gain.value = .75 * svol; }
         if (ctx.state !== 'running') ctx.resume();
         stingNotes(ctx, stg, ctx.currentTime + .05);
       } catch (e) {}
@@ -2825,11 +2849,11 @@ const CLACK_B64 = [
 ];
 /* ===== 音效：牌落在絨布桌上的悶響；碰、吃、槓各有聲（Web Audio 即時合成） ===== */
 const SFX = (() => {
-  let ctx, out, nb, bufs = [];
+  let ctx, out, nb, bufs = [], vol = 1;
   function init() {
     if (ctx) return true;
     try {
-      ctx = new (window.AudioContext || window.webkitAudioContext)(); out = ctx.createGain(); out.gain.value = .4; out.connect(ctx.destination);
+      ctx = new (window.AudioContext || window.webkitAudioContext)(); out = ctx.createGain(); out.gain.value = .4 * vol; out.connect(ctx.destination);
       nb = ctx.createBuffer(1, ctx.sampleRate * .2, ctx.sampleRate); const d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       CLACK_B64.forEach(b => { try { const bin = atob(b), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); const pr = ctx.decodeAudioData(u.buffer, x => bufs.push(x), () => {}); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {} });
       return true;
@@ -2860,6 +2884,7 @@ const SFX = (() => {
     chow() { run(t => { hit(t, .45, .95); hit(t + .13, .55, 1.07); }); },
     pung() { run(t => { hit(t, .45, .92); hit(t + .11, .5, 1); hit(t + .22, .58, 1.1); }); },
     kong() { run(t => { hit(t, .45, .9); hit(t + .1, .5, .98); hit(t + .2, .56, 1.07); hit(t + .33, .7, 1.2); }); },
+    setVol(f) { vol = f; if (out) out.gain.value = .4 * vol; },
     clacks() { return bufs.length; },
     // 測試用
     async render(kind) { const oc = new OfflineAudioContext(1, 44100, 44100), sc = ctx, so = out, sn = nb; ctx = oc; out = oc.createGain(); out.connect(oc.destination); nb = oc.createBuffer(1, 8820, 44100); const d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -2868,6 +2893,8 @@ const SFX = (() => {
 })();
 const sfxMeld = k => k === 'chow' ? SFX.chow() : k === 'kong' ? SFX.kong() : SFX.pung();
 const musicApply = () => PREF.music !== 'off' ? MUSIC.start() : MUSIC.stop();
+const musicFactor = () => Math.pow(Math.max(0, Math.min(100, +PREF.musicVol)) / 100, 2) || 0;   // 滑桿 0–100 → 音量倍數（100 ＝ 原本大小）
+MUSIC.setVol(musicFactor());
 document.addEventListener('visibilitychange', () => { if (PREF.music !== 'off') document.hidden ? MUSIC.stop() : MUSIC.start(); if (!document.hidden) SFX.unlock(); });
 // 瀏覽器要求在使用者操作中才能出聲（iPhone 還會中途把聲音暫停）：每次點擊都確認音效／音樂有在跑
 let warmed = false;
@@ -2894,6 +2921,7 @@ function renderSettings() {
     <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大', 'Large', PREF.fs === 'l')}</div>
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
+    <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
     <h3>${L('意見回饋', 'Feedback')}</h3><button type="button" class="btn sm" id="stFb">${L('意見回饋', 'Feedback')} …</button>`;
 }
 $('#setDlg').addEventListener('click', e => {
@@ -2905,6 +2933,11 @@ $('#setDlg').addEventListener('click', e => {
   else { LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't'; }
   savePref(); applyLang();
 });
+$('#setDlg').addEventListener('input', e => {
+  if (e.target.id !== 'stMusicVol') return;
+  PREF.musicVol = e.target.value; MUSIC.setVol(musicFactor()); $('#stMusicOut').textContent = PREF.musicVol + '%';
+});
+$('#setDlg').addEventListener('change', e => { if (e.target.id === 'stMusicVol') savePref(); });
 $('#setBtn').onclick = () => { renderSettings(); $('#setDlg').showModal(); };
 /* ===== 意見回饋（Web3Forms：免後端，寄到你的信箱）。把 access key 貼到 FEEDBACK_KEY ===== */
 const FEEDBACK_KEY = '81cd3f95-d21b-44ef-8a6d-b62638cd14d9';
@@ -2995,6 +3028,103 @@ $('.brand h1').addEventListener('click', () => { if (online() && !confirm(L('離
   };
 }
 { const _al = applyLang; applyLang = function () { _al(); applyScript(); }; }
+
+/* ===== 音量測試頁（網址加 ?soundtest）：逐個播放、量出每種聲音的實際大小，並可即時調整比例 ===== */
+if (/[?&]soundtest\b/.test(location.search)) (function () {
+  PREF.music = 'off';                      // 只在這一頁暫時關掉自動播放的背景音樂（不會存起來）
+  const lv = { music: Math.round(Math.sqrt(musicFactor()) * 100), sfx: 100, sting: 100 };
+  const db = v => Math.round(20 * Math.log10(v || 1e-6) * 10) / 10;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const el = document.createElement('div'); el.id = 'soundtest';
+  el.innerHTML = `<style>
+    #soundtest{position:fixed;inset:0;z-index:200;background:var(--bg);color:var(--pg);overflow:auto;padding:18px 16px 60px;font:15px/1.5 var(--ui)}
+    #soundtest .in{max-width:760px;margin:0 auto}#soundtest h1{font:900 24px var(--face);margin:0 0 4px}
+    #soundtest p.s{color:var(--pgm);margin:0 0 14px}
+    #soundtest .card{background:var(--table);color:var(--text);border-radius:12px;padding:14px 16px;margin:12px 0}
+    #soundtest h2{font-size:15px;margin:0 0 8px;color:var(--gold)}
+    #soundtest .sl{display:grid;grid-template-columns:8.5em 1fr 4.5em;gap:10px;align-items:center;margin:6px 0}
+    #soundtest .sl input{accent-color:var(--gold);width:100%}#soundtest .sl output{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+    #soundtest .row{display:flex;flex-wrap:wrap;gap:8px}
+    #soundtest table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+    #soundtest th,#soundtest td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--line)}#soundtest th:first-child,#soundtest td:first-child{text-align:left}
+    #soundtest th{color:var(--muted);font-weight:500;font-size:12px}
+    #soundtest td.hi{color:#f0928b}#soundtest td.lo{color:#8fd19e}
+    #soundtest .note{font-size:12px;color:var(--muted);margin:8px 0 0}
+    #soundtest textarea{width:100%;height:56px;background:var(--bg);color:var(--pg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:13px ui-monospace,monospace}
+  </style>
+  <div class="in">
+    <h1>${L('音量測試', 'Sound loudness test')}</h1>
+    <p class="s">${L('逐個播放，或按「量度全部」自動量出每種聲音的實際音量（dBFS，越接近 0 越大聲）。滑桿可即時調整，滿意後把下面的數字告訴我。', 'Play each sound, or press “Measure all” to read each sound’s real level (dBFS: closer to 0 = louder). Move the sliders live; when it feels right, send me the numbers at the bottom.')} <a href="${location.pathname}" style="color:var(--gold)">${L('回到遊戲', 'Back to the game')}</a></p>
+    <div class="card"><h2>${L('音量', 'Volumes')}</h2>
+      <div class="sl"><span>${L('背景音樂', 'Background music')}</span><input type="range" id="stMus" min="0" max="100" value="${lv.music}"><output id="stMusO"></output></div>
+      <div class="sl"><span>${L('牌聲／碰吃槓', 'Tile sounds')}</span><input type="range" id="stSfx" min="0" max="150" value="100"><output id="stSfxO"></output></div>
+      <div class="sl"><span>${L('胡牌音效', 'Win sting')}</span><input type="range" id="stSting" min="0" max="150" value="100"><output id="stStingO"></output></div>
+      <p class="note">${L('背景音樂 100 ＝ 目前遊戲的大小（和遊戲設定裡的音量滑桿一樣）；牌聲、胡牌音效 100% ＝ 目前遊戲的大小，可加到 150%。', 'Music 100 = current game level (same scale as the Settings slider). Tile sounds and win sting 100% = current game level, up to 150%.')}</p></div>
+    <div class="card"><h2>${L('試聽', 'Play')}</h2><div class="row">
+      <button class="btn" data-p="place">${L('打牌', 'Discard')}</button><button class="btn" data-p="chow">${L('吃', 'Chow')}</button><button class="btn" data-p="pung">${L('碰', 'Pung')}</button><button class="btn" data-p="kong">${L('槓', 'Kong')}</button>
+      <button class="btn" data-p="sting">${L('胡牌音效', 'Win sting')}</button><button class="btn" id="stMusBtn">${L('背景音樂：開／關', 'Music on/off')}</button>
+      <button class="btn primary" id="stMix">${L('音樂＋隨機音效（混音測試）', 'Music + random sounds (mix test)')}</button></div></div>
+    <div class="card"><h2>${L('量度', 'Measure')}</h2>
+      <div class="row"><button class="btn primary" id="stMeasure">${L('量度全部', 'Measure all')}</button><span id="stStatus" style="color:var(--muted);align-self:center"></span></div>
+      <table id="stTable" style="margin-top:10px"><thead><tr><th>${L('聲音', 'Sound')}</th><th>${L('最高峰 dBFS', 'Peak dBFS')}</th><th>${L('最響 23ms 平均', 'Loudest avg')}</th><th>${L('發聲期間平均', 'Avg while sounding')}</th><th>${L('最高峰 vs 打牌', 'Peak vs Discard')}</th></tr></thead><tbody></tbody></table>
+      <p class="note">${L('「最高峰 vs 打牌」：正數＝比單打一張牌更大聲（紅），負數＝更細聲（綠）。量度時會暫停背景音樂，量完會恢復。', '“Peak vs Discard”: positive = louder than a single discard (red), negative = quieter (green). Music is paused while measuring and restored after.')}</p></div>
+    <div class="card"><h2>${L('我的設定（複製給我）', 'My levels (copy to me)')}</h2><textarea id="stOut" readonly></textarea><div class="row" style="margin-top:8px"><button class="btn sm" id="stCopy">${L('複製', 'Copy')}</button></div></div>
+  </div>`;
+  document.body.appendChild(el);
+  const q = s => el.querySelector(s);
+  const setOut = () => {
+    q('#stMusO').textContent = lv.music; q('#stSfxO').textContent = lv.sfx + '%'; q('#stStingO').textContent = lv.sting + '%';
+    q('#stOut').value = `music ${lv.music} / tile sounds ${lv.sfx}% / win sting ${lv.sting}%`;
+  };
+  const apply = () => { MUSIC.setVol(Math.pow(lv.music / 100, 2)); SFX.setVol(lv.sfx / 100); MUSIC.setStingVol(lv.sting / 100); setOut(); };
+  q('#stMus').oninput = e => { lv.music = +e.target.value; apply(); };
+  q('#stSfx').oninput = e => { lv.sfx = +e.target.value; apply(); };
+  q('#stSting').oninput = e => { lv.sting = +e.target.value; apply(); };
+  const prime = () => { SFX.unlock(); apply(); };
+  const play = k => { prime(); if (k === 'sting') MUSIC.sting(); else SFX[k](); };
+  el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => play(b.dataset.p));
+  q('#stMusBtn').onclick = () => { prime(); MUSIC.playing() ? MUSIC.stop() : MUSIC.start(); };
+  let mix = null;
+  q('#stMix').onclick = () => {
+    prime();
+    if (mix) { clearInterval(mix); mix = null; MUSIC.stop(); q('#stMix').textContent = L('音樂＋隨機音效（混音測試）', 'Music + random sounds (mix test)'); return; }
+    MUSIC.start(); let n = 0; q('#stMix').textContent = L('停止混音測試', 'Stop mix test');
+    mix = setInterval(() => { n++; const k = ['place', 'place', 'place', 'chow', 'pung', 'kong'][Math.floor(Math.random() * 6)]; if (n % 7 === 0) MUSIC.sting(); else SFX[k](); }, 1500);
+  };
+  function measure(fn, ms) {
+    return new Promise(res => {
+      const ans = window.__an || []; if (!ans.length) { res(null); return; }
+      const buf = new Float32Array(1024); let peak = 0, loud = 0, sum = 0, n = 0; if (fn) fn();
+      const t0 = performance.now();
+      const iv = setInterval(() => {
+        for (const an of ans) {
+          an.getFloatTimeDomainData(buf); let sq = 0, pk = 0; for (const v of buf) { sq += v * v; pk = Math.max(pk, Math.abs(v)); }
+          const rms = Math.sqrt(sq / buf.length); peak = Math.max(peak, pk); loud = Math.max(loud, rms); if (rms > 0.001) { sum += sq / buf.length; n++; }
+        }
+        if (performance.now() - t0 > ms) { clearInterval(iv); res({ peak: db(peak), loud: db(loud), avg: db(Math.sqrt(sum / Math.max(1, n))) }); }
+      }, 8);
+    });
+  }
+  q('#stMeasure').onclick = async () => {
+    const btn = q('#stMeasure'), st = q('#stStatus'), tb = q('#stTable tbody'); btn.disabled = true; tb.innerHTML = '';
+    prime(); const wasMusic = MUSIC.playing(); if (mix) q('#stMix').click(); MUSIC.stop(); await sleep(1300);
+    const tests = [[L('打牌（1 下）', 'Discard (1 hit)'), () => SFX.place(), 700], [L('吃（2 下）', 'Chow (2 hits)'), () => SFX.chow(), 900], [L('碰（3 下）', 'Pung (3 hits)'), () => SFX.pung(), 1000], [L('槓（4 下）', 'Kong (4 hits)'), () => SFX.kong(), 1300], [L('胡牌音效', 'Win sting'), () => MUSIC.sting(), 3600]];
+    let base = null;
+    for (const [name, fn, ms] of tests) {
+      st.textContent = L('量度中：', 'Measuring: ') + name; const r = await measure(fn, ms); await sleep(500);
+      if (!r) { st.textContent = L('量度失敗（這個瀏覽器不支援）', 'Measuring failed in this browser'); btn.disabled = false; return; }
+      if (base === null) base = r.peak;
+      const diff = Math.round((r.peak - base) * 10) / 10;
+      tb.insertAdjacentHTML('beforeend', `<tr><td>${name}</td><td>${r.peak}</td><td>${r.loud}</td><td>${r.avg}</td><td class="${diff > 2 ? 'hi' : diff < -2 ? 'lo' : ''}">${diff > 0 ? '+' : ''}${diff} dB</td></tr>`);
+    }
+    st.textContent = L('量度中：背景音樂', 'Measuring: background music'); MUSIC.start(); await sleep(1800);
+    const m = await measure(null, 6000); MUSIC.stop();
+    if (m) { const diff = Math.round((m.peak - base) * 10) / 10; tb.insertAdjacentHTML('beforeend', `<tr><td>${L('背景音樂', 'Background music')}</td><td>${m.peak}</td><td>${m.loud}</td><td>${m.avg}</td><td class="${diff > 2 ? 'hi' : diff < -2 ? 'lo' : ''}">${diff > 0 ? '+' : ''}${diff} dB</td></tr>`); }
+    if (wasMusic) MUSIC.start(); st.textContent = L('完成', 'Done'); btn.disabled = false;
+  };
+  q('#stCopy').onclick = () => { const t = q('#stOut').value; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { q('#stCopy').textContent = L('已複製！', 'Copied!'); setTimeout(() => q('#stCopy').textContent = L('複製', 'Copy'), 1200); }, () => q('#stOut').select()); };
+  apply();
+})();
 applyLang(); updateOnlineBtn(); play();
 // 預覽用：?demo=zimo／ron（別家胡）、mezimo／meron（你胡）— 直接模擬一手胡牌並播放胡牌動畫與結算頁，不用打完整局
 function demoWin(kind) {
