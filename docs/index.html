@@ -2161,7 +2161,7 @@ function finish(res) {
   res.delta.forEach((v, i) => scores[i] += v);
   UI.result = res;
   const ev = res.ev;
-  log(() => { const who = WHO[res.winner], how = res.tsumo ? L('自摸', 'self-draw') : L(`${WHO[res.from]}出銃`, `discard from ${WHO[res.from]}`); return L(`${who}胡牌（${how}）${evTxt(ev)}`, `${who} won (${how}) ${evTxt(ev)}`); });
+  log(() => { const who = WHO[res.winner], how = res.tsumo ? L('自摸', 'self-draw (Zimo)') : L(`${WHO[res.from]}出銃`, `discard from ${WHO[res.from]} (Ron)`); return L(`${who}胡牌（${how}）${evTxt(ev)}`, `${who} won (${how}) ${evTxt(ev)}`); });
   dealer = res.winner === dealer ? dealer : (dealer + 1) % 4;
   showResult(true);
   setStatus(() => L('本局結束。', 'Hand over.'));
@@ -2181,7 +2181,7 @@ function renderResult() {
     const rv = d.querySelector('#rv'); for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, WHO[s]));
   } else {
     const ev = res.ev, who = WHO[res.winner];
-    const how = res.tsumo ? L('自摸', 'Self-draw') : L(`${WHO[res.from]}出銃`, `Discard from ${WHO[res.from]}`);
+    const how = res.tsumo ? L('自摸', 'Self-draw (Zimo)') : L(`${WHO[res.from]}出銃`, `Discard from ${WHO[res.from]} (Ron)`);
     const F = n => L(`${n} 番`, `${n} fan`);
     const rows = ev.items.map(i => `<span>${yn(i.name)}</span><span>${F(i.fan)}</span>`).join('') +
       ev.halves.map(i => `<span>${yn(i.name)}</span><span>+${F(i.fan)}</span>`).join('') +
@@ -2192,7 +2192,7 @@ function renderResult() {
     d.innerHTML = `<h2>${winTitle(res)}</h2><p style="margin:0;color:var(--muted)">${how}</p>
       <h3>${L('番種', 'Fan breakdown')}</h3><div class="fanlist">${rows}</div>
       <div class="hero"><small>${L('最終得分', 'Final score')}</small><b>${ev.points}</b><span>${ev.tilePts} ${L('點', 'pts')} × ${ev.mult}</span></div>
-      <h3>${L('結算', 'Settlement')}</h3><div class="pay">${pay}</div><p class="paynote">${res.tsumo ? L('自摸：每家付一份', 'Self-draw: each pays one share') : L('出銃者付兩份', 'Discarder pays two shares')}</p>
+      <h3>${L('結算', 'Settlement')}</h3><div class="pay">${pay}</div><p class="paynote">${res.tsumo ? L('自摸：每家付一份', 'Self-draw (Zimo): each pays one share') : L('出銃者付兩份', 'Discard (Ron): discarder pays two shares')}</p>
       <h3>${L('各家手牌', 'All hands')}</h3><div class="reveal" id="rv"></div>${next}`;
     const rv = d.querySelector('#rv');
     for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, WHO[s], res));
