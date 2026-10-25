@@ -2223,7 +2223,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = 
 const MUSIC = (() => {
   const SC = [0, 2, 4, 7, 9], BEAT = 0.4167, BARS = 9; // 9 小節 × 8 拍 × 0.4167 秒 ＝ 30 秒一圈
   const freq = d => 293.66 * Math.pow(2, (SC[((d % 5) + 5) % 5] + 12 * Math.floor(d / 5)) / 12);
-  let ctx, master, wet, timer, nextT = 0, bar = 0, deg = 5, on = false, rng, mvol = 1, svol = .45;   // svol：胡牌音效預設 45%（Wilson 試聽後定的）
+  let ctx, master, wet, timer, nextT = 0, bar = 0, deg = 5, on = false, rng, mvol = 1, svol = .6;   // svol：胡牌音效預設 60%（Wilson 試聽後定的）
   const seeded = () => { let a = 0x9e3779b9; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
   const impulse = c => { const n = Math.floor(c.sampleRate * 2.4), b = c.createBuffer(2, n, c.sampleRate); for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6); } return b; };
   function build(c, dest) {
@@ -2512,7 +2512,7 @@ $('.brand h1').addEventListener('click', () => { if (online() && !confirm(L('離
 /* ===== 音量測試頁（網址加 ?soundtest）：逐個播放、量出每種聲音的實際大小，並可即時調整比例 ===== */
 if (/[?&]soundtest\b/.test(location.search)) (function () {
   PREF.music = 'off';                      // 只在這一頁暫時關掉自動播放的背景音樂（不會存起來）
-  const lv = { music: Math.round(Math.sqrt(musicFactor()) * 100), sfx: 100, sting: 45 };   // 這裡的起始值＝目前遊戲的預設
+  const lv = { music: Math.round(Math.sqrt(musicFactor()) * 100), sfx: 100, sting: 60 };   // 這裡的起始值＝目前遊戲的預設
   const db = v => Math.round(20 * Math.log10(v || 1e-6) * 10) / 10;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const el = document.createElement('div'); el.id = 'soundtest';
@@ -2538,8 +2538,8 @@ if (/[?&]soundtest\b/.test(location.search)) (function () {
     <div class="card"><h2>${L('音量', 'Volumes')}</h2>
       <div class="sl"><span>${L('背景音樂', 'Background music')}</span><input type="range" id="stMus" min="0" max="100" value="${lv.music}"><output id="stMusO"></output></div>
       <div class="sl"><span>${L('牌聲／碰吃槓', 'Tile sounds')}</span><input type="range" id="stSfx" min="0" max="150" value="100"><output id="stSfxO"></output></div>
-      <div class="sl"><span>${L('胡牌音效', 'Win sting')}</span><input type="range" id="stSting" min="0" max="150" value="45"><output id="stStingO"></output></div>
-      <p class="note">${L('背景音樂：和遊戲設定裡的音量滑桿同一個刻度（100 ＝ 最初的大小）；牌聲、胡牌音效：100% ＝ 最初的大小，可加到 150%。遊戲現在的預設是音樂 95、牌聲 100%、胡牌音效 45%。', 'Music uses the same scale as the Settings slider (100 = original level); tile sounds and win sting: 100% = original level, up to 150%. The game’s defaults are now music 95, tile sounds 100%, win sting 45%.')}</p></div>
+      <div class="sl"><span>${L('胡牌音效', 'Win sting')}</span><input type="range" id="stSting" min="0" max="150" value="60"><output id="stStingO"></output></div>
+      <p class="note">${L('背景音樂：和遊戲設定裡的音量滑桿同一個刻度（100 ＝ 最初的大小）；牌聲、胡牌音效：100% ＝ 最初的大小，可加到 150%。遊戲現在的預設是音樂 95、牌聲 100%、胡牌音效 60%。', 'Music uses the same scale as the Settings slider (100 = original level); tile sounds and win sting: 100% = original level, up to 150%. The game’s defaults are now music 95, tile sounds 100%, win sting 60%.')}</p></div>
     <div class="card"><h2>${L('試聽', 'Play')}</h2><div class="row">
       <button class="btn" data-p="place">${L('打牌', 'Discard')}</button><button class="btn" data-p="chow">${L('吃', 'Chow')}</button><button class="btn" data-p="pung">${L('碰', 'Pung')}</button><button class="btn" data-p="kong">${L('槓', 'Kong')}</button>
       <button class="btn" data-p="sting">${L('胡牌音效', 'Win sting')}</button><button class="btn" id="stMusBtn">${L('背景音樂：開／關', 'Music on/off')}</button>
