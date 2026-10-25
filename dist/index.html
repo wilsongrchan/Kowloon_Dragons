@@ -1018,7 +1018,7 @@ const JA_EXACT = {
   '無法連線到配對伺服器，請稍後再試': 'マッチングサーバーに接続できません。しばらくしてからお試しください', '請輸入房間代碼': 'ルームIDを入力してください',
   '找不到這個房間（或連線被擋）': 'ルームが見つかりません（または接続がブロックされています）', '找不到這個房間': 'ルームが見つかりません', '連線失敗': '接続に失敗しました',
   '遊戲已開始，無法加入': 'ゲームはすでに始まっています', '房間已滿': 'ルームは満席です', '自動': '自動', '淺色': 'ライト', '深色': 'ダーク',
-  '小 S': '小 S', '中 M': '中 M', '大 L': '大 L',
+  '小': '小', '中': '中', '大': '大',
   /* cheat sheet: descriptions & reasons */
   '紅中／發財／白板刻子，明暗皆可，每組 +1': '白・發・中の刻子。明暗どちらも可、1組ごとに +1', '全順子、無三元': '順子のみ・三元牌なし',
   '4 刻 + 眼（彩碰可）': '刻子4組＋雀頭（彩ポン可）', '混一色或清一色，眼是彩眼，至少一張為主色（首副三元刻不另計）': '混一色／清一色で雀頭が彩雀頭、主色1枚以上（最初の三元刻は別計算しない）',
@@ -2891,7 +2891,7 @@ function renderSettings() {
   const chip = (grp, v, zh, en, on) => `<button type="button" class="chip ${on ? 'on' : ''}" data-set="${grp}:${v}">${L(zh, en)}</button>`;
   d.innerHTML = `${XBTN()}<h2>${L('設定', 'Settings')}</h2>
     <h3>${L('外觀', 'Appearance')}</h3><div class="chips">${chip('theme', 'auto', '自動', 'Auto', PREF.theme === 'auto')}${chip('theme', 'light', '淺色', 'Light', PREF.theme === 'light')}${chip('theme', 'dark', '深色', 'Dark', PREF.theme === 'dark')}</div>
-    <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小 S', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中 M', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大 L', 'Large', PREF.fs === 'l')}</div>
+    <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大', 'Large', PREF.fs === 'l')}</div>
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
     <h3>${L('意見回饋', 'Feedback')}</h3><button type="button" class="btn sm" id="stFb">${L('意見回饋', 'Feedback')} …</button>`;
