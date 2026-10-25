@@ -181,7 +181,8 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
     const inChow = (ck, k) => ck[0] === k[0] && +k.slice(1) >= +ck.slice(1) && +k.slice(1) <= +ck.slice(1) + 2;
     const altPlace = winK && (d.pair.split('/').includes(winK) || d.sets.some(s => s.type === 'chow' && inChow(s.k, winK)));
     for (const s of d.sets) if (s.type === 'pong' && !(winK && (s.keys ? s.keys.includes(winK) : s.k === winK) && !altPlace)) anko++;
-    if (anko >= 4) add('四暗刻', 4); else if (anko === 3) add('三暗刻', 2);
+    if (anko >= 4) { add('四暗刻', 4); const ai = items.findIndex(x => x.name === '對對胡'); if (ai >= 0) items.splice(ai, 1); } // 四暗刻不重複算對對胡
+    else if (anko === 3) add('三暗刻', 2);
     // 幺九順：同花 123+456+789，剩下一組可順可碰（可不同花色），眼任意；門清的話是門清幺九順（+30，不重複算門清）
     for (const su of ['p', 's', 'm']) {
       const a = sets.find(s => s.kind === 'chow' && s.k === su + 1), b = sets.find(s => s.kind === 'chow' && s.k === su + 4), c3 = sets.find(s => s.kind === 'chow' && s.k === su + 7);
