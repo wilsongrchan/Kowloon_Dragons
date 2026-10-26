@@ -838,7 +838,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     cands.push(finish(items, bonus, bonusName, { pair: d.pair, sets: d.sets }));
   }
   // 天胡／地胡／人胡：手牌成形即可（不需另有番種），固定 6 番
-  if (special && shapeOk) cands.push(fixed([{ name: special, fan: 6 }], 0, special));
+  if (special && shapeOk) cands.push(fixed([{ name: special, fan: 6 }], 30, special));
   if (!cands.length) return { ok: false, reason: 'shape' };
   let best = null;
   for (const r of cands) if (!best || (r.ok && !best.ok) || (r.ok === best.ok && r.points > best.points)) best = r;
@@ -1592,7 +1592,7 @@ zh: `  <h2>規則</h2>
         <li><b>天胡</b>：莊家起手即胡。</li>
         <li><b>地胡</b>：閒家胡莊家打出的第一隻牌。</li>
         <li><b>人胡</b>：閒家第一次摸牌自摸，之前無人吃碰槓。</li>
-        <li>天胡、地胡、人胡只要牌型完成即可，即使該手牌原是 0 番也算胡。</li>
+        <li>天胡、地胡、人胡只要牌型完成即可，即使該手牌原是 0 番也算胡。手牌點值立刻 +30，固定 6 番。</li>
       </ul>
     </li>
   </ul>
@@ -1739,7 +1739,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
         <li><b>Blessing of Heaven (天胡)</b>: the dealer wins on the starting hand.</li>
         <li><b>Blessing of Earth (地胡)</b>: a non-dealer wins on the dealer's very first discard.</li>
         <li><b>Blessing of Man (人胡)</b>: a non-dealer wins by self-draw on their first draw, with nobody having called a Chow, Pung or Kong before it.</li>
-        <li>The Blessings of Heaven, Earth and Man only need a complete hand, even if it is otherwise 0 fan.</li>
+        <li>The Blessings of Heaven, Earth and Man only need a complete hand, even if it is otherwise 0 fan. Hand points +30, fixed at 6 fan.</li>
       </ul>
     </li>
   </ul>
@@ -1841,7 +1841,7 @@ RULES_HTML.ja = `  <h2>ルール</h2>
         <li><b>天和</b>：親の配牌でそのまま和了。</li>
         <li><b>地和</b>：子が親の第1打でロン。</li>
         <li><b>人和</b>：子が最初のツモで和了。それまで誰もチー・ポン・カンしていない。</li>
-        <li>天和・地和・人和は形が完成していればよく、他に役がなくても和了できます。</li>
+        <li>天和・地和・人和は形が完成していればよく、他に役がなくても和了できます。手牌の点数が即 +30、6翻固定。</li>
       </ul>
     </li>
   </ul>

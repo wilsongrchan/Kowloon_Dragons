@@ -210,7 +210,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     cands.push(finish(items, bonus, bonusName, { pair: d.pair, sets: d.sets }));
   }
   // 天胡／地胡／人胡：手牌成形即可（不需另有番種），固定 6 番
-  if (special && shapeOk) cands.push(fixed([{ name: special, fan: 6 }], 0, special));
+  if (special && shapeOk) cands.push(fixed([{ name: special, fan: 6 }], 30, special));
   if (!cands.length) return { ok: false, reason: 'shape' };
   let best = null;
   for (const r of cands) if (!best || (r.ok && !best.ok) || (r.ok === best.ok && r.points > best.points)) best = r;
