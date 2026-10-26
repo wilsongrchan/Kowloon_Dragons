@@ -1530,7 +1530,7 @@ const BASICS = (() => {
 const RULES_HTML = {
 zh: `  <h2>規則</h2>
   <p class="rintro">幺九龍是一款全新的麻將類遊戲，邀請你試玩！對比傳統麻將，幺九龍最大的特點是每張牌都附有點數，而且數量不一，每次摸牌都是新的機會！幺九龍在傳統的番種上更添加全新番種，變化多樣，節奏輕快，適合所有玩過或沒有玩過傳統麻將的玩家。</p>
-  <p>1 對 3 電腦。每局由莊家起手，沒有風位與連莊，每局重新洗牌，分數累計。</p>
+  <p>可以 1 對 3 電腦，也可以開房間和朋友一起玩（最多 4 人，空位由電腦補上）。每局由莊家起手，沒有風位與連莊，每局重新洗牌，分數累計。</p>
   <h3>牌與分值</h3>
   <ul>
     <li>筒索萬各 45 張（數字 n 的牌有 10 − n 張）：一有 9 張 … 九只有 1 張，紅中、發財、白板各 5 張，共 150 張。</li>
@@ -1566,7 +1566,7 @@ zh: `  <h2>規則</h2>
         <li><b>不求人</b>：無鳴牌、自摸。門清加自摸，不重複算門清或自摸。</li>
         <li><b>斷小字</b>：整副手牌沒有 1–3。</li>
         <li><b>三暗刻</b></li>
-        <li><b>七對子</b>：7 對、全暗。四張相同算兩對（如 2222）；可疊混一色、清一色；不可彩眼；不重複算門清。</li>
+        <li><b>七對子</b>：門清狀態下組成 7 對。四張相同算兩對（如 2222）；可疊混一色、清一色；不可彩眼；不重複算門清。</li>
       </ul>
     </li>
     <li><b>3 番</b>
@@ -1628,7 +1628,7 @@ zh: `  <h2>規則</h2>
     <li>滑鼠移到牌上（手機點一下牌）會顯示這種牌共幾張、已見幾張、還剩幾張（已見＝你的手牌＋所有棄牌＋所有鳴牌）。</li></ul>`,
 en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
   <p class="rintro">Kowloon Dragons is a brand-new game from the mahjong family, and you're invited to try it! Its biggest difference from traditional mahjong is that every tile carries a point value and the number of copies varies, so every draw is a fresh opportunity. On top of the traditional scoring conditions, it adds brand-new ones: lots of variety, a light and quick pace, and a good fit for anyone, whether or not you've played traditional mahjong.</p>
-  <p>Kowloon Dragons is a tile game from the mahjong family. It needs its own 150-tile set, not a regular mahjong set. On this page you play against 3 computer players. A hand starts with the dealer; there are no winds or dealer streaks. The wall is reshuffled every hand and scores carry over.</p>
+  <p>Kowloon Dragons is a tile game from the mahjong family. It needs its own 150-tile set, not a regular mahjong set. You can play against 3 computer players, or open a room and play with friends online (up to 4 players, with bots filling empty seats). A hand starts with the dealer; there are no winds or dealer streaks. The wall is reshuffled every hand and scores carry over.</p>
   <h3>Goal</h3>
   <ul>
     <li>Hand of 13 tiles; you win on the 14th with <b>4 melds + 1 pair</b> (a meld is a sequence, a triplet or a kong).</li>
@@ -1779,7 +1779,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
 };
 RULES_HTML.ja = `  <h2>ルール</h2>
   <p class="rintro">幺九龍は麻雀系の新しいゲームです。ぜひ遊んでみてください！従来の麻雀との一番の違いは、すべての牌に点数があり、枚数もまちまちなところ。ツモるたびに新しいチャンスがあります。従来の役に加えて新しい役もあり、バリエーション豊かでテンポよく進むので、麻雀経験のある方もない方も楽しめます。</p>
-  <p>あなた1人 vs CPU3人。毎局、親から配牌が始まります。風や連荘はなく、毎局シャッフルし直し、点数は累計されます。</p>
+  <p>CPU3人と対戦するほか、ルームを作って友だちと遊ぶこともできます（最大4人、空席はCPUが埋めます）。毎局、親から配牌が始まります。風や連荘はなく、毎局シャッフルし直し、点数は累計されます。</p>
   <h3>牌と点数</h3>
   <ul>
     <li>筒子・索子・萬子は各45枚（数字nの牌が10−n枚：一は9枚 … 九は1枚）、白・發・中は各5枚、合計150枚。</li>
@@ -1815,7 +1815,7 @@ RULES_HTML.ja = `  <h2>ルール</h2>
         <li><b>不求人（門前ツモ）</b>：副露なし・ツモ。門前・ツモは別計算しない。</li>
         <li><b>断小字</b>：手牌に1〜3が1枚もない。</li>
         <li><b>三暗刻</b></li>
-        <li><b>七対子</b>：7対、すべて暗。同じ牌4枚＝2対も可（2222）。混一色・清一色と複合可。彩雀頭は不可。門前は別計算しない。</li>
+        <li><b>七対子</b>：門前（鳴きなし）で7対をそろえる。同じ牌4枚＝2対も可（2222）。混一色・清一色と複合可。彩雀頭は不可。門前は別計算しない。</li>
       </ul>
     </li>
     <li><b>3翻</b>
