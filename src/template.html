@@ -505,6 +505,9 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 #setDlg h3{margin:14px 0 6px}
 #setDlg .chips{display:flex;flex-wrap:wrap;gap:6px}
 #setDlg .chip{font:500 calc(14px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
+#landing .botlv{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:2px;color:var(--muted);font-size:calc(13px*var(--fs,1))}
+#landing .botlv .chip{font:500 calc(13px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:4px 12px;cursor:pointer}
+#landing .botlv .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
 #setDlg .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
 #hand .lgrp{position:relative;display:inline-flex}
 #hand .lrow2{display:flex;gap:3px;align-items:flex-end}
@@ -628,8 +631,10 @@ button.btn.hot:hover{background:var(--gold-hov)}
 const $ = s => document.querySelector(s);
 /*__JA__*/
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
-const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57' };
+const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
+const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' ? 'pro' : 'easy'; };
+applyBotLvl();
 const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
 const L = (zh, en) => LANG === 'en' ? en : LANG === 'ja' ? jaT(zh) : zh;
@@ -2485,6 +2490,8 @@ function renderSettings() {
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
     <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
+    <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}</div>
+    <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。', 'Expert bots plan their hands, track what has been played, read the table and play defensively.')}</p>
     <h3>${L('意見回饋', 'Feedback')}</h3><button type="button" class="btn sm" id="stFb">${L('意見回饋', 'Feedback')} …</button>`;
 }
 $('#setDlg').addEventListener('click', e => {
@@ -2493,6 +2500,7 @@ $('#setDlg').addEventListener('click', e => {
   if (g === 'theme' || g === 'fs') { PREF[g] = v; applyPrefs(); }
   else if (g === 'sfx') { PREF.sfx = v; savePref(); renderSettings(); if (v === 'on') SFX.place(); }
   else if (g === 'music') { PREF.music = v; musicApply(); renderSettings(); }
+  else if (g === 'bot') { PREF.botLvl = v === 'pro' ? 'pro' : 'easy'; applyBotLvl(); savePref(); renderSettings(); return; }
   else { LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't'; }
   savePref(); applyLang();
 });
@@ -2562,6 +2570,7 @@ function renderLanding() {
         <button class="btn primary big" id="lnCreate" type="button">${L('創建房間', 'Create room')}<small>${L('把代碼傳給朋友，空位可用電腦補', 'Share the code with friends; bots fill empty seats')}</small></button>
         <div class="joinrow"><input class="cd" id="lnCode" maxlength="4" value="${cd}" placeholder="${L('房間代碼', 'ROOM CODE')}" aria-label="${L('房間代碼', 'Room code')}" autocomplete="off"><button class="btn big2" id="lnGo" type="button">${L('加入房間', 'Join room')}</button></div>
         <button class="btn big" id="lnBots" type="button">${L('電腦對戰', 'Play with bots')}<small>${L('一人對三個電腦，即刻開局', 'You vs 3 bots, start right away')}</small></button>
+        <div class="botlv"><span>${L('電腦強度', 'Bot level')}</span><button type="button" class="chip ${PREF.botLvl !== 'pro' ? 'on' : ''}" data-bot="easy">${L('新手', 'Easy')}</button><button type="button" class="chip ${PREF.botLvl === 'pro' ? 'on' : ''}" data-bot="pro">${L('高手', 'Expert')}</button></div>
         <p class="err" id="lnMsg" aria-live="polite">${ROOM.msg || ''}</p>
       </div>
       <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragons · 6 fan cap')}</span></div>
@@ -2570,6 +2579,8 @@ function renderLanding() {
   const c = $('#lnCode'); if (c) c.addEventListener('input', () => { c.value = c.value.toUpperCase().replace(/[^A-Z]/g, ''); });
 }
 $('#landing').addEventListener('click', e => {
+  const lv = e.target.closest('button[data-bot]');
+  if (lv) { PREF.botLvl = lv.dataset.bot === 'pro' ? 'pro' : 'easy'; applyBotLvl(); savePref(); $('#landing').querySelectorAll('button[data-bot]').forEach(b => b.classList.toggle('on', b === lv)); return; }
   const t = e.target.closest('button'); if (!t) return;
   if (t.id === 'lnBots') { try { const n = cleanName(($('#lnName') || {}).value); if (n) localStorage.setItem('yjl-name', n); } catch (x) {} if (ROOM.zooming) return; dragonZoom(() => { if (online()) toSolo(); play(); hideLanding(); }); }
   else if (t.id === 'lnCreate') createRoom();

@@ -505,6 +505,9 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 #setDlg h3{margin:14px 0 6px}
 #setDlg .chips{display:flex;flex-wrap:wrap;gap:6px}
 #setDlg .chip{font:500 calc(14px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
+#landing .botlv{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:2px;color:var(--muted);font-size:calc(13px*var(--fs,1))}
+#landing .botlv .chip{font:500 calc(13px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:4px 12px;cursor:pointer}
+#landing .botlv .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
 #setDlg .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
 #hand .lgrp{position:relative;display:inline-flex}
 #hand .lrow2{display:flex;gap:3px;align-items:flex-end}
@@ -938,7 +941,7 @@ function winResult(g, seat, tsumo, from, ev) {
 }
 
 /* ---- bots ---- */
-function botDiscard(g, seat) {
+function easyDiscard(g, seat) {
   const h = g.hands[seat], c = counts(h), sc = { p: 0, s: 0, m: 0 };
   h.forEach(t => { if (t.s !== 'z') sc[t.s]++; }); g.melds[seat].forEach(m => m.tiles.forEach(t => { if (t.s !== 'z') sc[t.s]++; }));
   let best = null, bs = 1e9;
@@ -953,11 +956,21 @@ function botDiscard(g, seat) {
   }
   return best;
 }
-function botSelf(g, seat, opts) {
+function easySelf(g, seat, opts) {
   if (opts.win) return { win: true };
   if (opts.kongs.length && Math.random() < 0.6) return { kong: opts.kongs[0] };
-  return { discard: botDiscard(g, seat).id };
+  return { discard: easyDiscard(g, seat).id };
 }
+function easyClaim(g, s, from, t, o) {
+  if (o.kong.length && Math.random() < 0.5) return { seat: s, kind: 'kong', opt: o.kong[0] };
+  if (o.pong.length) {
+    const nat = o.pong.find(p => !p.mixed);
+    const p = nat || (Math.random() < 0.3 ? o.pong[0] : null);
+    if (p && (t.s === 'z' || Math.random() < 0.45)) return { seat: s, kind: 'pong', opt: p };
+  }
+  return null;
+}
+function easyChow(g, s, from, t, o) { return o.chow.length && Math.random() < 0.2 ? { seat: s, kind: 'chow', opt: o.chow[0] } : null; }
 function botClaims(g, from, t, skip = []) {
   for (let i = 1; i < 4; i++) {
     const s = (from + i) % 4; if (skip.includes(s)) continue;
@@ -967,24 +980,222 @@ function botClaims(g, from, t, skip = []) {
   for (let i = 1; i < 4; i++) {
     const s = (from + i) % 4; if (skip.includes(s)) continue;
     const o = claimOptions(g, s, t, from);
-    if (o.kong.length && Math.random() < 0.5) return { seat: s, kind: 'kong', opt: o.kong[0] };
-    if (o.pong.length) {
-      const nat = o.pong.find(p => !p.mixed);
-      const p = nat || (Math.random() < 0.3 ? o.pong[0] : null);
-      if (p && (t.s === 'z' || Math.random() < 0.45)) return { seat: s, kind: 'pong', opt: p };
-    }
+    const c = proLevel(g, s) ? proClaim(g, s, from, t, o) : easyClaim(g, s, from, t, o);
+    if (c) return c;
   }
   const s = (from + 1) % 4;
   if (!skip.includes(s)) {
     const o = claimOptions(g, s, t, from);
-    if (o.chow.length && Math.random() < 0.2) return { seat: s, kind: 'chow', opt: o.chow[0] };
+    const c = proLevel(g, s) ? proChow(g, s, from, t, o) : easyChow(g, s, from, t, o);
+    if (c) return c;
   }
   return null;
 }
 
+/* ---- 高手電腦：算向聽數、看牌效率與場上形勢（鳴牌、已見牌），不亂打 ---- */
+RULES.BOT_LEVEL = 'easy';   // 'easy' | 'pro'；模擬時可用 g.botLv[seat] 逐家指定
+function proLevel(g, seat) { return ((g.botLv && g.botLv[seat]) || RULES.BOT_LEVEL) === 'pro'; }
+const NK = ORDER.length;                                    // 30 種牌，順序同 ORDER：p1-9 s1-9 m1-9 z1-3
+const copiesIdx = i => i >= 27 ? 5 : (i % 9) + 1;           // 引擎編號 n 有 n 張
+const idxOf = k => ORD[k];
+function arrOf(tiles) { const a = new Array(NK).fill(0); for (const t of tiles) a[ORD[t.k]]++; return a; }
+
+// 向聽數（還差幾步聽牌；-1 = 已成形）。mode：closed/normal 一般、pinfu 只順子、duidui 只刻子、flush 已預先清掉其他花色
+const SH_CACHE = new Map();
+function shanten(c0, need, mode, init) {
+  const key = mode + need + (init ? init.s + '.' + init.p : '') + c0.join('');
+  const hit = SH_CACHE.get(key); if (hit !== undefined) return hit;
+  const c = c0.slice(), useChow = mode !== 'duidui', usePung = mode !== 'pinfu', useMixed = mode !== 'pinfu', honPair = mode !== 'pinfu';
+  let best = 99;
+  const rec = (i, s, p, pr) => {
+    while (i < NK && c[i] === 0) i++;
+    if (i === NK) { const v = 2 * need - 2 * s - Math.min(p, need - s) - pr; if (v < best) best = v; return; }
+    const n = i % 9, z = i >= 27;
+    if (usePung && s < need && c[i] >= 3) { c[i] -= 3; rec(i, s + 1, p, pr); c[i] += 3; }
+    if (useChow && s < need && !z && n <= 6 && c[i + 1] > 0 && c[i + 2] > 0) { c[i]--; c[i + 1]--; c[i + 2]--; rec(i, s + 1, p, pr); c[i]++; c[i + 1]++; c[i + 2]++; }
+    if (useMixed && s < need && !z && n <= 2) {
+      const ks = [n, 9 + n, 18 + n], si = Math.floor(i / 9);
+      c[i]--;
+      for (let a = 0; a < 3; a++) for (let b = a; b < 3; b++) {
+        const x = ks[a], y = ks[b];
+        if (x === y ? c[x] < 2 : (c[x] < 1 || c[y] < 1)) continue;
+        if (si === a && a === b && x === i) continue;
+        if (new Set([si, a, b]).size === 1) continue;
+        c[x]--; c[y]--; rec(i, s + 1, p, pr); c[x]++; c[y]++;
+      }
+      c[i]++;
+    }
+    if (!pr && c[i] >= 2 && (honPair || !z)) { c[i] -= 2; rec(i, s, p, 1); c[i] += 2; }
+    if (!pr && useMixed && !z && n <= 2) for (let d = Math.floor(i / 9) + 1; d < 3; d++) { const j = d * 9 + n; if (c[j] > 0) { c[i]--; c[j]--; rec(i, s, p, 1); c[i]++; c[j]++; } }
+    if (s + p < need) {
+      if (mode !== 'pinfu' && c[i] >= 2) { c[i] -= 2; rec(i, s, p + 1, pr); c[i] += 2; }
+      if (useMixed && !z && n <= 2) for (let d = Math.floor(i / 9) + 1; d < 3; d++) { const j = d * 9 + n; if (c[j] > 0) { c[i]--; c[j]--; rec(i, s, p + 1, pr); c[i]++; c[j]++; } }
+      if (useChow && !z) {
+        if (n <= 7 && c[i + 1] > 0) { c[i]--; c[i + 1]--; rec(i, s, p + 1, pr); c[i]++; c[i + 1]++; }
+        if (n <= 6 && c[i + 2] > 0) { c[i]--; c[i + 2]--; rec(i, s, p + 1, pr); c[i]++; c[i + 2]++; }
+      }
+    }
+    c[i]--; rec(i, s, p, pr); c[i]++;
+  };
+  rec(0, init ? init.s : 0, init ? init.p : 0, 0);
+  if (SH_CACHE.size > 60000) SH_CACHE.clear();
+  SH_CACHE.set(key, best); return best;
+}
+
+// 各條「路線」的向聽數與番數價值：沒有任何一條成形就不算胡（一番起胡）
+function planList(a, melds) {
+  const need = 4 - melds.length, open = melds.some(m => m.open);
+  const plans = [];
+  const mTiles = melds.flatMap(m => m.tiles);
+  const allChow = melds.every(m => m.type === 'chow'), allPung = melds.every(m => m.type !== 'chow');
+  const dragonMeld = melds.some(m => m.tiles[0].s === 'z');
+  const mask = f => a.map((v, i) => f(i) ? v : 0);
+  if (!open) plans.push({ n: 'closed', sh: shanten(a, need, 'normal') + 1, b: 8 });          // 門清自摸（不求人）：只能靠自摸
+  if (allChow && !dragonMeld) plans.push({ n: 'pinfu', sh: shanten(mask(i => i < 27), need, 'pinfu'), b: 12 });
+  if (allPung) plans.push({ n: 'duidui', sh: shanten(a, need, 'duidui'), b: 14 });
+  if (dragonMeld) plans.push({ n: 'dragon', sh: shanten(a, need, 'normal'), b: 24 });
+  else for (let z = 27; z < 30; z++) {
+    if (a[z] >= 3) { const c = a.slice(); c[z] -= 3; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 1, p: 0 }), b: 24 }); }
+    else if (a[z] === 2) { const c = a.slice(); c[z] -= 2; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 0, p: 1 }) + 0, b: 24 }); }
+  }
+  if (!mTiles.some(t => t.s !== 'z' && t.n >= 7)) plans.push({ n: 'nosmall', sh: shanten(mask(i => i >= 27 || i % 9 <= 5), need, 'normal'), b: 30 });
+  for (let su = 0; su < 3; su++) {
+    if (mTiles.some(t => t.s !== 'z' && ORD[t.s + 1] !== su * 9)) continue;
+    plans.push({ n: 'flush' + su, sh: shanten(mask(i => i >= 27 || Math.floor(i / 9) === su), need, 'normal'), b: 28 });
+  }
+  if (!melds.length) { let pr = 0; for (let i = 0; i < NK; i++) pr += a[i] >> 1; plans.push({ n: 'seven', sh: 6 - Math.min(7, pr), b: 28 }); }
+  if (!plans.length) plans.push({ n: 'any', sh: shanten(a, need, 'normal') + 2, b: 0 });
+  return plans;
+}
+const bestSh = plans => plans.reduce((m, p) => Math.min(m, p.sh), 99);
+
+// 場上還看不到的牌：總數 − 自己手牌 − 所有鳴牌 − 所有棄牌
+function unseenArr(g, seat) {
+  const u = []; for (let i = 0; i < NK; i++) u.push(copiesIdx(i));
+  g.hands[seat].forEach(t => u[ORD[t.k]]--);
+  g.melds.forEach(ms => ms.forEach(m => m.tiles.forEach(t => u[ORD[t.k]]--)));
+  g.discards.forEach(d => d.forEach(t => u[ORD[t.k]]--));
+  return u.map(v => Math.max(0, v));
+}
+function relevantKeys(a) {
+  const r = new Set();
+  for (let i = 0; i < NK; i++) if (a[i] > 0) {
+    r.add(i); if (i >= 27) continue;
+    const su = Math.floor(i / 9), n = i % 9;
+    for (let d = -2; d <= 2; d++) if (n + d >= 0 && n + d <= 8) r.add(su * 9 + n + d);
+    if (n <= 2) for (let s2 = 0; s2 < 3; s2++) r.add(s2 * 9 + n);
+  }
+  return [...r];
+}
+// 摸到哪些牌會讓某條路線前進（進張數）
+function ukeire(a, melds, u, planNames, cur) {
+  let tot = 0;
+  for (const x of relevantKeys(a)) {
+    if (!u[x]) continue;
+    a[x]++;
+    const pl = planList(a, melds).filter(p => planNames.has(p.n));
+    a[x]--;
+    if (bestSh(pl) < cur) tot += u[x];
+  }
+  return tot;
+}
+
+// 對手威脅：鳴牌多、牌局後段、疑似做一色
+function threats(g, seat) {
+  const prog = 1 - g.wall.length / 98, th = [];
+  for (let o = 0; o < 4; o++) {
+    if (o === seat) { th.push(0); continue; }
+    const ms = g.melds[o], suits = new Set(ms.flatMap(m => m.tiles).filter(t => t.s !== 'z').map(t => t.s));
+    th.push({ w: 0.35 + 0.55 * prog + 0.6 * Math.min(3, ms.length), flush: suits.size === 1 && ms.length >= 1 ? [...suits][0] : null });
+  }
+  return th;
+}
+function dangerOf(g, seat, t, u, th) {
+  const i = ORD[t.k], remain = u[i];
+  let tot = 0;
+  for (let o = 0; o < 4; o++) {
+    if (o === seat) continue;
+    const T = th[o]; let d = remain <= 0 ? 0 : Math.min(1, remain / 3) + 0.2;
+    if (t.s === 'z') d *= 0.7;
+    else { if (t.n >= 4 && t.n <= 6) d *= 1.25; if (T.flush) d *= t.s === T.flush ? 1.8 : 0.5; }
+    if (g.discards[o].some(x => x.k === t.k)) d *= 0.3;
+    tot += T.w * d;
+  }
+  return tot;
+}
+
+function proDiscard(g, seat) {
+  const h = g.hands[seat], melds = g.melds[seat];
+  const a = arrOf(h), u = unseenArr(g, seat), th = threats(g, seat);
+  const cands = [];
+  const seenKey = new Set();
+  for (const t of h) {
+    if (seenKey.has(t.k)) continue; seenKey.add(t.k);
+    const i = ORD[t.k]; a[i]--;
+    const plans = planList(a, melds), sh = bestSh(plans);
+    cands.push({ t, i, plans, sh });
+    a[i]++;
+  }
+  const minSh = Math.min(...cands.map(c => c.sh));
+  const mult = minSh <= 0 ? 0.45 : minSh === 1 ? 0.8 : 1.0;
+  let best = null, bs = -1e9;
+  for (const c of cands) {
+    if (c.sh > minSh + 1) continue;
+    let sc = -100 * c.sh;
+    const names = new Set(c.plans.filter(p => p.sh <= c.sh + 1).map(p => p.n));
+    a[c.i]--;
+    if (c.sh === minSh) {
+      const act = new Set(c.plans.filter(p => p.sh === c.sh).map(p => p.n));
+      sc += 1.5 * ukeire(a, melds, u, act, c.sh);
+    }
+    a[c.i]++;
+    let bonus = 0; for (const p of c.plans) if (p.sh <= c.sh + 1) bonus = Math.max(bonus, p.b - 10 * (p.sh - c.sh));
+    sc += bonus * (RULES.PRO_BONUS == null ? 0.4 : RULES.PRO_BONUS);
+    sc -= 6 * mult * dangerOf(g, seat, c.t, u, th);
+    sc -= 0.15 * val(c.t) + Math.random() * 0.3;
+    if (sc > bs) { bs = sc; best = c.t; }
+  }
+  return best || h[0];
+}
+function proSelf(g, seat, opts) {
+  if (opts.win) return { win: true };
+  if (opts.kongs.length) return { kong: opts.kongs[0] };
+  return { discard: proDiscard(g, seat).id };
+}
+// 鳴牌後的向聽數（鳴完要再打一張，取最好的打法）
+function afterClaimSh(g, seat, opt, t, kind) {
+  const h = g.hands[seat].filter(x => !opt.tiles.some(y => y.id === x.id));
+  const meld = { type: kind === 'chow' ? 'chow' : kind === 'pong' ? 'pong' : 'kong', tiles: [...opt.tiles, t], open: true, mixed: !!opt.mixed, claimed: opt.mixed ? t.id : null };
+  const ms = [...g.melds[seat], meld], a = arrOf(h);
+  if (kind === 'kong') return bestSh(planList(a, ms));
+  let best = 99; const seen = new Set();
+  for (const x of h) { if (seen.has(x.k)) continue; seen.add(x.k); a[ORD[x.k]]--; best = Math.min(best, bestSh(planList(a, ms))); a[ORD[x.k]]++; }
+  return best;
+}
+function curSh(g, seat) { return bestSh(planList(arrOf(g.hands[seat]), g.melds[seat])); }
+function proClaimKind(g, seat, t, list, kind) {
+  if (!list.length) return null;
+  const cur = curSh(g, seat); if (cur <= 0) return null;       // 已聽牌：保住門清，不鳴
+  let best = null, bs = cur;
+  for (const o of list) {
+    const sh = afterClaimSh(g, seat, o, t, kind);
+    const dragon = t.s === 'z';
+    if (sh < bs || (sh === cur && dragon && !best && cur >= 1 && kind !== 'chow')) { bs = Math.min(bs, sh); best = o; }
+  }
+  return best ? { seat, kind, opt: best } : null;
+}
+function proClaim(g, seat, from, t, o) {
+  const k = proClaimKind(g, seat, t, o.kong, 'kong'); if (k) return k;
+  const natural = proClaimKind(g, seat, t, o.pong.filter(p => !p.mixed), 'pong'); if (natural) return natural;
+  return proClaimKind(g, seat, t, o.pong.filter(p => p.mixed), 'pong');
+}
+function proChow(g, seat, from, t, o) { return proClaimKind(g, seat, t, o.chow, 'chow'); }
+function botDiscard(g, seat) { return proLevel(g, seat) ? proDiscard(g, seat) : easyDiscard(g, seat); }
+function botSelf(g, seat, opts) { return proLevel(g, seat) ? proSelf(g, seat, opts) : easySelf(g, seat, opts); }
+
 /* ---- headless simulation (all four seats are bots) ---- */
-function simGame() {
-  const g = newGame(0);
+function simGame(levels) {
+  const g = newGame(0); if (levels) g.botLv = levels;
   let seat = 0, rep = false, needDraw = true, guard = 0;
   while (guard++ < 2000) {
     if (needDraw) { if (!drawTile(g, seat, rep)) return { draw: true, g }; }
@@ -1005,7 +1216,7 @@ function simGame() {
   }
   return { draw: true, g };
 }
-if (false) module.exports = { RULES, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
+if (false) module.exports = { RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
 
 
 /* ===== UI ===== */
@@ -1024,7 +1235,7 @@ const YAKU_JA = {
 };
 const JA_EXACT = {
   /* table */
-  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
+  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '電腦強度': 'COMの強さ', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
   '手牌＋鳴牌的點值總和（未乘番數；彩碰被要的那張不計）': '手牌＋副露の点の合計（翻数を掛ける前。彩ポンで鳴いた1枚は数えません）',
   '整理': '理牌', '彩組': '彩まとめ', '把手上的彩眼／彩刻湊在一起並鎖定': '手牌の彩雀頭／彩刻子をまとめてロックします',
   '目前沒有可組的彩眼／彩刻': 'まとめられる彩雀頭／彩刻子はありません', '解鎖': 'ロック解除', '鎖定': 'ロック',
@@ -1150,8 +1361,10 @@ function jaRuby(html) {
 }
 
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
-const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57' };
+const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
+const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' ? 'pro' : 'easy'; };
+applyBotLvl();
 const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
 const L = (zh, en) => LANG === 'en' ? en : LANG === 'ja' ? jaT(zh) : zh;
@@ -3007,6 +3220,8 @@ function renderSettings() {
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
     <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
+    <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}</div>
+    <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。', 'Expert bots plan their hands, track what has been played, read the table and play defensively.')}</p>
     <h3>${L('意見回饋', 'Feedback')}</h3><button type="button" class="btn sm" id="stFb">${L('意見回饋', 'Feedback')} …</button>`;
 }
 $('#setDlg').addEventListener('click', e => {
@@ -3015,6 +3230,7 @@ $('#setDlg').addEventListener('click', e => {
   if (g === 'theme' || g === 'fs') { PREF[g] = v; applyPrefs(); }
   else if (g === 'sfx') { PREF.sfx = v; savePref(); renderSettings(); if (v === 'on') SFX.place(); }
   else if (g === 'music') { PREF.music = v; musicApply(); renderSettings(); }
+  else if (g === 'bot') { PREF.botLvl = v === 'pro' ? 'pro' : 'easy'; applyBotLvl(); savePref(); renderSettings(); return; }
   else { LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't'; }
   savePref(); applyLang();
 });
@@ -3084,6 +3300,7 @@ function renderLanding() {
         <button class="btn primary big" id="lnCreate" type="button">${L('創建房間', 'Create room')}<small>${L('把代碼傳給朋友，空位可用電腦補', 'Share the code with friends; bots fill empty seats')}</small></button>
         <div class="joinrow"><input class="cd" id="lnCode" maxlength="4" value="${cd}" placeholder="${L('房間代碼', 'ROOM CODE')}" aria-label="${L('房間代碼', 'Room code')}" autocomplete="off"><button class="btn big2" id="lnGo" type="button">${L('加入房間', 'Join room')}</button></div>
         <button class="btn big" id="lnBots" type="button">${L('電腦對戰', 'Play with bots')}<small>${L('一人對三個電腦，即刻開局', 'You vs 3 bots, start right away')}</small></button>
+        <div class="botlv"><span>${L('電腦強度', 'Bot level')}</span><button type="button" class="chip ${PREF.botLvl !== 'pro' ? 'on' : ''}" data-bot="easy">${L('新手', 'Easy')}</button><button type="button" class="chip ${PREF.botLvl === 'pro' ? 'on' : ''}" data-bot="pro">${L('高手', 'Expert')}</button></div>
         <p class="err" id="lnMsg" aria-live="polite">${ROOM.msg || ''}</p>
       </div>
       <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragons · 6 fan cap')}</span></div>
@@ -3092,6 +3309,8 @@ function renderLanding() {
   const c = $('#lnCode'); if (c) c.addEventListener('input', () => { c.value = c.value.toUpperCase().replace(/[^A-Z]/g, ''); });
 }
 $('#landing').addEventListener('click', e => {
+  const lv = e.target.closest('button[data-bot]');
+  if (lv) { PREF.botLvl = lv.dataset.bot === 'pro' ? 'pro' : 'easy'; applyBotLvl(); savePref(); $('#landing').querySelectorAll('button[data-bot]').forEach(b => b.classList.toggle('on', b === lv)); return; }
   const t = e.target.closest('button'); if (!t) return;
   if (t.id === 'lnBots') { try { const n = cleanName(($('#lnName') || {}).value); if (n) localStorage.setItem('yjl-name', n); } catch (x) {} if (ROOM.zooming) return; dragonZoom(() => { if (online()) toSolo(); play(); hideLanding(); }); }
   else if (t.id === 'lnCreate') createRoom();
