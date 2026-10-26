@@ -223,7 +223,7 @@ dialog li{margin:2px 0}
 dialog li>ul{margin:2px 0 6px;opacity:.92}
 dialog li b{color:var(--ivt)}
 details.eg{margin:8px 0 4px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:rgba(0,0,0,.12)}
-details.eg summary{cursor:pointer;color:var(--gold-t);font-size:calc(14px*var(--fs,1));font-weight:500}
+details.basics{margin:10px 0}details.basics ol{margin:6px 0 4px;padding-left:1.3em}details.basics li{margin:5px 0;line-height:1.6}details.eg summary{cursor:pointer;color:var(--gold-t);font-size:calc(14px*var(--fs,1));font-weight:500}
 .exrow{display:flex;flex-direction:column;gap:3px;align-items:flex-start;margin:10px 0}
 .exl{font-size:calc(13px*var(--fs,1));color:var(--muted)}
 .exs{display:flex;flex-wrap:wrap;gap:6px 10px}
@@ -1490,8 +1490,41 @@ const exampleRows = lang => HAND_EX.map((h, i) => exampleRow(lang, i)).join('');
 const EXNOTE = { zh: '綠線＝這組必須是暗牌（不可吃碰）', en: 'Green line = this group must stay concealed (no chow/pung calls)', ja: '緑の線＝この組は暗（鳴き不可）' };
 const EGH = (title, lang, btn) => `<details class="eg"><summary>${title}</summary><div class="exnote">${EXNOTE[lang]}</div><div class="exwrap">${exampleRows(lang)}</div></details>`;
 
+
+const BASICS = (() => {
+  const mk = (t, intro, items) => `<details class="eg basics"><summary>${t}</summary><p>${intro}</p><ol>${items.map(i => `<li>${i}</li>`).join('')}</ol></details>`;
+  return {
+    zh: mk('🀄 完全沒玩過麻將？先看這裡', '幺九龍是麻將的親戚，只要記住「湊牌」這件事：', [
+      '<b>目標</b>：把手上的牌湊成 <b>4 組＋1 對</b>（共 14 張）就胡牌。',
+      '<b>三種組合</b>：<b>順子</b>＝同花色連續三張（如 四筒五筒六筒）；<b>刻子</b>＝三張一樣的牌（如 五萬×3）；<b>眼</b>＝兩張一樣的牌。紅中、發財、白板只能湊刻子或眼。',
+      '<b>一回合</b>：開局每人 13 張。輪到你時先<b>摸一張</b>（變 14 張），再<b>打出一張</b>回到 13 張。打出的牌放在桌面中間，叫「棄牌」。',
+      '<b>吃、碰、槓</b>：別人打出的牌，若剛好能湊成你要的組合，可以拿來用。<b>吃</b>＝拿上家的牌湊順子；<b>碰</b>＝拿任何人的牌湊刻子；<b>槓</b>＝四張一樣，補摸一張。拿來的組合會攤開在桌上（不再是秘密），所以不是越多越好。',
+      '<b>胡牌</b>：湊齊 4 組＋1 對。自己摸到最後一張叫<b>自摸</b>；吃別人打的那張叫<b>食胡</b>（榮胡），由出銃的人付較多分。',
+      '<b>要有番才能胡</b>：只湊齊還不夠，至少要有 1 番的條件（例如三元刻、平胡、對對胡…，見下面的番種）。',
+      '<b>小提示</b>：不確定時就先看畫面下方的提示：能吃、碰、胡的時候會自動出現按鈕，不想要就按「過」。打牌時點選一張牌，再按「打出」。'
+    ]),
+    en: mk('🀄 Never played mahjong? Start here', 'Kowloon Dragons is a cousin of mahjong. The whole game is about collecting matching tiles:', [
+      '<b>Goal</b>: arrange your hand into <b>4 sets + 1 pair</b> (14 tiles) to win.',
+      '<b>The building blocks</b>: a <b>chow</b> is three consecutive numbers in one suit (e.g. 4-5-6 of circles); a <b>pung</b> is three identical tiles (e.g. three 5 of characters); the <b>pair</b> is two identical tiles. Dragons (Red, Green, White) can only form pungs or the pair.',
+      '<b>A turn</b>: everyone starts with 13 tiles. On your turn you <b>draw one</b> (now 14) and <b>discard one</b> (back to 13). Discards are placed face-up in the middle.',
+      '<b>Chow, pung, kong</b>: a tile someone else just discarded can be taken if it completes a set. <b>Chow</b> = take the previous player\'s tile for a sequence; <b>pung</b> = take anyone\'s tile for a triplet; <b>kong</b> = four identical tiles, then you draw a bonus tile. Taken sets are laid face-up, so the others can see them.',
+      '<b>Winning</b>: complete 4 sets + 1 pair. Drawing the last tile yourself is a <b>self-draw (Zimo)</b>; taking someone\'s discard is a <b>Ron</b>, and the discarder pays more.',
+      '<b>You need a scoring pattern (fan)</b>: a complete hand is not enough, you need at least 1 fan (e.g. a dragon triplet, All Chows, All Pungs… see the list below).',
+      '<b>Tip</b>: buttons for Chow / Pung / Win pop up automatically when you can use a discard; press Pass to skip. To discard, tap a tile, then press Discard.'
+    ]),
+    ja: mk('🀄 麻雀を知らない方はここから', '幺九龍は麻雀の親戚です。ポイントは「牌をそろえる」ことだけ：', [
+      '<b>目的</b>：手牌を<b>4つのメンツ＋1つの雀頭</b>（計14枚）にそろえるとあがりです。',
+      '<b>3つの形</b>：<b>順子</b>＝同じ種類の連続した3枚（例：四筒五筒六筒）、<b>刻子</b>＝同じ牌3枚、<b>雀頭</b>＝同じ牌2枚。白・發・中は刻子か雀頭にしかなりません。',
+      '<b>1ターン</b>：最初は13枚。自分の番に1枚<b>ツモ</b>（14枚）して、1枚<b>捨て</b>て13枚に戻します。捨てた牌は場に並びます。',
+      '<b>チー・ポン・カン</b>：他の人が捨てた牌がメンツに使えるなら、もらえます。<b>チー</b>＝上家の牌で順子、<b>ポン</b>＝誰の牌でも刻子、<b>カン</b>＝同じ牌4枚（もう1枚引く）。もらったメンツは公開されます。',
+      '<b>あがり</b>：4メンツ＋雀頭が完成。自分で引いてあがると<b>ツモ</b>、人の捨て牌であがると<b>ロン</b>（捨てた人が多く払います）。',
+      '<b>役が必要</b>：形が完成しただけではあがれません。最低1翻の役（役牌の刻子、平和、対々和…下の役一覧）が必要です。',
+      '<b>ヒント</b>：チー・ポン・ロンできるときはボタンが自動で出ます。不要なら「パス」。捨てるときは牌をタップして「打牌」を押します。'
+    ])
+  };
+})();
 const RULES_HTML = {
-zh: `  <h2>規則（目前實作）</h2>
+zh: `  <h2>規則</h2>
   <p class="rintro">幺九龍是一款全新的麻將類遊戲，邀請你試玩！對比傳統麻將，幺九龍最大的特點是每張牌都附有點數，而且數量不一，每次摸牌都是新的機會！幺九龍在傳統的番種上更添加全新番種，變化多樣，節奏輕快，適合所有玩過或沒有玩過傳統麻將的玩家。</p>
   <p>1 對 3 電腦。每局由莊家起手，沒有風位與連莊，每局重新洗牌，分數累計。</p>
   <h3>牌與分值</h3>
@@ -1530,7 +1563,7 @@ zh: `  <h2>規則（目前實作）</h2>
         <li><b>不求人</b>：無鳴牌、自摸。門清加自摸，不重複算門清或自摸。</li>
         <li><b>斷小字</b>：整副手牌沒有 1–3。</li>
         <li><b>三暗刻</b></li>
-        <li><b>七對子</b>：7 對、全暗。四張相同算兩對（如 8888）；可疊混一色、清一色；不可彩眼；不重複算門清。</li>
+        <li><b>七對子</b>：7 對、全暗。四張相同算兩對（如 2222）；可疊混一色、清一色；不可彩眼；不重複算門清。</li>
       </ul>
     </li>
     <li><b>3 番</b>
@@ -1588,9 +1621,8 @@ zh: `  <h2>規則（目前實作）</h2>
   <h3>操作</h3>
   <ul><li>點一下牌＝選取並顯示資訊；手機上再點一次是取消選取。要打出時，按手牌下面的「打出」按鈕，只會打出目前選取的那張。滑鼠用戶也可以對已選取的牌再點一次來打出。</li>
     <li>調整手牌順序：電腦用滑鼠拖曳；手機長按牌再拖曳。也可以先選一張牌，按 ◀ ▶ 移動；按「整理」回到自動排序。</li>
-    <li>滑鼠移到牌上（手機點一下牌）會顯示這種牌共幾張、已見幾張、還剩幾張（已見＝你的手牌＋所有棄牌＋所有鳴牌）。</li>
-    <li>電腦的策略很簡單（不防守，會隨機吃碰），只適合測規則。</li></ul>`,
-en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
+    <li>滑鼠移到牌上（手機點一下牌）會顯示這種牌共幾張、已見幾張、還剩幾張（已見＝你的手牌＋所有棄牌＋所有鳴牌）。</li></ul>`,
+en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
   <p class="rintro">Kowloon Dragons is a brand-new game from the mahjong family, and you're invited to try it! Its biggest difference from traditional mahjong is that every tile carries a point value and the number of copies varies, so every draw is a fresh opportunity. On top of the traditional scoring patterns, it adds brand-new ones: lots of variety, a light and quick pace, and a good fit for anyone, whether or not you've played traditional mahjong.</p>
   <p>Kowloon Dragons is a tile game from the mahjong family. It needs its own 150-tile set, not a regular mahjong set. On this page you play against 3 computer players. A hand starts with the dealer; there are no winds or dealer streaks. The wall is reshuffled every hand and scores carry over.</p>
   <h3>Goal</h3>
@@ -1678,7 +1710,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
         <li><b>Concealed Self-Draw (不求人)</b>: no calls and you win by drawing. Replaces Concealed and Self-draw.</li>
         <li><b>No Small (斷小字)</b>: no 1–3 anywhere in the hand.</li>
         <li><b>Three Concealed Triplets (三暗刻)</b></li>
-        <li><b>Seven Pairs (七對子)</b>: seven pairs, all concealed. Four of a kind counts as two pairs (8888). No mixed pair. Can stack with Half Flush and Full Flush. No Concealed bonus on top.</li>
+        <li><b>Seven Pairs (七對子)</b>: seven pairs, all concealed. Four of a kind counts as two pairs (2222). No mixed pair. Can stack with Half Flush and Full Flush. No Concealed bonus on top.</li>
       </ul>
     </li>
     <li><b>3 fan</b>
@@ -1741,7 +1773,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     <li>The computer players are simple (no defense, random calls). They are there to test the rules.</li>
   </ul>`
 };
-RULES_HTML.ja = `  <h2>ルール（現在の実装）</h2>
+RULES_HTML.ja = `  <h2>ルール</h2>
   <p class="rintro">幺九龍は麻雀系の新しいゲームです。ぜひ遊んでみてください！従来の麻雀との一番の違いは、すべての牌に点数があり、枚数もまちまちなところ。ツモるたびに新しいチャンスがあります。従来の役に加えて新しい役もあり、バリエーション豊かでテンポよく進むので、麻雀経験のある方もない方も楽しめます。</p>
   <p>あなた1人 vs CPU3人。毎局、親から配牌が始まります。風や連荘はなく、毎局シャッフルし直し、点数は累計されます。</p>
   <h3>牌と点数</h3>
@@ -1780,7 +1812,7 @@ RULES_HTML.ja = `  <h2>ルール（現在の実装）</h2>
         <li><b>不求人（門前ツモ）</b>：副露なし・ツモ。門前・ツモは別計算しない。</li>
         <li><b>断小字</b>：手牌に1〜3が1枚もない。</li>
         <li><b>三暗刻</b></li>
-        <li><b>七対子</b>：7対、すべて暗。同じ牌4枚＝2対も可（8888）。混一色・清一色と複合可。彩雀頭は不可。門前は別計算しない。</li>
+        <li><b>七対子</b>：7対、すべて暗。同じ牌4枚＝2対も可（2222）。混一色・清一色と複合可。彩雀頭は不可。門前は別計算しない。</li>
       </ul>
     </li>
     <li><b>3翻</b>
@@ -1838,8 +1870,7 @@ RULES_HTML.ja = `  <h2>ルール（現在の実装）</h2>
   <h3>操作</h3>
   <ul><li>牌を1回クリック＝選択して情報を表示。スマホでは、もう一度タップで選択解除。打牌するときは手牌の下の「打牌」ボタンを押すと、選択中の1枚だけが捨てられます。マウスなら、選択済みの牌をもう一度クリックしても打牌できます。</li>
     <li>手牌の並べ替え：PCはマウスでドラッグ、スマホは牌を長押ししてドラッグ。牌を選んで ◀ ▶ で動かすこともできます。「理牌」で自動並べ替えに戻ります。</li>
-    <li>牌にマウスを乗せる（スマホは牌をタップ）と、その牌が全部で何枚か、何枚見えているか、残り何枚かが表示されます（見えている＝手牌＋すべての捨て牌＋すべての副露）。</li>
-    <li>CPUの戦略は単純です（守備はせず、ランダムに鳴きます）。ルールの確認用です。</li></ul>`;
+    <li>牌にマウスを乗せる（スマホは牌をタップ）と、その牌が全部で何枚か、何枚見えているか、残り何枚かが表示されます（見えている＝手牌＋すべての捨て牌＋すべての副露）。</li></ul>`;
 // 電腦對戰的累計分數存在這個瀏覽器（localStorage yjl-scores）；「重新開局」會歸零
 const loadSoloScores = () => { try { const a = JSON.parse(localStorage.getItem('yjl-scores')); if (Array.isArray(a) && a.length === 4 && a.every(Number.isFinite)) return a; } catch (e) {} return [0, 0, 0, 0]; };
 const saveSoloScores = () => { try { if (ROOM.mode === 'solo') localStorage.setItem('yjl-scores', JSON.stringify(scores)); } catch (e) {} };
@@ -2496,7 +2527,7 @@ function renderResult() {
 $('#resBack').onclick = () => { UI.viewTable = false; renderResult(); const d = $('#result'); d.showModal(); d.scrollTop = 0; render(); };
 const CHEAT_TIERS = [
   [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all chows, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed pung ok)'], ['彩眼混一色', '混一色或清一色，眼是彩眼，至少一張為主色（首副三元刻不另計）', 'half/full flush with a mixed pair, at least one tile in the main suit (1st dragon triplet not counted)'], ['彩碰混一色', '混一色或清一色，一刻是彩碰，至少一張為主色（首副三元刻不另計）', 'half/full flush with one mixed pung, at least one tile in the main suit (1st dragon triplet not counted)']]],
-  [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['斷小字', '沒有 1–3', 'no 1–3'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 8888 ok, no mixed pair']]],
+  [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['斷小字', '沒有 1–3', 'no 1–3'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 2222 ok, no mixed pair']]],
   [3, [['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['全小字', '全部 1–3', 'only 1–3'], ['幺九順', '同花 123·456·789 · 其餘任一組', 'same-suit 123·456·789 + any set']]],
   [4, [['清一色', '一門、無三元（不含彩碰／彩眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻（不另計對對胡）', '4 concealed triplets (no All Triplets on top)'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
   [6, [['幺九龍', '同花 123·456·789 + 紅中、發財、白板 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White Dragon + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '紅中、發財、白板全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer\'s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]
@@ -2587,7 +2618,7 @@ function applyLang() {
   $('#leftBtn').setAttribute('aria-label', L('向左移', 'Move left')); $('#rightBtn').setAttribute('aria-label', L('向右移', 'Move right'));
   $('#logSum').textContent = L('牌局記錄', 'Game log');
   $('#meName').textContent = NAMES[0];
-  $('#rules').innerHTML = XBTN() + (LANG === 'ja' ? jaRuby(RULES_HTML.ja) : RULES_HTML[LANG]);
+  $('#rules').innerHTML = XBTN() + (LANG === 'ja' ? jaRuby(RULES_HTML.ja) : RULES_HTML[LANG]).replace('</p>', '</p>' + (BASICS[LANG] || BASICS.zh));
   if (G) {
     render(); renderLog();
     if (UI.statusFn) setStatus(UI.statusFn);
