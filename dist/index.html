@@ -1088,7 +1088,7 @@ const JA_EXACT = {
   '牌面示例：番種': '牌の例：役', ' 番：': ' 翻：',
 };
 const JA_PATTERNS = [
-  [/^彩：其他花色還剩 <b>(\d+) 張<\/b>（(.+)）$/, (m) => `彩：他の色に残り<b>${m[1]}枚</b>（${m[2]}）`],
+  [/^彩：還剩 <b>(\d+) 張<\/b>（(.+)）$/, (m) => `彩：残り<b>${m[1]}枚</b>（${m[2]}）`],
   [/^第 (\d+) 次摸牌$/, (m) => `${m[1]}回目のツモ`],
   [/^共 (\d+) 張，已見 (\d+)，<b>還剩 (\d+) 張<\/b>$/, (m) => `全${m[1]}枚・見えている${m[2]}枚・<b>残り${m[3]}枚</b>`],
   [/^(\d+) 番 ×(\d+) ＝ (\d+)$/, (m) => `${m[1]}翻 ×${m[2]} ＝ ${m[3]}`],
@@ -1937,7 +1937,7 @@ function infoHTML(k) {
   if (k[0] !== 'z' && +k.slice(1) <= 3) {   // 彩碰／彩刻／彩眼用得到的 7–9：其他花色同數字還剩幾張
     const SN = { p: ['筒', 'Circles'], s: ['索', 'Sticks'], m: ['萬', 'Characters'] }, o = ['p', 's', 'm'].filter(x => x !== k[0]).map(x => { const kk = x + k.slice(1); return [x, Math.max(0, copiesOf(kk) - seenCount(kk))]; });
     const sum = o.reduce((a, c) => a + c[1], 0);
-    mix = '<br>' + L(`彩：其他花色還剩 <b>${sum} 張</b>（${o.map(c => SN[c[0]][0] + ' ' + c[1]).join('、')}）`, `Mixed: <b>${sum} left</b> in other suits (${o.map(c => SN[c[0]][1] + ' ' + c[1]).join(', ')})`);
+    mix = '<br>' + L(`彩：還剩 <b>${sum} 張</b>（${o.map(c => SN[c[0]][0] + ' ' + c[1]).join('、')}）`, `Mixed: <b>${sum} left</b> (${o.map(c => SN[c[0]][1] + ' ' + c[1]).join(', ')})`);
   }
   return `<b>${knFull(k)}</b>${L('　', ' · ')}${v} ${L('分', v === 1 ? 'pt' : 'pts')}<br>` + L(`共 ${tot} 張，已見 ${seen}，<b>還剩 ${left} 張</b>`, `${tot} in total · ${seen} seen · <b>${left} left</b>`) + mix;
 }
