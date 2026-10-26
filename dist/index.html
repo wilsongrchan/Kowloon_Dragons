@@ -1153,7 +1153,7 @@ ORDER.forEach(k => { if (k[0] !== 'z') ORD[k] = ORDER.indexOf(k[0] + '1') + (9 -
 const tn = t => { if (t.s !== 'z') t = { ...t, n: 10 - t.n }; return LANG === 'en' ? enTile(t.s, t.n) : LANG === 'zh' && t.s === 'z' ? ZH_DRAGON[t.n] : tname(t); };
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? enTile(k[0], k[0] === 'z' ? +k.slice(1) : dnum(+k.slice(1))) : kn(k);
-const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Chows','對對胡':'All Triplets','彩眼混一色':'Mixed-Pair Half Flush','彩碰混一色':'Mixed-Pung Half Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragon','門清幺九龍':'Concealed Kowloon Dragon','槓三元':'Dragon Kongs','天胡':'Heavenly Win','地胡':'Earthly Win','人胡':'Human Win','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Chows','對對胡':'All Triplets','彩眼混一色':'Mixed-Pair Half Flush','彩碰混一色':'Mixed-Pung Half Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Heavenly Win','地胡':'Earthly Win','人胡':'Human Win','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
 const yn = name => { if (LANG === 'zh') return name; const m = name.match(/^(.+?)(×\d+)?$/), T = LANG === 'ja' ? YAKU_JA : YAKU_EN; return (T[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -1188,8 +1188,8 @@ const HAND_EX = [
   [4, '四暗刻', 'Four Concealed Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|p5 p5'],
   [4, '大三元', 'Great Dragons', 'z1 z1 z1|z2 z2 z2|z3 z3 z3|p2 p3 p4|s5 s5'],
   [4, '門清幺九順', 'Concealed Kowloon Straight', 's1 s2 s3|s4 s5 s6|s7 s8 s9|p5 p5 p5|m6 m6'],
-  [6, '幺九龍', 'Kowloon Dragon', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
-  [6, '門清幺九龍', 'Concealed Kowloon Dragon', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
+  [6, '幺九龍', 'Kowloon Dragons', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
+  [6, '門清幺九龍', 'Concealed Kowloon Dragons', 'm1 m2 m3|m4 m5 m6|m7 m8 m9|z1 z2 z3|m5 m5'],
   [6, '槓三元', 'Dragon Kongs', 'z1 z1 z1 z1|z2 z2 z2 z2|z3 z3 z3 z3|p2 p3 p4|s5 s5']
 ];
 /* ---- 番種示例「換一組」：隨機生成，並用 evaluateHand 驗證確實是該番種 ---- */
@@ -1414,7 +1414,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     <li><b>Mixed pair (彩眼)</b>
       <ul>
         <li>Two tiles of the same number 7–9 in different suits can serve as the pair, for example 9筒 + 9索. It can never be called, only completed by winning (on a discard or by self-draw).</li>
-        <li>It is not a dragon pair, and the Kowloon Dragon pair must still be two identical tiles.</li>
+        <li>It is not a dragon pair, and the Kowloon Dragons pair must still be two identical tiles.</li>
       </ul>
     </li>
     <li><b>Grand dragon kong (三元大槓)</b>
@@ -1462,8 +1462,8 @@ en: `  <h2>Kowloon Dragons (幺九龍): rules as implemented</h2>
     </li>
     <li><b>6 fan (cap)</b>
       <ul>
-        <li><b>Kowloon Dragon (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +30.</li>
-        <li><b>Concealed Kowloon Dragon (門清幺九龍)</b>: the same, with no open melds. Hand points +90.</li>
+        <li><b>Kowloon Dragons (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +30.</li>
+        <li><b>Concealed Kowloon Dragons (門清幺九龍)</b>: the same, with no open melds. Hand points +90.</li>
         <li><b>Dragon Kongs (槓三元)</b>: kongs of all three dragons. Hand points +90.</li>
         <li><b>Heavenly Win (天胡)</b>: the dealer wins on the starting hand.</li>
         <li><b>Earthly Win (地胡)</b>: a non-dealer wins on the dealer’s very first discard.</li>
@@ -3049,7 +3049,7 @@ function renderLanding() {
         <button class="btn big" id="lnBots" type="button">${L('電腦對戰', 'Play with bots')}<small>${L('一人對三個電腦，即刻開局', 'You vs 3 bots, start right away')}</small></button>
         <p class="err" id="lnMsg" aria-live="polite">${ROOM.msg || ''}</p>
       </div>
-      <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragon · 6 fan cap')}</span></div>
+      <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragons · 6 fan cap')}</span></div>
     </div>
     <div class="foot">${L('試玩版 · 規則仍在調整', 'Playtest · rules still changing')} · <a href="#" id="lnFb">${L('意見回饋', 'Feedback')}</a><br><small style="opacity:.7">${L('牌聲：雀ゴロ打牌音 ver.11（アンコロキング）', 'Tile sound: 雀ゴロ打牌音 ver.11 by Ancoro King')}</small></div>`;
   const c = $('#lnCode'); if (c) c.addEventListener('input', () => { c.value = c.value.toUpperCase().replace(/[^A-Z]/g, ''); });
