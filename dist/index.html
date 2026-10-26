@@ -1391,7 +1391,7 @@ ORDER.forEach(k => { if (k[0] !== 'z') ORD[k] = ORDER.indexOf(k[0] + '1') + (9 -
 const tn = t => { if (t.s !== 'z') t = { ...t, n: 10 - t.n }; return LANG === 'en' ? enTile(t.s, t.n) : LANG === 'zh' && t.s === 'z' ? ZH_DRAGON[t.n] : tname(t); };
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? enTile(k[0], k[0] === 'z' ? +k.slice(1) : dnum(+k.slice(1))) : kn(k);
-const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Heavenly Win','地胡':'Earthly Win','人胡':'Human Win','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Blessing of Heaven','地胡':'Blessing of Earth','人胡':'Blessing of Man','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
 const yn = name => { if (LANG === 'zh') return name; const m = name.match(/^(.+?)(×\d+)?$/), T = LANG === 'ja' ? YAKU_JA : YAKU_EN; return (T[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -1589,7 +1589,7 @@ zh: `  <h2>規則</h2>
         <li><b>天胡</b>：莊家起手即胡。</li>
         <li><b>地胡</b>：閒家胡莊家打出的第一隻牌。</li>
         <li><b>人胡</b>：閒家第一次摸牌自摸，之前無人吃碰槓。</li>
-        <li>天胡、地胡、人胡只要牌型完成即可，不需另有番種。</li>
+        <li>天胡、地胡、人胡只要牌型完成即可，即使該手牌原是 0 番也算胡。</li>
       </ul>
     </li>
   </ul>
@@ -1732,10 +1732,10 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
         <li><b>Kowloon Dragons (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +30.</li>
         <li><b>Concealed Kowloon Dragons (門清幺九龍)</b>: the same, with no open melds. Hand points +90.</li>
         <li><b>Dragon Kongs (槓三元)</b>: kongs of all three dragons. Hand points +90.</li>
-        <li><b>Heavenly Win (天胡)</b>: the dealer wins on the starting hand.</li>
-        <li><b>Earthly Win (地胡)</b>: a non-dealer wins on the dealer’s very first discard.</li>
-        <li><b>Human Win (人胡)</b>: a non-dealer wins by self-draw on their first draw, with nobody having called a chow, pung or kong before it.</li>
-        <li>Heavenly, Earthly and Human Wins only need a complete hand; no other fan is required.</li>
+        <li><b>Blessing of Heaven (天胡)</b>: the dealer wins on the starting hand.</li>
+        <li><b>Blessing of Earth (地胡)</b>: a non-dealer wins on the dealer’s very first discard.</li>
+        <li><b>Blessing of Man (人胡)</b>: a non-dealer wins by self-draw on their first draw, with nobody having called a chow, pung or kong before it.</li>
+        <li>The Blessings of Heaven, Earth and Man only need a complete hand, even if it is otherwise 0 fan.</li>
       </ul>
     </li>
   </ul>
@@ -1836,7 +1836,7 @@ RULES_HTML.ja = `  <h2>ルール</h2>
         <li><b>天和</b>：親の配牌でそのまま和了。</li>
         <li><b>地和</b>：子が親の第1打でロン。</li>
         <li><b>人和</b>：子が最初のツモで和了。それまで誰もチー・ポン・カンしていない。</li>
-        <li>天和・地和・人和は形が完成していればよく、他の役は不要です。</li>
+        <li>天和・地和・人和は形が完成していればよく、他に役がなくても和了できます。</li>
       </ul>
     </li>
   </ul>
