@@ -153,6 +153,7 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 .tile.clk::before{content:"";position:absolute;left:-.12em;right:-.12em;top:100%;height:.6em}
 .tile.sel{transform:translateY(-.8em);outline:2px solid var(--gold);outline-offset:1px}
 .tile.dim{opacity:.55}
+.tile.down{background:repeating-linear-gradient(45deg,var(--jade) 0 .35em,#2f8660 .35em .7em)!important;border-color:var(--jade-d)!important;box-shadow:none}.tile.down>*{visibility:hidden}
 #hand{display:flex;flex-wrap:wrap;gap:21px 3px;align-items:flex-end;padding:6px 0 22px}
 #hand .tile{--u:clamp(11px,calc((100vw - 40px) / 52),16px)}
 #hand .gap{width:.9em}
@@ -1391,7 +1392,7 @@ ORDER.forEach(k => { if (k[0] !== 'z') ORD[k] = ORDER.indexOf(k[0] + '1') + (9 -
 const tn = t => { if (t.s !== 'z') t = { ...t, n: 10 - t.n }; return LANG === 'en' ? enTile(t.s, t.n) : LANG === 'zh' && t.s === 'z' ? ZH_DRAGON[t.n] : tname(t); };
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? enTile(k[0], k[0] === 'z' ? +k.slice(1) : dnum(+k.slice(1))) : kn(k);
-const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Blessing of Heaven','地胡':'Blessing of Earth','人胡':'Blessing of Man','槓':'Kong','三元大補槓':'Grand dragon kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Blessing of Heaven','地胡':'Blessing of Earth','人胡':'Blessing of Man','槓':'Kong','三元大補槓':'Grand dragon Kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
 const yn = name => { if (LANG === 'zh') return name; const m = name.match(/^(.+?)(×\d+)?$/), T = LANG === 'ja' ? YAKU_JA : YAKU_EN; return (T[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -1488,7 +1489,7 @@ const pairLast = spec => { const g = spec.split('|'), two = g.filter(x => x.trim
 const EXCONC = { '門清幺九龍': 'all', '三暗刻': [0, 1, 2], '四暗刻': [0, 1, 2, 3], '門清幺九順': 'all', '七對子': 'all' };
 const exampleRow = (lang, i, rand) => X(exLabel(lang, HAND_EX[i]), pairLast(rand ? exRandom(HAND_EX[i]) : HAND_EX[i][3]), EXCONC[HAND_EX[i][1]]).replace('</span><span class="exs">', `<button type="button" class="exre" data-re="${lang}" data-i="${i}" aria-label="shuffle" title="↻">↻</button></span><span class="exs">`);
 const exampleRows = lang => HAND_EX.map((h, i) => exampleRow(lang, i)).join('');
-const EXNOTE = { zh: '綠線＝這組必須是暗牌（不可吃碰）', en: 'Green line = this group must stay concealed (no chow/pung calls)', ja: '緑の線＝この組は暗（鳴き不可）' };
+const EXNOTE = { zh: '綠線＝這組必須是暗牌（不可吃碰）', en: 'Green line = this group must stay concealed (no Chow/Pung calls)', ja: '緑の線＝この組は暗（鳴き不可）' };
 const EGH = (title, lang, btn) => `<details class="eg"><summary>${title}</summary><div class="exnote">${EXNOTE[lang]}</div><div class="exwrap">${exampleRows(lang)}</div></details>`;
 
 
@@ -1506,9 +1507,9 @@ const BASICS = (() => {
     ]),
     en: mk('🀄 Never played mahjong? Start here', 'Kowloon Dragons is a cousin of mahjong. The whole game is about collecting matching tiles:', [
       '<b>Goal</b>: arrange your hand into <b>4 melds + 1 pair</b> (14 tiles) to win.',
-      '<b>The building blocks</b>: a <b>meld</b> is a group of three or four tiles, and comes in three kinds. A <b>sequence</b> is three consecutive numbers in one suit (e.g. 4-5-6 of circles); a <b>triplet</b> is three identical tiles (e.g. three 5 of characters); a <b>kong</b> is four identical tiles. The <b>pair</b> is two identical tiles. Dragons (Red, Green, White) can only form triplets or the pair.',
+      '<b>The building blocks</b>: a <b>meld</b> is a group of three or four tiles, and comes in three kinds. A <b>sequence</b> is three consecutive numbers in one suit (e.g. 4-5-6 of circles); a <b>triplet</b> is three identical tiles (e.g. three 5 of characters); a <b>Kong</b> is four identical tiles. The <b>pair</b> is two identical tiles. Dragons (Red, Green, White) can only form triplets or the pair.',
       '<b>A turn</b>: everyone starts with 13 tiles. On your turn you <b>draw one</b> (now 14) and <b>discard one</b> (back to 13). Discards are placed face-up in the middle.',
-      '<b>Chow, pung, kong</b>: a tile someone else just discarded can be taken if it completes a meld. <b>Chow</b> = take the previous player\'s tile for a sequence; <b>pung</b> = take anyone\'s tile for a triplet; <b>kong</b> = four identical tiles, then you draw a bonus tile. Taken melds are laid face-up, so the others can see them.',
+      '<b>Chow, Pung, Kong</b>: a tile someone else just discarded can be taken if it completes a meld. <b>Chow</b> = take the previous player\'s tile for a sequence; <b>Pung</b> = take anyone\'s tile for a triplet; <b>Kong</b> = four identical tiles, then you draw a bonus tile. Taken melds are laid face-up, so the others can see them.',
       '<b>Winning</b>: complete 4 melds + 1 pair. Drawing the last tile yourself is a <b>self-draw (Zimo)</b>; taking someone\'s discard is a <b>Ron</b>, and the discarder pays more.',
       '<b>You need a scoring condition (fan)</b>: a complete hand is not enough, you need at least 1 fan (e.g. a dragon triplet, All Sequences, All Triplets… see the list below).',
       '<b>Tip</b>: buttons for Chow / Pung / Win pop up automatically when you can use a discard; press Pass to skip. To discard, tap a tile, then press Discard.'
@@ -1642,7 +1643,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
     <li><b>Chow (吃)</b>
       <ul>
         <li>Same suit only, and only from your upstream player (the one who plays right before you, on your left).</li>
-        <li>A claimed sequence can't contain a 1–3. Holding 4-5 you can't chow a 3; holding 2-3 you can't chow a 4.</li>
+        <li>A claimed sequence can't contain a 1–3. Holding 4-5 you can't Chow a 3; holding 2-3 you can't Chow a 4.</li>
         <li>So only <b>456, 567, 678 and 789</b> can be claimed. A 123 sequence is fine inside your closed hand.</li>
         <li>No mixed chow.</li>
       </ul>
@@ -1650,7 +1651,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
     <li><b>Pung (碰)</b>
       <ul>
         <li>Allowed for 4–9 and dragons. Small tiles (1–3) can never be punged.</li>
-        <li>If several players can pung the same discard, priority is: the discarder's downstream player (next to play), then across, then upstream.</li>
+        <li>If several players can Pung the same discard, priority is: the discarder's downstream player (next to play), then across, then upstream.</li>
       </ul>
     </li>
     <li><b>Kong (槓)</b>
@@ -1660,9 +1661,9 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
         <li>After a kong you draw a replacement tile from the end of the wall.</li>
       </ul>
     </li>
-    <li><b>Win (胡)</b> beats pung and kong, and a chow comes last. No robbing the kong.</li>
+    <li><b>Win (胡)</b> beats Pung and Kong, and a Chow comes last. No robbing the Kong.</li>
   </ul>
-  ${EG('Tile examples: chow, pung, kong', [X('Chow','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('Pung / kong','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('Never claimable (1–3)','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
+  ${EG('Tile examples: Chow, Pung, Kong', [X('Chow','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('Pung / Kong','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('Never claimable (1–3)','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
   <h3>Special actions</h3>
   <ul>
     <li><b>Mixed pung (彩碰)</b>
@@ -1685,27 +1686,27 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
         <li>It is not a dragon pair, and the Kowloon Dragons pair must still be two identical tiles.</li>
       </ul>
     </li>
-    <li><b>Grand dragon kong (三元大槓)</b>
+    <li><b>Grand dragon Kong (三元大槓)</b>
       <ul>
-        <li>After a concealed kong or added kong of a dragon, you can add the 5th copy (press Grand kong).</li>
+        <li>After a concealed Kong or added Kong of a dragon, you can add the 5th copy (press Grand Kong).</li>
         <li>Worth an extra ½ fan. Each dragon has 5 copies; this must be self-drawn.</li>
       </ul>
     </li>
   </ul>
-  ${EG('Tile examples: special actions', [X('Mixed pung (claimed tile faded)','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('Mixed triplet in hand (concealed)','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('Mixed pair','p1 s1|p2 m2|s3 m3'),X('Grand dragon kong (5 copies)','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3')])}
+  ${EG('Tile examples: special actions', [X('Mixed Pung (claimed tile faded)','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('Mixed triplet in hand (concealed)','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('Mixed pair','p1 s1|p2 m2|s3 m3'),X('Grand dragon Kong (5 copies)','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3')])}
   <h3>Winning hands (fans stack, capped at 6)</h3>
   <ul>
     <li><b>1 fan</b>
       <ul>
-        <li><b>Dragon triplet (三元刻)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed pung or a concealed triplet. They stack.</li>
+        <li><b>Dragon triplet (三元刻)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed Pung or a concealed triplet. They stack.</li>
         <li><b>All Sequences (平胡)</b>: all sequences, no dragons.</li>
-        <li><b>All Triplets (對對胡)</b>: 4 triplets + pair. Mixed pungs are allowed.</li>
-        <li><b>Mixed Flush (彩一色)</b>: a Half Flush or Full Flush with exactly one mixed part: either the pair is a mixed pair, or one of the triplets is a mixed pung / mixed triplet. That mixed pair, pung or triplet must contain at least one tile of the main suit (e.g. 8-Circle 8-Circle 8-Character in a Circles hand). A mixed pair and a mixed pung together, or more than one mixed pung, don’t count. The first dragon triplet isn’t counted separately.</li>
+        <li><b>All Triplets (對對胡)</b>: 4 triplets + pair. Mixed Pungs are allowed.</li>
+        <li><b>Mixed Flush (彩一色)</b>: a Half Flush or Full Flush with exactly one mixed part: either the pair is a mixed pair, or one of the triplets is a mixed Pung / mixed triplet. That mixed pair, Pung or triplet must contain at least one tile of the main suit (e.g. 8-Circle 8-Circle 8-Character in a Circles hand). A mixed pair and a mixed Pung together, or more than one mixed Pung, don't count. The first dragon triplet isn't counted separately.</li>
       </ul>
     </li>
     <li><b>2 fan</b>
       <ul>
-        <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed pung, mixed triplet or mixed pair (otherwise it counts only as a Mixed Flush). Doesn’t also get Missing suit. The first dragon triplet isn’t counted separately.</li>
+        <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed Pung, mixed triplet or mixed pair (otherwise it counts only as a Mixed Flush). Doesn't also get Missing suit. The first dragon triplet isn't counted separately.</li>
         <li><b>Concealed Self-Draw (不求人)</b>: no calls and you win by drawing. Replaces Concealed and Self-draw.</li>
         <li><b>No Small (斷小字)</b>: no 1–3 anywhere in the hand.</li>
         <li><b>Three Concealed Triplets (三暗刻)</b></li>
@@ -1721,8 +1722,8 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
     </li>
     <li><b>4 fan</b>
       <ul>
-        <li><b>Full Flush (清一色)</b>: one suit only, no dragons. No mixed pung, mixed triplet or mixed pair (otherwise it counts only as a Mixed Flush). Doesn’t also get Missing suit, no dragons.</li>
-        <li><b>Four Concealed Triplets (四暗刻)</b>: doesn’t also get All Triplets.</li>
+        <li><b>Full Flush (清一色)</b>: one suit only, no dragons. No mixed Pung, mixed triplet or mixed pair (otherwise it counts only as a Mixed Flush). Doesn't also get Missing suit, no dragons.</li>
+        <li><b>Four Concealed Triplets (四暗刻)</b>: doesn't also get All Triplets.</li>
         <li><b>Great Dragons (大三元)</b>: triplets of all three dragons. Replaces the dragon triplet fan; hand points +60.</li>
         <li><b>Concealed Kowloon Straight (門清幺九順)</b>: a Kowloon Straight with no open melds. Hand points +30. No Concealed bonus on top.</li>
       </ul>
@@ -1731,10 +1732,10 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
       <ul>
         <li><b>Kowloon Dragons (幺九龍)</b>: 123 + 456 + 789 in one suit + one each of Red, Green and White Dragon + a pair of a same-suit number or a dragon. Hand points +30.</li>
         <li><b>Concealed Kowloon Dragons (門清幺九龍)</b>: the same, with no open melds. Hand points +90.</li>
-        <li><b>Dragon Kongs (槓三元)</b>: kongs of all three dragons. Hand points +90.</li>
+        <li><b>Dragon Kongs (槓三元)</b>: Kongs of all three dragons. Hand points +90.</li>
         <li><b>Blessing of Heaven (天胡)</b>: the dealer wins on the starting hand.</li>
-        <li><b>Blessing of Earth (地胡)</b>: a non-dealer wins on the dealer’s very first discard.</li>
-        <li><b>Blessing of Man (人胡)</b>: a non-dealer wins by self-draw on their first draw, with nobody having called a chow, pung or kong before it.</li>
+        <li><b>Blessing of Earth (地胡)</b>: a non-dealer wins on the dealer's very first discard.</li>
+        <li><b>Blessing of Man (人胡)</b>: a non-dealer wins by self-draw on their first draw, with nobody having called a Chow, Pung or Kong before it.</li>
         <li>The Blessings of Heaven, Earth and Man only need a complete hand, even if it is otherwise 0 fan.</li>
       </ul>
     </li>
@@ -1742,13 +1743,13 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
   ${EGH('Tile examples: winning hands', 'en', 'Shuffle')}
   <h3>Minor fans (碎番, ½ fan each)</h3>
   <ul>
-    <li>Only added once you already have at least 1 full fan; two ½ fans alone can’t win.</li>
+    <li>Only added once you already have at least 1 full fan; two ½ fans alone can't win.</li>
     <li><b>Kong (槓)</b>: each kong.</li>
-    <li><b>Grand dragon kong (三元大補槓)</b></li>
+    <li><b>Grand dragon Kong (三元大補槓)</b></li>
     <li><b>Concealed (門清)</b>: no calls. Not given with Concealed Self-Draw, All Small, Seven Pairs or Concealed Kowloon Straight.</li>
     <li><b>Self-draw (自摸)</b>: open hands only. Concealed Self-Draw already includes it.</li>
-    <li><b>Kong self-draw (槓上自摸)</b>: you win by self-draw on the replacement tile drawn after a kong. It stacks with Self-draw and Kong, so a win like that adds 1½ fan in total.</li>
-    <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons. Half Flush and Full Flush don’t get it.</li>
+    <li><b>Kong self-draw (槓上自摸)</b>: you win by self-draw on the replacement tile drawn after a Kong. It stacks with Self-draw and Kong, so a win like that adds 1½ fan in total.</li>
+    <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons. Half Flush and Full Flush don't get it.</li>
     <li><b>Win on a big tile (胡大字)</b>: the winning tile is a 7–9.</li>
   </ul>
   <h3>Concealed triplets</h3>
@@ -1761,7 +1762,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
   <ul>
     <li>Total fan is rounded down, so 1 + ½ = 1.5 counts as 1 fan, while 1 + ½ + ½ = 2 fan.</li>
     <li>Multiplier = fan (1 fan ×1 … 6 fan ×6).</li>
-    <li>Score = total tile points of the whole hand (melds included, minus the claimed tile of a mixed pung, plus any instant bonus of the hand) × multiplier.</li>
+    <li>Score = total tile points of the whole hand (melds included, minus the claimed tile of a mixed Pung, plus any instant bonus of the hand) × multiplier.</li>
     <li>Payment (provisional): on a self-draw each of the other three pays one share; on a discard win the discarder pays two shares.</li>
   </ul>
   <h3>Controls</h3>
@@ -1888,11 +1889,13 @@ function tileEl(t, o = {}) {
   return d;
 }
 function backEl() { const d = document.createElement('div'); d.className = 'tile back'; return d; }
-function meldEl(m, size) {
+function meldEl(m, size, reveal) {
   const w = document.createElement('div'); w.className = 'meld' + (m.mixed ? ' mixed' : '');
-  (m.type === 'chow' ? m.tiles.slice().reverse() : m.tiles).forEach(t => {
+  const hide = m.type === 'kong' && !m.open && m.tiles.length >= 4 && !reveal;   // 暗槓：兩端兩張翻面（日式）
+  (m.type === 'chow' ? m.tiles.slice().reverse() : m.tiles).forEach((t, i, arr) => {
     const e = tileEl(t, { [size]: true });
     if (!m.open) e.classList.add('dim');
+    if (hide && (i === 0 || i === arr.length - 1)) e.classList.add('down');
     if (m.mixed && t.id === m.claimed) { e.style.opacity = .6; e.querySelector('.v')?.remove(); }
     w.appendChild(e);
   });
@@ -1927,7 +1930,7 @@ function render() {
   const opps = $('#opps'); opps.innerHTML = '';
   for (const seat of [2, 3, 1]) {
     const s = document.createElement('section'); s.className = 'seat opp ' + (seat === 2 ? 'across' : seat === 3 ? 'left' : 'right') + (G.turn === seat ? ' active' : '');
-    const rel = seat === 3 ? L('可吃', 'you can chow from them') : seat === 1 ? L('', 'plays after you') : '';
+    const rel = seat === 3 ? L('可吃', 'you can Chow from them') : seat === 1 ? L('', 'plays after you') : '';
     const dealerB = G.dealer === seat ? `<span class="dealer">${L('莊', 'Dealer')}</span>` : '';
     const tag = online() ? `<span class="nm">${ROOM.names[(seat + mySeat) % 4]}</span>` : '';
     s.innerHTML = `<div class="seat-head"><b>${NAMES[seat]}${dealerB}</b>${tag}<span>${rel}</span><span class="tclk" data-v="${seat}"></span><span class="score">${L('分數', 'Points')} <b>${scores[seat]}</b></span></div>`;
@@ -1946,7 +1949,7 @@ function render() {
   let myPts = G.hands[0].reduce((a, t) => a + val(t), 0);
   G.melds[0].forEach(m => m.tiles.forEach(t => { if (!(m.mixed && t.id === m.claimed)) myPts += val(t); }));
   const mt = $('#meTotal'); mt.innerHTML = `${L('手牌點值', 'Hand points')} <b>${myPts}</b>`;
-  mt.title = L('手牌＋鳴牌的點值總和（未乘番數；彩碰被要的那張不計）', 'Tile points of hand + melds, before fan multiplier (claimed tile of a mixed pung excluded)');
+  mt.title = L('手牌＋鳴牌的點值總和（未乘番數；彩碰被要的那張不計）', 'Tile points of hand + melds, before fan multiplier (claimed tile of a mixed Pung excluded)');
   const pd = $('#myDiscards'); pd.innerHTML = '';
   G.discards[0].forEach(t => pd.appendChild(tileEl(t, { sm: true, cls: G.last && G.last.t.id === t.id ? 'last' : '' })));
   const mm = $('#myMelds'); mm.innerHTML = ''; G.melds[0].forEach(m => mm.appendChild(meldEl(m, 'md')));
@@ -2232,7 +2235,7 @@ function humanSelf(opts) {
       opts.kongs.forEach(k => {
         const nm = kn(k.k);
         addAction(L((k.big ? '大槓 ' : '槓 ') + nm + (k.kind === 'add' ? '（加槓）' : '（暗槓）'),
-          (k.big ? 'Grand kong ' : 'Kong ') + nm + (k.kind === 'add' ? ' (add to pung)' : ' (concealed)')), done({ kong: k }));
+          (k.big ? 'Grand Kong ' : 'Kong ') + nm + (k.kind === 'add' ? ' (add to Pung)' : ' (concealed)')), done({ Kong: k }));
       });
       setStatus(() => L('輪到你：選一張牌，再按「<b>打出</b>」。', 'Your turn: select a tile, then press <b>Discard</b>.'));
     };
@@ -2378,7 +2381,7 @@ async function play() {
     if (act.win) { const wr = winResult(G, seat, true, null, opts.win); wr.winId = G.lastDraw.id; finish(wr); return; }
     if (act.kong) {
       const kk = act.kong, ks = seat;
-      applyKong(G, seat, kk); sfxMeld('kong'); log(() => L(`${WHO[ks]}${kk.big ? '大槓' : '槓'} ${kn(kk.k)}`, `${WHO[ks]} ${kk.big ? 'grand kong' : 'kong'} ${kn(kk.k)}`));
+      applyKong(G, seat, kk); sfxMeld('kong'); log(() => L(`${WHO[ks]}${kk.big ? '大槓' : '槓'} ${kn(kk.k)}`, `${WHO[ks]} ${kk.big ? 'Grand Kong' : 'Kong'} ${kn(kk.k)}`));
       rep = true; UI.drawnId = null; continue;
     }
     const t = discardTile(G, seat, act.discard);
@@ -2449,7 +2452,7 @@ function handRow(seat, who, res) {
   const r = document.createElement('div'); r.className = 'rvrow' + (win ? ' wn' : '');
   if (G.melds[seat].length) {
     const mb = document.createElement('div'); mb.className = 'rvm'; mb.dataset.l = L('已鳴', 'Declared');
-    G.melds[seat].forEach(m => mb.appendChild(meldEl(m, 'sm'))); r.appendChild(mb);
+    G.melds[seat].forEach(m => mb.appendChild(meldEl(m, 'sm', true))); r.appendChild(mb);
   }
   const mark = t => { const e = tileEl(t, { sm: true }); if (win && t.id === res.winId) { e.classList.add('wintile'); e.dataset.w = L('胡', 'Win'); } return e; };
   const groups = win ? winGroups(seat, res) : null;
@@ -2524,13 +2527,13 @@ function renderResult() {
 }
 $('#resBack').onclick = () => { UI.viewTable = false; renderResult(); const d = $('#result'); d.showModal(); d.scrollTop = 0; render(); };
 const CHEAT_TIERS = [
-  [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all sequences, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed pung ok)'], ['彩一色', '混一色或清一色，恰有一處彩（彩眼或一刻彩碰），至少一張為主色（首副三元刻不另計）', 'half/full flush with exactly one mixed part (mixed pair or one mixed pung), at least one tile in the main suit (1st dragon triplet not counted)']]],
+  [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all sequences, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed Pung ok)'], ['彩一色', '混一色或清一色，恰有一處彩（彩眼或一刻彩碰），至少一張為主色（首副三元刻不另計）', 'half/full flush with exactly one mixed part (mixed pair or one mixed Pung), at least one tile in the main suit (1st dragon triplet not counted)']]],
   [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['斷小字', '沒有 1–3', 'no 1–3'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 2222 ok, no mixed pair']]],
   [3, [['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['全小字', '全部 1–3', 'only 1–3'], ['幺九順', '同花 123·456·789 · 其餘任一面子', 'same-suit 123·456·789 + any set']]],
   [4, [['清一色', '一門、無三元（不含彩碰／彩眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻（不另計對對胡）', '4 concealed triplets (no All Triplets on top)'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
   [6, [['幺九龍', '同花 123·456·789 + 紅中、發財、白板 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White Dragon + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '紅中、發財、白板全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer\'s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]
 ];
-const CHEAT_MINOR = [['槓', '每次', 'each kong'], ['三元大補槓', '補第 5 張紅中、發財、白板', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['槓上自摸', '槓後補牌自摸（連自摸、槓共 +1.5）', 'self-draw on the kong replacement (with kong + self-draw: +1½)'], ['斷一門無三元', '缺一門、無紅中、發財、白板', 'a suit missing, no dragons'], ['胡大字', '胡牌是 7–9', 'winning tile is 7–9']];
+const CHEAT_MINOR = [['槓', '每次', 'each Kong'], ['三元大補槓', '補第 5 張紅中、發財、白板', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['槓上自摸', '槓後補牌自摸（連自摸、槓共 +1.5）', 'self-draw on the Kong replacement (with Kong + self-draw: +1½)'], ['斷一門無三元', '缺一門、無紅中、發財、白板', 'a suit missing, no dragons'], ['胡大字', '胡牌是 7–9', 'winning tile is 7–9']];
 /* 速查表即時狀態：只標示「你目前已經有的」（✓ 金色），並把「已不可能」的灰掉（原因顯示在右邊） */
 function cheatStates() {
   const st = {}; if (!G) return st;
@@ -2555,7 +2558,7 @@ function cheatStates() {
   if (chows.length) out('對對胡', '已有吃牌', 'you have a chow');
   if (trip.length) out('平胡', '已有碰／槓', 'you have a pung/kong');
   if (suitsNM.size >= 2) { out('混一色', '鳴牌不只一門', 'melds in 2+ suits'); out('清一色', '鳴牌不只一門', 'melds in 2+ suits'); out('彩一色', '鳴牌不只一門', 'melds in 2+ suits'); }
-  if (mixedM.length) { out('混一色', '已有彩碰', 'you have a mixed pung'); out('清一色', '已有彩碰', 'you have a mixed pung'); }
+  if (mixedM.length) { out('混一色', '已有彩碰', 'you have a mixed Pung'); out('清一色', '已有彩碰', 'you have a mixed Pung'); }
   if (mixedM.length >= 2) out('彩一色', '彩碰多於一刻', 'more than one mixed pung');
   if (drag.length) { out('清一色', '已有三元牌鳴牌', 'you have a dragon meld'); out('斷一門無三元', '已有三元牌鳴牌', 'you have a dragon meld'); }
   if (suits.size >= 3) out('斷一門無三元', '鳴牌三門齊', 'melds in all 3 suits');
@@ -2565,9 +2568,9 @@ function cheatStates() {
   const chowStarts = chows.map(m => Math.min(...m.tiles.map(t => t.n))), chowSuits = new Set(chows.map(m => m.tiles[0].s));
   const badYao = chowStarts.some(n => n !== 1 && n !== 4) || chowSuits.size > 1;
   if (badYao || trip.length >= 2) out('幺九順', '鳴牌不合（只可鳴 456、789，同花）', 'melds don\'t fit (only 456 & 789, same suit)');
-  if (badYao || trip.length >= 1) { out('幺九龍', '鳴牌不合（只可鳴 456、789，同花，不能有碰槓）', 'melds don\'t fit (only 456 & 789 same suit, no pung/kong)'); out('門清幺九龍', '鳴牌不合', 'melds don\'t fit'); }
+  if (badYao || trip.length >= 1) { out('幺九龍', '鳴牌不合（只可鳴 456、789，同花，不能有碰槓）', 'melds don\'t fit (only 456 & 789 same suit, no Pung/Kong)'); out('門清幺九龍', '鳴牌不合', 'melds don\'t fit'); }
   if (badYao || trip.length >= 2) out('門清幺九順', '鳴牌不合', 'melds don\'t fit');
-  if (melds.some(m => m.tiles[0].s === 'z' && m.type !== 'kong') || nonDrag >= 2) out('槓三元', '鳴牌不合（要紅中、發財、白板全槓）', 'melds don\'t fit (needs kongs of all 3 dragons)');
+  if (melds.some(m => m.tiles[0].s === 'z' && m.type !== 'kong') || nonDrag >= 2) out('槓三元', '鳴牌不合（要紅中、發財、白板全槓）', 'melds don\'t fit (needs Kongs of all 3 dragons)');
   if (melds.length) { out('天胡', '已有鳴牌', 'someone has called'); out('地胡', '已有鳴牌', 'someone has called'); out('人胡', '已有鳴牌', 'someone has called'); }
   // ---- 目前已經有的（只標示已成立的，不標「可能」）----
   if (drag.length || handTrips.some(k => k[0] === 'z')) ok('三元刻');
@@ -2588,7 +2591,7 @@ function cheatHTML() {
     row('吃', '同花 456·567·678·789，只吃上家', '456·567·678·789, same suit, from upstream only').replace(/<b>[^<]*<\/b>/, `<b>${L('吃', 'Chow')}</b>`) +
     `<div class="r"><b>${L('碰', 'Pung')}</b><span>${L('4–9、紅中、發財、白板（1–3 不可）', '4–9, dragons (not 1–3)')}</span></div>` +
     `<div class="r"><b>${L('槓', 'Kong')}</b><span>${L('4–6、紅中、發財、白板（1–3、7–9 不可）', '4–6, dragons (not 1–3, 7–9)')}</span></div>` +
-    `<div class="r"><b>${L('彩碰', 'Mixed pung')}</b><span>${L('7–9 同數字、不同花', '7–9, same number, 3 suits')}</span></div>` +
+    `<div class="r"><b>${L('彩碰', 'Mixed Pung')}</b><span>${L('7–9 同數字、不同花', '7–9, same number, 3 suits')}</span></div>` +
     `<h3>${L('可榮胡的牌', 'What can be won on')}</h3>` +
     `<div class="r"><b>${L('彩眼', 'Mixed pair')}</b><span>${L('7–9 同數字、不同花的兩張；不可鳴，只可榮胡', '7–9, same number, 2 suits; can\'t be called, only won on')}</span></div>` +
     `<p>${L('得分 = 全手點值（一＝1 … 九＝9）× 番數（上限 6）；番數取整數，1+0.5＝1.5 算 1、1+0.5+0.5＝2。', 'Score = hand tile points (1 = 1 … 9 = 9) × fan (cap 6). Fan is rounded down: 1+½ = 1, 1+½+½ = 2.')}</p></div>`;
@@ -3332,7 +3335,7 @@ function renderLanding() {
         <div class="botlv"><span>${L('電腦強度', 'Bot level')}</span><button type="button" class="chip ${PREF.botLvl !== 'pro' ? 'on' : ''}" data-bot="easy">${L('新手', 'Easy')}</button><button type="button" class="chip ${PREF.botLvl === 'pro' ? 'on' : ''}" data-bot="pro">${L('高手', 'Expert')}</button></div>
         <p class="err" id="lnMsg" aria-live="polite">${ROOM.msg || ''}</p>
       </div>
-      <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragons · 6 fan cap')}</span></div>
+      <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed Pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragons · 6 fan cap')}</span></div>
     </div>
     <div class="foot">${L('試玩版 · 規則仍在調整', 'Playtest · rules still changing')} · <a href="#" id="lnFb">${L('意見回饋', 'Feedback')}</a><br><small style="opacity:.7">${L('牌聲：雀ゴロ打牌音 ver.11（アンコロキング）', 'Tile sound: 雀ゴロ打牌音 ver.11 by Ancoro King')}</small></div>`;
   const c = $('#lnCode'); if (c) c.addEventListener('input', () => { c.value = c.value.toUpperCase().replace(/[^A-Z]/g, ''); });
