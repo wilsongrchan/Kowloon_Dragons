@@ -229,7 +229,9 @@ details.eg summary{cursor:pointer;color:var(--gold-t);font-size:calc(14px*var(--
 .btn.cb{display:inline-flex;align-items:center;gap:8px}
 .btn.cb .cbt{display:inline-flex;gap:2px}
 .btn.cb .tile.cmk::after{content:"";position:absolute;left:50%;bottom:-6px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--gold)}
-.btn.cb .tile{--u:8px;pointer-events:none}
+.btn.cb .tile{--u:6px;pointer-events:none}
+#actions:has(.cb) .btn{min-height:0;padding-top:5px;padding-bottom:5px}
+#actions:has(.cb) .btn.cb{padding-top:6px;padding-bottom:8px}
 .hpg{margin-left:6px;width:22px;height:22px;padding:0;border:1px solid var(--line);border-radius:6px;background:rgba(0,0,0,.2);color:var(--muted);cursor:pointer;font-size:12px;line-height:1;vertical-align:middle;transition:transform .15s}
 .hpg.on{transform:rotate(90deg);color:var(--gold-t);border-color:var(--gold)}
 .hpchart{max-width:340px;margin:2px 0 4px}
