@@ -226,6 +226,9 @@ details.eg summary{cursor:pointer;color:var(--gold-t);font-size:calc(14px*var(--
 .reveal .who .nm{display:inline-block;min-width:7em}
 .reveal .who .nm.w{font-weight:700;color:var(--text)}
 .reveal .who .hp b{color:var(--text)}
+.btn.cb{display:inline-flex;align-items:center;gap:8px}
+.btn.cb .cbt{display:inline-flex;gap:2px}
+.btn.cb .tile{--u:8px;pointer-events:none}
 .hpg{margin-left:6px;width:22px;height:22px;padding:0;border:1px solid var(--line);border-radius:6px;background:rgba(0,0,0,.2);color:var(--muted);cursor:pointer;font-size:12px;line-height:1;vertical-align:middle;transition:transform .15s}
 .hpg.on{transform:rotate(90deg);color:var(--gold-t);border-color:var(--gold)}
 .hpchart{max-width:340px;margin:2px 0 4px}
@@ -1637,6 +1640,14 @@ function log(fn) {
   if (isHost() && ROOM.started) { const sv = LANG; LANG = 'zh'; const zh = f(); LANG = 'en'; const en = f(); LANG = 'ja'; const ja = f(); LANG = sv; bcast({ t: 'log', zh, en, ja }); }
 }
 function setStatus(h) { UI.statusFn = typeof h === 'function' ? h : () => h; $('#status').innerHTML = UI.statusFn(); }
+// 吃碰槓按鈕：文字（彩碰只寫「彩」）＋小牌面（藍筒、綠索、紅萬），比純文字好認
+function claimBtn(kind, opt, fn) {
+  const b = addAction('', fn); b.textContent = '';
+  const tx = document.createElement('span'); tx.textContent = opt.mixed ? L('彩', 'Mixed') : L(KIND[kind][0], KIND[kind][1]); b.appendChild(tx);
+  const row = document.createElement('span'); row.className = 'cbt';
+  opt.tiles.forEach(t => { const e = tileEl(t, { sm: true }); delete e.dataset.id; delete e.dataset.k; row.appendChild(e); });
+  b.appendChild(row); b.classList.add('cb'); b.ariaLabel = plabel(kind, opt); return b;
+}
 function clearActions() { $('#actions').innerHTML = ''; }
 function addAction(label, fn, primary) {
   const b = document.createElement('button'); b.className = 'btn' + (primary ? ' primary' : ''); b.type = 'button'; b.textContent = label;
@@ -1964,9 +1975,9 @@ function humanClaim(ho, t) {
     const build = () => {
       clearActions();
       if (ho.ron) { const pay = ho.ron.points * RULES.RON_MULT; addAction(L(`胡（${evTxt(ho.ron)}，出銃者付 ${pay}）`, `Win (${evTxt(ho.ron)}; discarder pays ${pay})`), done({ kind: 'ron' }), true); }
-      ho.kong.forEach(o => addAction(plabel('kong', { tiles: [...o.tiles, t] }), done({ kind: 'kong', opt: o })));
-      ho.pong.forEach(o => addAction(plabel('pong', { tiles: [...o.tiles, t], mixed: o.mixed }), done({ kind: 'pong', opt: o })));
-      ho.chow.forEach(o => addAction(plabel('chow', { tiles: [...o.tiles, t].sort((a, b) => b.n - a.n), mixed: o.mixed }), done({ kind: 'chow', opt: o })));
+      ho.kong.forEach(o => claimBtn('kong', { tiles: [...o.tiles, t] }, done({ kind: 'kong', opt: o })));
+      ho.pong.forEach(o => claimBtn('pong', { tiles: [...o.tiles, t], mixed: o.mixed }, done({ kind: 'pong', opt: o })));
+      ho.chow.forEach(o => claimBtn('chow', { tiles: [...o.tiles, t].sort((a, b) => b.n - a.n), mixed: o.mixed }, done({ kind: 'chow', opt: o })));
       addAction(L('過', 'Pass'), done(null));
       setStatus(() => L(`${WHO[from]}打出 <b>${tn(t)}</b>，要不要？`, `${WHO[from]} discarded <b>${tn(t)}</b>. Claim it?`));
     };
