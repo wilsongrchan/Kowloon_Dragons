@@ -85,15 +85,15 @@ function sevenPairsShape(concealed) {
   return pairs.length === 7 ? { pairs } : null;
 }
 function flushOf(normalKeys, mixedSets, mixedPairs, mixSuits) {
-  // 混一色／清一色（不可彩碰彩眼）；彩眼混一色、彩碰混一色（只有一個混的部份，其餘同一花色＋可有三元）各 1 番
+  // 混一色／清一色（不可彩碰彩眼）；彩一色（只有一個混的部份＝彩眼或一組彩碰，其餘同一花色＋可有三元）1 番
   const suits = new Set(normalKeys.filter(k => k[0] !== 'z').map(k => k[0]));
   const hon = normalKeys.some(k => k[0] === 'z');
   if (suits.size !== 1) return null;
   if (mixedSets === 0 && mixedPairs === 0) return hon ? { name: '混一色', fan: 2 } : { name: '清一色', fan: 4 };
   // 彩眼／彩碰中必須有一張是主色（其餘由另一花色補）
   const main = [...suits][0], hasMain = mixSuits && mixSuits.includes(main);
-  if (mixedSets === 0 && mixedPairs === 1) return hasMain ? { name: '彩眼混一色', fan: 1 } : null;
-  if (mixedSets === 1 && mixedPairs === 0) return hasMain ? { name: '彩碰混一色', fan: 1 } : null;
+  if (mixedSets === 0 && mixedPairs === 1) return hasMain ? { name: '彩一色', fan: 1 } : null;
+  if (mixedSets === 1 && mixedPairs === 0) return hasMain ? { name: '彩一色', fan: 1 } : null;
   return null;
 }
 // special: null | '天胡'（莊家起手即胡）| '地胡'（閒家胡莊家第一隻打出的牌）| '人胡'（閒家第一次摸牌自摸，之前無人吃碰槓）
@@ -201,7 +201,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
     if (!pairMixed) normalKeys.push(d.pair, d.pair);
     const mixSuits = pairMixed ? d.pair.split('/').map(k => k[0]) : (((sets.find(s => s.mixed) || {}).keys || (sets.find(s => s.mixed) || {}).mkeys) || []).map(k => k[0]);
     const fl = flushOf(normalKeys, sets.filter(s => s.mixed).length, pairMixed ? 1 : 0, mixSuits); if (fl) items.push(fl);
-    // 混一色／彩眼混一色／彩碰混一色：第一副三元刻不另計（已包含在混一色內）
+    // 混一色／彩一色：第一副三元刻不另計（已包含在混一色內）
     if (fl && fl.name !== '清一色') { const di = items.findIndex(x => x.name === '三元刻'); if (di >= 0) items.splice(di, 1); }
     if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全小字', 3);
     if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷小字', 2);
