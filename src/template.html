@@ -660,7 +660,7 @@ ORDER.forEach(k => { if (k[0] !== 'z') ORD[k] = ORDER.indexOf(k[0] + '1') + (9 -
 const tn = t => { if (t.s !== 'z') t = { ...t, n: 10 - t.n }; return LANG === 'en' ? enTile(t.s, t.n) : LANG === 'zh' && t.s === 'z' ? ZH_DRAGON[t.n] : tname(t); };
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? enTile(k[0], k[0] === 'z' ? +k.slice(1) : dnum(+k.slice(1))) : kn(k);
-const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Blessing of Heaven','地胡':'Blessing of Earth','人胡':'Blessing of Man','槓':'Kong','三元大補槓':'Grand dragon Kong','門清':'Concealed','自摸':'Self-draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Blessing of Heaven','地胡':'Blessing of Earth','人胡':'Blessing of Man','槓':'Kong','三元大補槓':'Grand dragon Kong','門清':'Concealed','自摸':'Self-draw','海底撈月':'Last Tile Draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
 const yn = name => { if (LANG === 'zh') return name; const m = name.match(/^(.+?)(×\d+)?$/), T = LANG === 'ja' ? YAKU_JA : YAKU_EN; return (T[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -871,6 +871,7 @@ zh: `  <h2>規則</h2>
     <li><b>門清</b>：無鳴牌。不求人、全小字、七對子、門清幺九順不再加。</li>
     <li><b>自摸</b>：只給有鳴牌的手牌；不求人已包含自摸。</li>
     <li><b>槓上自摸</b>：槓後補牌自摸。與自摸及槓重疊，合共追加 1.5 番。</li>
+    <li><b>海底撈月</b>：摸到牌山最後一張牌並自摸胡。與自摸重疊（有鳴牌時合共追加 1 番）。</li>
     <li><b>斷一門無三元</b>：筒索萬缺一門且沒有紅中、發財、白板；混一色、清一色不重複算。</li>
     <li><b>胡大字</b>：胡的那張牌是 7–9。</li>
   </ul>
@@ -1016,6 +1017,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
     <li><b>Grand dragon Kong (三元大補槓)</b></li>
     <li><b>Concealed (門清)</b>: no calls. Not given with Concealed Self-Draw, All Small, Seven Pairs or Concealed Kowloon Straight.</li>
     <li><b>Self-draw (自摸)</b>: open hands only. Concealed Self-Draw already includes it.</li>
+    <li><b>Last Tile Draw (海底撈月)</b>: you win by self-draw on the very last tile of the wall. It stacks with Self-draw, so for a hand with calls it adds 1 fan in total.</li>
     <li><b>Kong self-draw (槓上自摸)</b>: you win by self-draw on the replacement tile drawn after a Kong. It stacks with Self-draw and Kong, so a win like that adds 1½ fan in total.</li>
     <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons. Half Flush and Full Flush don't get it.</li>
     <li><b>Win on a big tile (胡大字)</b>: the winning tile is a 7–9.</li>
@@ -1118,6 +1120,7 @@ RULES_HTML.ja = `  <h2>ルール</h2>
     <li><b>門前</b>：副露なし。不求人・全小字・七対子・門前幺九順には付きません。</li>
     <li><b>ツモ</b>：副露のある手のみ。不求人にはすでに含まれます。</li>
     <li><b>嶺上開花</b>：カン後の補充牌でツモ。ツモ・カンと重なり、合計 +1.5翻。</li>
+    <li><b>海底摸月</b>：牌山の最後の1枚でツモあがり。ツモと重なり、鳴いている手なら合計 +1翻。</li>
     <li><b>欠一門無字</b>：筒索萬の1色が欠け、三元牌もない。混一色・清一色とは重ならない。</li>
     <li><b>大字和了</b>：和了牌が7〜9。</li>
   </ul>
@@ -1801,7 +1804,7 @@ const CHEAT_TIERS = [
   [4, [['清一色', '一門、無三元（不含彩碰／彩眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻（不另計對對胡）', '4 concealed triplets (no All Triplets on top)'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
   [6, [['幺九龍', '同花 123·456·789 + 紅中、發財、白板 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White Dragon + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '紅中、發財、白板全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer\'s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]
 ];
-const CHEAT_MINOR = [['槓', '每次', 'each Kong'], ['三元大補槓', '補第 5 張紅中、發財、白板', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['槓上自摸', '槓後補牌自摸（連自摸、槓共 +1.5）', 'self-draw on the Kong replacement (with Kong + self-draw: +1½)'], ['斷一門無三元', '缺一門、無紅中、發財、白板', 'a suit missing, no dragons'], ['胡大字', '胡牌是 7–9', 'winning tile is 7–9']];
+const CHEAT_MINOR = [['槓', '每次', 'each Kong'], ['三元大補槓', '補第 5 張紅中、發財、白板', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['海底撈月', '摸牌山最後一張自摸（連自摸共 +1）', 'self-draw on the last tile of the wall (with self-draw: +1)'], ['槓上自摸', '槓後補牌自摸（連自摸、槓共 +1.5）', 'self-draw on the Kong replacement (with Kong + self-draw: +1½)'], ['斷一門無三元', '缺一門、無紅中、發財、白板', 'a suit missing, no dragons'], ['胡大字', '胡牌是 7–9', 'winning tile is 7–9']];
 /* 速查表即時狀態：只標示「你目前已經有的」（✓ 金色），並把「已不可能」的灰掉（原因顯示在右邊） */
 function cheatStates() {
   const st = {}; if (!G) return st;

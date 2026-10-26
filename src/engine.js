@@ -97,7 +97,7 @@ function flushOf(normalKeys, mixedSets, mixedPairs, mixSuits) {
   return null;
 }
 // special: null | '天胡'（莊家起手即胡）| '地胡'（閒家胡莊家第一隻打出的牌）| '人胡'（閒家第一次摸牌自摸，之前無人吃碰槓）
-function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
+function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastTile) {
   const allTiles = concealed.slice(); melds.forEach(m => allTiles.push(...m.tiles));
   let pts = 0;
   concealed.forEach(t => pts += val(t));
@@ -115,6 +115,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special) {
       if (kongs) halves.push({ name: '槓×' + kongs, fan: 0.5 * kongs });
       const bigs = melds.filter(m => m.big).length;
       if (bigs) halves.push({ name: '三元大補槓×' + bigs, fan: 0.5 * bigs });
+      if (tsumo && lastTile) halves.push({ name: '海底撈月', fan: 0.5 }); // 摸牌山最後一張自摸：與自摸重疊
       if (tsumo && kongDraw) halves.push({ name: '槓上自摸', fan: 0.5 }); // 槓後補牌自摸：與自摸、槓重疊，合計追加 1.5 番
       // 不求人已包含門清與自摸；全小字、門清幺九順、七對子不重複算門清
       const noMen = has('不求人') || has('全小字') || has('門清幺九順') || has('七對子');
@@ -225,7 +226,7 @@ function newGame(dealer = 0) {
 function drawTile(g, seat, replacement) {
   if (!g.wall.length) return null;
   const t = replacement ? g.wall.shift() : g.wall.pop();
-  g.hands[seat].push(t); g.lastDraw = t; g.lastDrawRep = !!replacement; g.drawN[seat]++;
+  g.hands[seat].push(t); g.lastDraw = t; g.lastDrawRep = !!replacement; g.lastDrawLast = g.wall.length === 0; g.drawN[seat]++;
   return t;
 }
 function selfOptions(g, seat, noWin) {
@@ -234,7 +235,7 @@ function selfOptions(g, seat, noWin) {
   if (!noWin) {
     // 天胡：莊家起手即胡；人胡：閒家第一次摸牌自摸，之前無人吃碰槓
     const sp = g.calls === 0 && g.drawN[seat] === 1 ? (seat === g.dealer && g.discardN === 0 ? '天胡' : seat !== g.dealer ? '人胡' : null) : null;
-    const ev = evaluateHand(ms, h, true, g.lastDraw, g.lastDrawRep, sp); if (ev.ok) win = ev;
+    const ev = evaluateHand(ms, h, true, g.lastDraw, g.lastDrawRep, sp, g.lastDrawLast); if (ev.ok) win = ev;
   }
   const kongs = []; const c = counts(h);
   for (const k in c) {
