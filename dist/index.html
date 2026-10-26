@@ -133,12 +133,10 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 #tip{position:fixed;z-index:70;display:none;pointer-events:none;background:#0e151c;color:#f3ecd6;border:1px solid var(--gold);border-radius:8px;padding:6px 10px;font-size:calc(13px*var(--fs,1));line-height:1.45;max-width:min(260px,calc(100vw - 16px))}
 #tip b{color:var(--gold)}
 .discardbar{}
-#tip .tm{display:inline-block}
-#tip .tm{margin-left:.2em}
-#tip .tbar{display:inline-block;opacity:.5;margin:0 .35em 0 .1em;line-height:1;vertical-align:-.12em}
-#tip.wrapm .tm{margin-left:0}
-#tip.wrapm .tm{display:block}
-#tip.wrapm .tbar{display:none}
+#tip .tm,#selinfo .tm{display:inline-block;margin-left:.2em}
+#tip .tsep,#selinfo .tsep{display:inline-block;opacity:.5;margin:0 .35em 0 .1em;line-height:1;vertical-align:-.12em}
+#tip.wrapm .tm,#selinfo.wrapm .tm{margin-left:0;display:block}
+#tip.wrapm .tsep,#selinfo.wrapm .tsep{display:none}
 @media (hover:hover) and (pointer:fine){#tip{max-width:min(480px,calc(100vw - 16px))}}
 #selinfo{min-height:0;margin:0;font-size:calc(14px*var(--fs,1));line-height:1.45;color:var(--muted)}
 #selinfo b{color:var(--gold)}
@@ -2006,7 +2004,7 @@ function render() {
   updateDiscardBtn();
   hideTip();
   const selT = hasSel ? G.hands[0].find(x => x.id === UI.sel) : null;
-  $('#selinfo').innerHTML = selT ? infoHTML(selT.k).replace('<br>', ' ｜ ') : ''; $('#status').style.visibility = selT ? 'hidden' : '';
+  { const si = $('#selinfo'); si.classList.remove('wrapm'); si.innerHTML = selT ? infoHTML(selT.k).replace('<br>', ' ｜ ') : ''; const ts = si.querySelector('.ts'), tm = si.querySelector('.tm'); if (ts && tm && tm.offsetTop > ts.offsetTop + 2) si.classList.add('wrapm'); } $('#status').style.visibility = selT ? 'hidden' : '';
   if (isHost()) bcastState();
 }
 function doDiscard() {
@@ -2197,7 +2195,7 @@ function infoHTML(k) {
   if (k[0] !== 'z' && +k.slice(1) <= 3) {   // 彩碰／彩刻／彩眼用得到的 7–9：其他花色同數字還剩幾張
     const SN = { p: ['筒', 'Circles'], s: ['索', 'Sticks'], m: ['萬', 'Characters'] }, o = ['p', 's', 'm'].filter(x => x !== k[0]).map(x => { const kk = x + k.slice(1); return [x, Math.max(0, copiesOf(kk) - seenCount(kk))]; });
     const sum = o.reduce((a, c) => a + c[1], 0);
-    mix = '<span class="tm"><span class="tbar">｜</span>' + L(`彩：還剩 <b>${sum} 張</b>（${o.map(c => SN[c[0]][0] + ' ' + c[1]).join('、')}）`, `Mixed: <b>${sum} left</b> (${o.map(c => SN[c[0]][1] + ' ' + c[1]).join(', ')})`) + '</span>';
+    mix = '<span class="tm"><span class="tsep">｜</span>' + L(`彩：還剩 <b>${sum} 張</b>（${o.map(c => SN[c[0]][0] + ' ' + c[1]).join('、')}）`, `Mixed: <b>${sum} left</b> (${o.map(c => SN[c[0]][1] + ' ' + c[1]).join(', ')})`) + '</span>';
   }
   return `<b>${knFull(k)}</b>${L('　', ' · ')}${v} ${L('分', v === 1 ? 'pt' : 'pts')}<br>` + '<span class="ts">' + L(`共 ${tot} 張，已見 ${seen}，<b>還剩 ${left} 張</b>`, `${tot} in total · ${seen} seen · <b>${left} left</b>`) + '</span>' + mix;
 }
