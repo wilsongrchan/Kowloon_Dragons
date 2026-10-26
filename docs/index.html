@@ -232,8 +232,11 @@ details.eg summary{cursor:pointer;color:var(--gold-t);font-size:calc(14px*var(--
 .btn.cb .tile{--u:6px;pointer-events:none}
 #actions:has(.cb) .btn{min-height:0;padding-top:5px;padding-bottom:5px}
 #actions:has(.cb) .btn.cb{padding-top:6px;padding-bottom:8px}
-.hpg{margin-left:6px;width:22px;height:22px;padding:0;border:1px solid var(--line);border-radius:6px;background:rgba(0,0,0,.2);color:var(--muted);cursor:pointer;font-size:12px;line-height:1;vertical-align:middle;transition:transform .15s}
-.hpg.on{transform:rotate(90deg);color:var(--gold-t);border-color:var(--gold)}
+.hpg{margin-left:4px;width:26px;height:26px;padding:0;border:0;background:none;cursor:pointer;vertical-align:middle;color:var(--muted);position:relative}
+.hpg::before{content:"";position:absolute;left:9px;top:8px;width:7px;height:7px;border-top:2px solid currentColor;border-right:2px solid currentColor;transform:rotate(45deg);transition:transform .15s}
+.hpg:hover{color:var(--text)}
+.hpg.on{color:var(--gold-t)}
+.hpg.on::before{transform:translate(-2px,2px) rotate(135deg)}
 .hpchart{max-width:340px;margin:2px 0 4px}
 .hpchart svg{width:100%;height:auto;display:block;font:10px var(--ui);fill:var(--muted)}
 .hpchart .gax{stroke:var(--line);stroke-width:1}
@@ -2177,7 +2180,7 @@ function handRow(seat, who, res) {
   { const hp = handPts(seat);
     const b = document.createElement('span'); b.className = 'hp'; b.innerHTML = `${L('手牌點值', 'Hand points')} <b>${hp}</b>`; lab.appendChild(b);
     if (hist.length > 1) {
-      const ar = document.createElement('button'); ar.type = 'button'; ar.className = 'hpg'; ar.setAttribute('aria-expanded', 'false'); ar.title = ar.ariaLabel = L('手牌點值走勢', 'Hand points over the game'); ar.textContent = '▸';
+      const ar = document.createElement('button'); ar.type = 'button'; ar.className = 'hpg'; ar.setAttribute('aria-expanded', 'false'); ar.title = ar.ariaLabel = L('手牌點值走勢', 'Hand points over the game'); 
       gbox = document.createElement('div'); gbox.className = 'hpchart'; gbox.hidden = true;
       ar.onclick = () => { const open = gbox.hidden; gbox.hidden = !open; ar.classList.toggle('on', open); ar.setAttribute('aria-expanded', open); if (open && !gbox.firstChild) gbox.innerHTML = hpChart(hist); };
       lab.appendChild(ar);
@@ -2857,7 +2860,7 @@ const MUSIC = (() => {
     for (let i = 0; i < 9; i++) pluck(c, g, t + 1.15 + i * .07, freq(5 + i), .16 + i * .012, 1.6);
     [5, 7, 8, 10].forEach((d, k) => pluck(c, g, t + 1.84 + k * .018, freq(d), .2, 3.2)); pluck(c, g, t + 1.84, freq(-5), .36, 3.4);
   }
-  let stg;
+  let stg, duckTm;
   function tick() { while (nextT < ctx.currentTime + 1.2) { schedBar(ctx, wet, nextT); nextT += BEAT * 8; } }
   return {
     // 音量（0–1 倍；1 ＝ 原本大小）：背景音樂、胡牌音效各自調整
@@ -2892,6 +2895,10 @@ const MUSIC = (() => {
         if (!stg) { stg = build(ctx, ctx.destination); stg.m.gain.value = .75 * svol; }
         if (ctx.state !== 'running') ctx.resume();
         stingNotes(ctx, stg, ctx.currentTime + .05);
+        if (on && wet) {   // 胡牌音效響時，背景音樂先壓低（約降到 15%），過幾秒再慢慢回來
+          const t = ctx.currentTime; wet.m.gain.cancelScheduledValues(t); wet.m.gain.setTargetAtTime(.8 * mvol * .15, t, .12);
+          clearTimeout(duckTm); duckTm = setTimeout(() => { try { if (on) wet.m.gain.setTargetAtTime(.8 * mvol, ctx.currentTime, 1.2); } catch (e) {} }, 5500);
+        }
       } catch (e) {}
     },
     dbg() { return { state: ctx && ctx.state, t: ctx && ctx.currentTime, stg: !!stg, on }; },
