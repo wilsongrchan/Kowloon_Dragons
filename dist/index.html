@@ -1394,7 +1394,7 @@ ORDER.forEach(k => { if (k[0] !== 'z') ORD[k] = ORDER.indexOf(k[0] + '1') + (9 -
 const tn = t => { if (t.s !== 'z') t = { ...t, n: 10 - t.n }; return LANG === 'en' ? enTile(t.s, t.n) : LANG === 'zh' && t.s === 'z' ? ZH_DRAGON[t.n] : tname(t); };
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? enTile(k[0], k[0] === 'z' ? +k.slice(1) : dnum(+k.slice(1))) : kn(k);
-const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Blessing of Heaven','地胡':'Blessing of Earth','人胡':'Blessing of Man','槓':'Kong','三元大補槓':'Grand dragon Kong','門清':'Concealed','自摸':'Self-draw','海底撈月':'Last Tile Draw','槓上自摸':'Kong self-draw','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Blessing of Heaven','地胡':'Blessing of Earth','人胡':'Blessing of Man','槓':'Kong','三元大補槓':'Grand dragon Kong','門清':'Concealed','自摸':'Self-draw','海底撈月':'Win on Last Tile','槓上自摸':'Win on Kong','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
 const yn = name => { if (LANG === 'zh') return name; const m = name.match(/^(.+?)(×\d+)?$/), T = LANG === 'ja' ? YAKU_JA : YAKU_EN; return (T[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -1751,8 +1751,8 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
     <li><b>Grand dragon Kong (三元大補槓)</b></li>
     <li><b>Concealed (門清)</b>: no calls. Not given with Concealed Self-Draw, All Small, Seven Pairs or Concealed Kowloon Straight.</li>
     <li><b>Self-draw (自摸)</b>: open hands only. Concealed Self-Draw already includes it.</li>
-    <li><b>Last Tile Draw (海底撈月)</b>: you win by self-draw on the very last tile of the wall. It stacks with Self-draw, so for a hand with calls it adds 1 fan in total.</li>
-    <li><b>Kong self-draw (槓上自摸)</b>: you win by self-draw on the replacement tile drawn after a Kong. It stacks with Self-draw and Kong, so a win like that adds 1½ fan in total.</li>
+    <li><b>Win on Last Tile (海底撈月)</b>: you win by self-draw on the very last tile of the wall. It stacks with Self-draw, so for a hand with calls it adds 1 fan in total.</li>
+    <li><b>Win on Kong (槓上自摸)</b>: you win by self-draw on the replacement tile drawn after a Kong. It stacks with Self-draw and Kong, so a win like that adds 1½ fan in total.</li>
     <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons. Half Flush and Full Flush don't get it.</li>
     <li><b>Win on a big tile (胡大字)</b>: the winning tile is a 7–9.</li>
   </ul>
