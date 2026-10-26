@@ -2266,7 +2266,7 @@ const CHEAT_TIERS = [
   [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['斷小字', '沒有 1–3', 'no 1–3'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 8888 ok, no mixed pair']]],
   [3, [['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['全小字', '全部 1–3', 'only 1–3'], ['幺九順', '同花 123·456·789 · 其餘任一組', 'same-suit 123·456·789 + any set']]],
   [4, [['清一色', '一門、無三元（不含彩碰／彩眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻（不另計對對胡）', '4 concealed triplets (no All Triplets on top)'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
-  [6, [['幺九龍', '同花 123·456·789 + 紅中、發財、白板 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White Dragon + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '紅中、發財、白板全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer’s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]
+  [6, [['幺九龍', '同花 123·456·789 + 紅中、發財、白板 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White Dragon + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '紅中、發財、白板全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer\'s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]
 ];
 const CHEAT_MINOR = [['槓', '每次', 'each kong'], ['三元大補槓', '補第 5 張紅中、發財、白板', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['槓上自摸', '槓後補牌自摸（連自摸、槓共 +1.5）', 'self-draw on the kong replacement (with kong + self-draw: +1½)'], ['斷一門無三元', '缺一門、無紅中、發財、白板', 'a suit missing, no dragons'], ['胡大字', '胡牌是 7–9', 'winning tile is 7–9']];
 /* 速查表即時狀態：只標示「你目前已經有的」（✓ 金色），並把「已不可能」的灰掉（原因顯示在右邊） */
@@ -2288,7 +2288,7 @@ function cheatStates() {
     out('四暗刻', '已有鳴牌', 'you have an open meld');
     out('七對子', '已有鳴牌', 'you have an open meld');
   }
-  if (melds.length) { out('七對子', '已有鳴牌／槓', 'you have a meld'); out('全小字', '1–3 不能鳴牌，已有鳴牌', 'small tiles can’t be called, and you have a meld'); }
+  if (melds.length) { out('七對子', '已有鳴牌／槓', 'you have a meld'); out('全小字', '1–3 不能鳴牌，已有鳴牌', 'small tiles can\'t be called, and you have a meld'); }
   if (open.length >= 2) out('三暗刻', '鳴牌太多', 'too many open melds');
   if (chows.length) out('對對胡', '已有吃牌', 'you have a chow');
   if (trip.length) out('平胡', '已有碰／槓', 'you have a pung/kong');
@@ -2299,13 +2299,13 @@ function cheatStates() {
   if (suits.size >= 3) out('斷一門無三元', '鳴牌三門齊', 'melds in all 3 suits');
   const nonDrag = melds.length - drag.length;
   if (nonDrag >= 2) out('大三元', '非三元鳴牌太多', 'too many non-dragon melds');
-  if (nonDrag >= 3 || drag.length >= 3) out('小三元', '鳴牌不合', 'your melds don’t fit');
+  if (nonDrag >= 3 || drag.length >= 3) out('小三元', '鳴牌不合', 'your melds don\'t fit');
   const chowStarts = chows.map(m => Math.min(...m.tiles.map(t => t.n))), chowSuits = new Set(chows.map(m => m.tiles[0].s));
   const badYao = chowStarts.some(n => n !== 1 && n !== 4) || chowSuits.size > 1;
-  if (badYao || trip.length >= 2) out('幺九順', '鳴牌不合（只可鳴 456、789，同花）', 'melds don’t fit (only 456 & 789, same suit)');
-  if (badYao || trip.length >= 1) { out('幺九龍', '鳴牌不合（只可鳴 456、789，同花，不能有碰槓）', 'melds don’t fit (only 456 & 789 same suit, no pung/kong)'); out('門清幺九龍', '鳴牌不合', 'melds don’t fit'); }
-  if (badYao || trip.length >= 2) out('門清幺九順', '鳴牌不合', 'melds don’t fit');
-  if (melds.some(m => m.tiles[0].s === 'z' && m.type !== 'kong') || nonDrag >= 2) out('槓三元', '鳴牌不合（要紅中、發財、白板全槓）', 'melds don’t fit (needs kongs of all 3 dragons)');
+  if (badYao || trip.length >= 2) out('幺九順', '鳴牌不合（只可鳴 456、789，同花）', 'melds don\'t fit (only 456 & 789, same suit)');
+  if (badYao || trip.length >= 1) { out('幺九龍', '鳴牌不合（只可鳴 456、789，同花，不能有碰槓）', 'melds don\'t fit (only 456 & 789 same suit, no pung/kong)'); out('門清幺九龍', '鳴牌不合', 'melds don\'t fit'); }
+  if (badYao || trip.length >= 2) out('門清幺九順', '鳴牌不合', 'melds don\'t fit');
+  if (melds.some(m => m.tiles[0].s === 'z' && m.type !== 'kong') || nonDrag >= 2) out('槓三元', '鳴牌不合（要紅中、發財、白板全槓）', 'melds don\'t fit (needs kongs of all 3 dragons)');
   if (melds.length) { out('天胡', '已有鳴牌', 'someone has called'); out('地胡', '已有鳴牌', 'someone has called'); out('人胡', '已有鳴牌', 'someone has called'); }
   // ---- 目前已經有的（只標示已成立的，不標「可能」）----
   if (drag.length || handTrips.some(k => k[0] === 'z')) ok('三元刻');
@@ -2328,7 +2328,7 @@ function cheatHTML() {
     `<div class="r"><b>${L('槓', 'Kong')}</b><span>${L('4–6、紅中、發財、白板（1–3、7–9 不可）', '4–6, dragons (not 1–3, 7–9)')}</span></div>` +
     `<div class="r"><b>${L('彩碰', 'Mixed pung')}</b><span>${L('7–9 同數字、不同花', '7–9, same number, 3 suits')}</span></div>` +
     `<h3>${L('可榮胡的牌', 'What can be won on')}</h3>` +
-    `<div class="r"><b>${L('彩眼', 'Mixed pair')}</b><span>${L('7–9 同數字、不同花的兩張；不可鳴，只可榮胡', '7–9, same number, 2 suits; can’t be called, only won on')}</span></div>` +
+    `<div class="r"><b>${L('彩眼', 'Mixed pair')}</b><span>${L('7–9 同數字、不同花的兩張；不可鳴，只可榮胡', '7–9, same number, 2 suits; can\'t be called, only won on')}</span></div>` +
     `<p>${L('得分 = 全手點值（一＝1 … 九＝9）× 番數（上限 6）；番數取整數，1+0.5+0.5＝2、1+0.5＝1.5 算 1。', 'Score = hand tile points (1 = 1 … 9 = 9) × fan (cap 6). Fan is rounded down: 1+½+½ = 2, 1+½ = 1.')}</p></div>`;
 }
 function refreshCheat() {
