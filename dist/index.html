@@ -532,6 +532,13 @@ dialog .xform + h2,dialog .xform + h3{padding-right:38px}
 #langMenu button:hover{background:rgba(255,255,255,.1)}
 #langMenu button.on{color:var(--gold-t);font-weight:700}
 #langMenu i{font-style:normal;color:var(--gold-t)}
+#langMenu .lsep{height:1px;background:var(--gold);opacity:.35;margin:5px 4px}
+#termDlg{max-width:min(560px,94vw)}
+table.ttbl{width:100%;border-collapse:collapse;margin:6px 0 0}
+table.ttbl td,table.ttbl th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:calc(14px*var(--fs,1))}
+table.ttbl th{color:var(--gold-t);font-weight:700}
+table.ttbl td:first-child{white-space:nowrap;font-weight:700;color:var(--ivt)}
+#termDlg .tnote{color:var(--muted);margin:4px 0 0;font-size:calc(13px*var(--fs,1))}
 #fbDlg{max-width:min(460px,94vw)}
 #fbDlg textarea,#fbDlg input,#fbDlg select{width:100%;box-sizing:border-box;font:500 calc(15px*var(--fs,1)) var(--ui);padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--text);margin:0 0 8px}
 #fbDlg textarea{resize:vertical;min-height:110px}
@@ -617,6 +624,7 @@ button.btn.hot:hover{background:var(--gold-hov)}
 <dialog id="rules"></dialog>
 <dialog id="setDlg"></dialog>
 <dialog id="fbDlg"></dialog>
+<dialog id="termDlg"></dialog>
 <dialog id="voteDlg"></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 <dialog id="cheatDlg"></dialog>
@@ -1510,7 +1518,7 @@ const BASICS = (() => {
       '<b>The building blocks</b>: a <b>meld</b> is a group of three or four tiles, and comes in three kinds. A <b>sequence</b> is three consecutive numbers in one suit (e.g. 4-5-6 of circles); a <b>triplet</b> is three identical tiles (e.g. three 5 of characters); a <b>Kong</b> is four identical tiles. The <b>pair</b> is two identical tiles. Dragons (Red, Green, White) can only form triplets or the pair.',
       '<b>A turn</b>: everyone starts with 13 tiles. On your turn you <b>draw one</b> (now 14) and <b>discard one</b> (back to 13). Discards are placed face-up in the middle.',
       '<b>Chow, Pung, Kong</b>: a tile someone else just discarded can be taken if it completes a meld. <b>Chow</b> = take the previous player\'s tile for a sequence; <b>Pung</b> = take anyone\'s tile for a triplet; <b>Kong</b> = four identical tiles, then you draw a bonus tile. Taken melds are laid face-up, so the others can see them.',
-      '<b>Winning</b>: complete 4 melds + 1 pair. Drawing the last tile yourself is a <b>self-draw (Zimo)</b>; taking someone\'s discard is a <b>Ron</b>, and the discarder pays more.',
+      '<b>Winning</b>: complete 4 melds + 1 pair. Drawing the last tile yourself is a <b>self-draw (Zimo)</b>; taking someone\'s discard is a <b>Ron</b>, and the discarder pays more. If several players can Ron the same discard, only the one nearest in turn order (the discarder\'s downstream player, then across, then upstream) wins; the others are blocked. There are no multiple winners on one discard.',
       '<b>You need a scoring condition (fan)</b>: a complete hand is not enough, you need at least 1 fan (e.g. a dragon triplet, All Sequences, All Triplets… see the list below).',
       '<b>Tip</b>: buttons for Chow / Pung / Win pop up automatically when you can use a discard; press Pass to skip. To discard, tap a tile, then press Discard.'
     ]),
@@ -1545,6 +1553,7 @@ zh: `  <h2>規則</h2>
     <li>只有 4–6 和紅中、發財、白板可以槓，1–3 與 7–9 都不能槓（暗槓也不可）。沒有混槓，槓只可同花色同數字。</li>
     <li>三元大槓：暗槓或加槓紅中、發財、白板後可再補第五張（點「大槓」），多 0.5 番。</li>
     <li>多人同時碰（例如 4、5 或紅中、發財、白板）：棄牌者的下家優先，再對家，再上家。胡牌最優先，吃最後。</li>
+    <li>胡牌順序：多人同時可以胡同一張棄牌時，只有依出牌順序最近的一家（棄牌者的下家，再對家，再上家）可以胡，其餘的人被截胡；沒有一炮多響。</li>
     <li>沒有搶槓。槓之後從牌山尾補牌。</li>
   </ul>
   ${EG('牌面示例：吃碰槓、彩碰、三元大槓', [X('吃','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('碰／槓','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('彩碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('彩刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('彩眼','p1 s1|p2 m2|s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('1–3 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
@@ -1794,6 +1803,7 @@ RULES_HTML.ja = `  <h2>ルール</h2>
     <li>カンできるのは4〜6と三元牌だけで、1〜3と7〜9は暗槓もできません。混合カンもなし。カンは同じ色・同じ数字のみ。</li>
     <li>三元大カン：三元牌を暗槓または加槓したあと、5枚目を加えられます（「大カン」を押す）。+0.5翻。</li>
     <li>複数人が同時にポンできる場合（4・5や三元牌）：捨てた人の下家が優先、次に対面、次に上家。ロンが最優先で、チーは最後。</li>
+    <li>複数人が同じ捨て牌でロンできる場合は、捨てた人の下家、対面、上家の順で最も近い一人だけが和了できます（頭ハネ）。ダブロン・トリプルロンはありません。</li>
     <li>搶槓（槍カン）はありません。カンのあとは牌山の末尾から補充します。</li>
   </ul>
   ${EG('牌の例：チー・ポン・カン・彩ポン・三元大カン', [X('チー','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('ポン／カン','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('彩ポン（鳴いた牌は薄く表示）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('彩刻子（手牌内の暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('彩雀頭','p1 s1|p2 m2|s3 m3'),X('三元大カン（5枚）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7〜9は鳴けない','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
@@ -2622,7 +2632,7 @@ function applyLang() {
   $('#leftBtn').setAttribute('aria-label', L('向左移', 'Move left')); $('#rightBtn').setAttribute('aria-label', L('向右移', 'Move right'));
   $('#logSum').textContent = L('牌局記錄', 'Game log');
   $('#meName').textContent = NAMES[0];
-  $('#rules').innerHTML = XBTN() + (LANG === 'ja' ? jaRuby(RULES_HTML.ja) : RULES_HTML[LANG]).replace('</p>', '</p>' + (BASICS[LANG] || BASICS.zh));
+  $('#rules').innerHTML = XBTN() + (LANG === 'ja' ? jaRuby(RULES_HTML.ja) : RULES_HTML[LANG]).replace('</p>', '</p>' + (BASICS[LANG] || BASICS.zh)) + (LANG === 'zh' ? `<details class="eg basics"><summary>📖 用語對照（各地叫法）</summary>${termsTable()}</details>` : '');
   if (G) {
     render(); renderLog();
     if (UI.statusFn) setStatus(UI.statusFn);
@@ -3052,7 +3062,8 @@ function openLangMenu(anchor) {
   if (m && !m.hidden) { m.hidden = true; return; }
   if (!m) { m = document.createElement('div'); m.id = 'langMenu'; m.hidden = true; document.body.appendChild(m); }
   const cur = LANG === 'en' ? 'en' : LANG === 'ja' ? 'ja' : PREF.script === 's' ? 'sc' : 'tc';
-  m.innerHTML = LANG_CHOICES.map(([v, n]) => `<button type="button" data-lg="${v}" class="${v === cur ? 'on' : ''}"><span>${n}</span><i>${v === cur ? '✓' : ''}</i></button>`).join('');
+  m.innerHTML = LANG_CHOICES.map(([v, n]) => `<button type="button" data-lg="${v}" class="${v === cur ? 'on' : ''}"><span>${n}</span><i>${v === cur ? '✓' : ''}</i></button>`).join('')
+    + (LANG === 'zh' ? '<div class="lsep"></div><button type="button" data-act="terms"><span>用語對照</span><i>›</i></button>' : '');
   const host = anchor.closest('dialog[open]') || document.body; if (m.parentNode !== host) host.appendChild(m);
   m.hidden = false;
   const r = anchor.getBoundingClientRect(), w = m.offsetWidth;
@@ -3060,6 +3071,7 @@ function openLangMenu(anchor) {
 }
 document.addEventListener('click', e => {
   const m = $('#langMenu'); if (!m || m.hidden) return;
+  if (e.target.closest('#langMenu button[data-act="terms"]')) { m.hidden = true; openTerms(); return; }
   const b = e.target.closest('#langMenu button[data-lg]');
   if (b) {
     const v = b.dataset.lg; LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't';
@@ -3067,6 +3079,33 @@ document.addEventListener('click', e => {
   }
   if (!e.target.closest('#langBtn,#lnLang,#lbLang')) m.hidden = true;
 }, true);
+const TERMS = [
+  ['榮胡', '出銃胡、食糊（粵港）；放炮胡（台灣）'],
+  ['聽牌', '叫胡、叫糊（粵港）'],
+  ['鳴牌', '副露（日本）；吃、碰、槓的統稱'],
+  ['吃', '上（粵港）'],
+  ['槓', '杠；加槓＝補槓'],
+  ['面子', '一組牌（順子或刻子）'],
+  ['門清', '門前清（日本）；不求人（台灣；本遊戲的「不求人」＝門清加自摸）'],
+  ['胡', '糊（粵港）；和（日本）'],
+  ['番', '台（台灣）；翻（日本）'],
+  ['平胡', '平糊（粵港）；平和（日本）'],
+  ['對對胡', '碰碰胡（粵港）；對對和（日本）'],
+  ['七對子', '嚦咕嚦咕（粵港）；小七對（台灣）'],
+  ['槓上自摸', '槓上開花（粵港、日本）'],
+  ['海底撈月', '海底摸月（日本）'],
+  ['天胡／地胡／人胡', '天和、地和、人和（日本）'],
+  ['三元牌', '箭牌（粵港）；役牌（日本）'],
+  ['牌山', '牌牆（粵港、台灣）'],
+  ['出銃（的人）', '放槍（粵港）；放炮（台灣）；放銃（日本）']
+];
+const termsTable = () => '<p class="tnote">本遊戲用語和各地常見說法的對照，方便不同地區的玩家溝通。</p><table class="ttbl"><tr><th>本遊戲</th><th>其他叫法</th></tr>'
+  + TERMS.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('') + '</table>';
+function openTerms() {
+  const d = $('#termDlg');
+  d.innerHTML = XBTN() + '<h2>用語對照</h2>' + termsTable();
+  if (!d.open) d.showModal();
+}
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $('#langMenu'); if (m) m.hidden = true; } });
 /* ===== 背景音樂：Web Audio 即時合成（五聲音階、撥弦＋柔和長音），預設關閉 ===== */
 const MUSIC = (() => {
