@@ -637,7 +637,7 @@ button.btn.hot:hover{background:var(--gold-hov)}
 const $ = s => document.querySelector(s);
 /*__JA__*/
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
-const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy' };
+const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'off' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
 const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' ? 'pro' : 'easy'; };
 applyBotLvl();
@@ -1617,13 +1617,14 @@ async function resolveClaims(from, t) {
     const ho2 = { ron: ho.ron, pong: beaten ? [] : ho.pong, kong: beaten ? [] : ho.kong, chow: botMeld ? [] : ho.chow };
     if (!(ho2.ron || ho2.pong.length || ho2.kong.length || ho2.chow.length)) return null;
     let ch;
-    const ck = clkBegin(x);
+    const ck = clkBegin(x), tq = performance.now();
     if (ROOM.kind[x] === 'host') ch = ck ? await hostClocked(ck, humanClaim(ho2, t), () => null, true) : await humanClaim(ho2, t);
     else { ch = await askRemote(x, { t: 'claim', ho: ho2, tile: t, from }, ck ? ck.allow + 1500 : 20000, a => {
       if (!a) return null;
       if (a.kind === 'ron') return ho2.ron ? { kind: 'ron' } : null;
       const list = ho2[a.kind]; return list && list[a.idx] ? { kind: a.kind, opt: list[a.idx] } : null;
     }, () => null); clkEnd(ck); }
+    if (ROOM.kind[x] === 'host') recAsk(x, t, ho2, ch, performance.now() - tq);
     if (!ch) return null;
     return ch.kind === 'ron' ? { seat: x, kind: 'ron', ev: ho.ron } : { seat: x, kind: ch.kind, opt: ch.opt };
   });
@@ -1635,13 +1636,46 @@ async function resolveClaims(from, t) {
   return { claim: true, seat: w.seat, kind: w.kind, opt: w.opt };
 }
 
+/* ===== 牌局記錄（分析用，預設關閉）：整局的發牌、牌山順序、每一次摸打吃碰與你的思考時間，只存在這台裝置的瀏覽器，可在設定匯出 ===== */
+const REC = { cur: null, t0: 0, key: 'yjl-rec', max: 300 };
+const recOn = () => PREF.recOn === 'on' && ROOM.mode === 'solo';
+const recLoad = () => { try { return JSON.parse(localStorage.getItem(REC.key) || '[]'); } catch (e) { return []; } };
+function recStart() {
+  REC.cur = null; if (!recOn()) return;
+  REC.cur = { t: Date.now(), bot: PREF.botLvl, dealer, scores: scores.slice(), hands: G.hands.map(h => h.map(t => t.k)), wall: G.wall.map(t => t.k), acts: [] };
+}
+const recAct = o => { if (REC.cur) REC.cur.acts.push(o); };
+function recEnd(res) {
+  const r = REC.cur; REC.cur = null; if (!r) return;
+  r.final = { hands: G.hands.map(h => h.map(t => t.k)), melds: G.melds.map(ms => ms.map(m => ({ type: m.type, open: m.open, tiles: m.tiles.map(t => t.k) }))) };
+  r.result = res.draw ? { draw: true } : { winner: res.winner, tsumo: res.tsumo, from: res.from, fan: res.ev.fan, points: res.ev.points, items: res.ev.items.map(i => i.name), halves: res.ev.halves.map(h => h.name), delta: res.delta };
+  r.wallLeft = G.wall.length;
+  try {
+    const all = recLoad(); all.push(r);
+    while (all.length > REC.max) all.shift();
+    for (;;) { try { localStorage.setItem(REC.key, JSON.stringify(all)); break; } catch (e) { if (all.length <= 1) break; all.shift(); } }
+  } catch (e) {}
+}
+function recAsk(seat, t, ho, ch, ms) {
+  if (!REC.cur) return;
+  const opts = []; if (ho.ron) opts.push('ron'); if (ho.kong.length) opts.push('kong'); if (ho.pong.length) opts.push('pong'); if (ho.chow.length) opts.push('chow');
+  recAct({ s: seat, a: 'ask', k: t.k, opts, pick: ch ? ch.kind : 'pass', ms: Math.round(ms) });
+}
+function recExport() {
+  const all = recLoad();
+  const blob = new Blob([JSON.stringify({ app: 'kowloon-dragons', v: 1, exported: new Date().toISOString(), hands: all })], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kowloon-hands-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
 // 除錯：網址加 ?botlog 時，高手電腦放棄胡牌改做大牌會記在牌局記錄裡
 const BOTLOG = /[?&]botlog\b/.test(location.search);
 function flushGreedLog() {
-  if (!BOTLOG || !G || !G.greedLog) return;
+  if (!G || !G.greedLog || !(BOTLOG || REC.cur)) return;
   G.glSeen = G.glSeen || 0;
   while (G.glSeen < G.greedLog.length) {
     const e = G.greedLog[G.glSeen++], who = WHO[e.seat];
+    recAct({ s: e.seat, a: 'greed', goal: e.goal, tsumo: e.tsumo });
+    if (!BOTLOG) continue;
     log(() => e.goal === 'pure' ? L(`【除錯】${who}放棄${e.tsumo ? '自摸' : '食胡'}，改做清一色`, `[debug] ${who} passed on a ${e.tsumo ? 'self-draw' : 'Ron'} win, going for a full flush`)
       : L(`【除錯】${who}放棄${e.tsumo ? '自摸' : '食胡'}，改做對對胡`, `[debug] ${who} passed on a ${e.tsumo ? 'self-draw' : 'Ron'} win, going for all triplets`));
   }
@@ -1650,7 +1684,7 @@ async function play() {
   const my = ++runId; ROOM.handNo++;
   if (isHost() && ROOM.tc) { ROOM.bank = [0, 1, 2, 3].map(() => ROOM.tc.a); const m = { t: 'clk', reset: true, banks: ROOM.bank.slice() }; clkApply(m); bcast(m); }
   G = newGame(dealer); G.turn = dealer; HIST = [0, 1, 2, 3].map(s => [handPts(s)]); UI.viewTable = false; UI.locks = []; UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
-  LOGS.length = 0; renderLog(); clearActions();
+  LOGS.length = 0; renderLog(); clearActions(); recStart();
   $('#result').close?.(); render();
   const dl = dealer; log(() => L(`新局，${WHO[dl]}做莊。`, !online() && dl === 0 ? 'New hand. You deal.' : `New hand. ${WHO[dl]} deals.`));
   let seat = dealer, rep = false, needDraw = true;
@@ -1658,29 +1692,33 @@ async function play() {
   while (alive()) {
     G.turn = seat;
     let t0 = null;
-    if (needDraw) { t0 = drawTile(G, seat, rep); if (!t0) { endDraw(); return; } HIST[seat].push(handPts(seat)); }
+    if (needDraw) { t0 = drawTile(G, seat, rep); if (!t0) { endDraw(); return; } HIST[seat].push(handPts(seat)); recAct({ s: seat, a: 'draw', k: t0.k, rep }); }
     const drew = needDraw; needDraw = true; rep = false;
     UI.drawnId = seat === 0 && drew ? t0.id : null;
     render();
     const opts = selfOptions(G, seat, !drew);
     let act;
+    const tAsk = performance.now();
     act = await askSelf(seat, opts, drew ? t0 : null);
     if (!alive()) return;
+    const askMs = ROOM.kind[seat] === 'host' ? Math.round(performance.now() - tAsk) : undefined;
     flushGreedLog();
-    if (act.win) { const wr = winResult(G, seat, true, null, opts.win); wr.winId = G.lastDraw.id; finish(wr); return; }
+    if (act.win) { recAct({ s: seat, a: 'win', tsumo: true, ms: askMs }); const wr = winResult(G, seat, true, null, opts.win); wr.winId = G.lastDraw.id; finish(wr); return; }
     if (act.kong) {
       const kk = act.kong, ks = seat;
-      applyKong(G, seat, kk); sfxMeld('kong'); log(() => L(`${WHO[ks]}${kk.big ? '大槓' : '槓'} ${kn(kk.k)}`, `${WHO[ks]} ${kk.big ? 'Grand Kong' : 'Kong'} ${kn(kk.k)}`));
+      recAct({ s: seat, a: 'kong', k: kk.k, kind: kk.kind, big: !!kk.big, ms: askMs }); applyKong(G, seat, kk); sfxMeld('kong'); log(() => L(`${WHO[ks]}${kk.big ? '大槓' : '槓'} ${kn(kk.k)}`, `${WHO[ks]} ${kk.big ? 'Grand Kong' : 'Kong'} ${kn(kk.k)}`));
       rep = true; UI.drawnId = null; continue;
     }
     const t = discardTile(G, seat, act.discard);
+    recAct({ s: seat, a: 'dis', k: t.k, ms: askMs });
     UI.drawnId = null; SFX.place(); { const ds = seat; log(() => L(`${WHO[ds]}打 ${tn(t)}`, `${WHO[ds]} discards ${tn(t)}`)); } render();
     if (!fast()) await sleep(seat === 0 ? 250 : 350);
     const cl = await resolveClaims(seat, t);
     if (!alive()) return;
     flushGreedLog();
-    if (cl.win) { G.hands[cl.seat].push(t); G.discards[seat].pop(); const wr = winResult(G, cl.seat, false, seat, cl.ev); wr.winId = t.id; finish(wr); return; }
+    if (cl.win) { recAct({ s: cl.seat, a: 'win', tsumo: false, from: seat, k: t.k }); G.hands[cl.seat].push(t); G.discards[seat].pop(); const wr = winResult(G, cl.seat, false, seat, cl.ev); wr.winId = t.id; finish(wr); return; }
     if (cl.claim) {
+      recAct({ s: cl.seat, a: cl.kind, k: t.k, from: seat });
       applyClaim(G, cl.seat, cl.kind, cl.opt, t, seat);
       const mm = G.melds[cl.seat][G.melds[cl.seat].length - 1]; sfxMeld(cl.kind);
       { const cs = cl.seat, ck = cl.kind, cm = mm.mixed; log(() => L(`${WHO[cs]}${KIND[ck][0]} ${tn(t)}${cm ? '（混）' : ''}`, `${WHO[cs]} ${KIND[ck][1].toLowerCase()} ${tn(t)}${cm ? ' (mixed)' : ''}`)); }
@@ -1767,6 +1805,7 @@ function showResult(win) {
   setTimeout(() => { go(); el.remove(); }, 1700);
 }
 function finish(res) {
+  recEnd(res);
   res.delta.forEach((v, i) => scores[i] += v); saveSoloScores();
   HIST.forEach((a, i) => { const v = handPts(i); if (a[a.length - 1] !== v) a.push(v); });   // 最後一點＝結算頁顯示的手牌點值
   res.hist = HIST.map(a => a.slice());
@@ -1779,6 +1818,7 @@ function finish(res) {
   render(); sendResult(res);
 }
 function endDraw() {
+  recEnd({ draw: true });
   log(() => L('流局', 'Draw'));
   HIST.forEach((a, i) => { const v = handPts(i); if (a[a.length - 1] !== v) a.push(v); });
   UI.result = { draw: true, hist: HIST.map(a => a.slice()) };
@@ -2573,6 +2613,9 @@ function renderSettings() {
     <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
     <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}</div>
     <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。', 'Expert bots plan their hands, track what has been played, read the table and play defensively.')}</p>
+    <h3>${L('牌局記錄（分析用）', 'Hand history (for analysis)')}</h3><div class="chips">${chip('rec', 'on', '開', 'On', PREF.recOn === 'on')}${chip('rec', 'off', '關', 'Off', PREF.recOn !== 'on')}</div>
+    <p class="note" style="margin:6px 0 0">${L('只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。', 'Records solo games against bots (deal, wall, every move and your thinking time). Stored only in this browser, never uploaded.')}</p>
+    <div class="chips" style="margin-top:6px"><button type="button" class="btn sm" id="recExp">${L('匯出', 'Export')} (${recLoad().length})</button><button type="button" class="btn sm" id="recClr">${L('清除', 'Clear')}</button></div>
     <h3>${L('意見回饋', 'Feedback')}</h3><button type="button" class="btn sm" id="stFb">${L('意見回饋', 'Feedback')} …</button>`;
 }
 $('#setDlg').addEventListener('click', e => {
@@ -2581,6 +2624,7 @@ $('#setDlg').addEventListener('click', e => {
   if (g === 'theme' || g === 'fs') { PREF[g] = v; applyPrefs(); }
   else if (g === 'sfx') { PREF.sfx = v; savePref(); renderSettings(); if (v === 'on') SFX.place(); }
   else if (g === 'music') { PREF.music = v; musicApply(); renderSettings(); }
+  else if (g === 'rec') { PREF.recOn = v === 'on' ? 'on' : 'off'; savePref(); renderSettings(); return; }
   else if (g === 'bot') { PREF.botLvl = v === 'pro' ? 'pro' : 'easy'; applyBotLvl(); savePref(); renderSettings(); return; }
   else { LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't'; }
   savePref(); applyLang();
@@ -2632,6 +2676,8 @@ $('#fbDlg').addEventListener('click', async e => {
 document.addEventListener('click', e => {
   if (e.target.closest('#stFb')) { $('#setDlg').close(); openFeedback(); }
   else if (e.target.closest('#lnFb')) { e.preventDefault(); openFeedback(); }
+  else if (e.target.closest('#recExp')) { if (recLoad().length) recExport(); else toast('還沒有記錄', 'No hands recorded yet'); }
+  else if (e.target.closest('#recClr')) { if (recLoad().length && confirm(L('清除所有牌局記錄？', 'Clear all recorded hands?'))) { try { localStorage.removeItem(REC.key); } catch (x) {} renderSettings(); } }
 });
 /* ===== 首頁 / landing ===== */
 const LAND = { join: false };
