@@ -349,7 +349,7 @@ function botClaims(g, from, t, skip = []) {
   for (let i = 1; i < 4; i++) {
     const s = (from + i) % 4; if (skip.includes(s)) continue;
     const o = claimOptions(g, s, t, from);
-    if (o.ron) return { seat: s, kind: 'ron', ev: o.ron };
+    if (o.ron && !(proLevel(g, s) && greedDecline(g, s, o.ron, t, false))) return { seat: s, kind: 'ron', ev: o.ron };
   }
   for (let i = 1; i < 4; i++) {
     const s = (from + i) % 4; if (skip.includes(s)) continue;
@@ -368,6 +368,17 @@ function botClaims(g, from, t, skip = []) {
 
 /* ---- 高手電腦：算向聽數、看牌效率與場上形勢（鳴牌、已見牌），不亂打 ---- */
 RULES.BOT_LEVEL = 'easy';   // 'easy' | 'pro'；模擬時可用 g.botLv[seat] 逐家指定
+// 貪番（像真人一樣：牌山還長、手上已能胡時，放掉小胡，改做更大的牌）
+RULES.PRO_GREED = true;
+RULES.GREED_WALL = 56;   // 牌山至少剩這麼多張才肯放棄胡牌
+RULES.GREED_KEEP = 30;   // 目標做到一半，牌山剩不到這個數就放棄目標，回頭保底
+RULES.GREED_EV = 0.9;    // 預估期望值 ≥ 現有胡牌 × 這個比例，就賭一把
+let PRO_G = null;        // 目前這位高手的目標 {t:'pure'|'dui', su, fan, dv}，planList 會多算一條 'goal' 路線
+function proGoal(g, seat) {
+  const G = g.goal && g.goal[seat];
+  if (G && g.wall.length < RULES.GREED_KEEP) { g.goal[seat] = null; return null; }
+  return G || null;
+}
 function proLevel(g, seat) { return ((g.botLv && g.botLv[seat]) || RULES.BOT_LEVEL) === 'pro'; }
 const NK = ORDER.length;                                    // 30 種牌，順序同 ORDER：p1-9 s1-9 m1-9 z1-3
 const copiesIdx = i => i >= 27 ? 5 : (i % 9) + 1;           // 引擎編號 n 有 n 張
@@ -438,6 +449,15 @@ function planList(a, melds) {
     plans.push({ n: 'flush' + su, sh: shanten(mask(i => i >= 27 || Math.floor(i / 9) === su), need, 'normal'), b: 28 });
   }
   if (!melds.length) { let pr = 0; for (let i = 0; i < NK; i++) pr += a[i] >> 1; plans.push({ n: 'seven', sh: 6 - Math.min(7, pr), b: 28 }); }
+  if (PRO_G) {   // 目標路線：清一色（把字牌換掉）／對對（把順子換成刻子）；少了的牌每張要多摸一次
+    const su = PRO_G.su, pure = PRO_G.t === 'pure';
+    const ok = pure ? melds.every(m => m.tiles.every(t => t.s !== 'z' && ORD[t.s + 1] === su * 9)) : melds.every(m => m.type !== 'chow' && m.tiles.every(t => t.s === 'z' || ORD[t.s + 1] === su * 9));
+    if (ok) {
+      const mk = mask(i => (pure ? i < 27 : true) && (i >= 27 ? !pure : Math.floor(i / 9) === su));
+      const cnt = mk.reduce((x, y) => x + y, 0), pad = Math.max(0, 13 - 3 * melds.length - cnt);
+      plans.push({ n: 'goal', sh: shanten(mk, need, pure ? 'normal' : 'duidui') + pad, b: 60 });
+    }
+  }
   if (!plans.length) plans.push({ n: 'any', sh: shanten(a, need, 'normal') + 2, b: 0 });
   return plans;
 }
@@ -499,6 +519,7 @@ function dangerOf(g, seat, t, u, th) {
 }
 
 function proDiscard(g, seat) {
+  PRO_G = proGoal(g, seat);
   const h = g.hands[seat], melds = g.melds[seat];
   const a = arrOf(h), u = unseenArr(g, seat), th = threats(g, seat);
   const cands = [];
@@ -509,6 +530,19 @@ function proDiscard(g, seat) {
     const plans = planList(a, melds), sh = bestSh(plans);
     cands.push({ t, i, plans, sh });
     a[i]++;
+  }
+  if (PRO_G && !cands.some(c => c.plans.some(p => p.n === 'goal'))) { g.goal[seat] = null; PRO_G = null; return proDiscard(g, seat); }
+  if (PRO_G) {   // 有目標：以目標路線的向聽為主，同時盡量保住原本的聽牌（保底）
+    let bb = null, bsc = -1e9;
+    for (const c of cands) {
+      const gp = c.plans.find(p => p.n === 'goal'), gsh = gp ? gp.sh : 9;
+      const fsh = bestSh(c.plans.filter(p => p.n !== 'goal'));
+      if (fsh > 1) continue;
+      let sc = -100 * gsh - 70 * fsh - 6 * dangerOf(g, seat, c.t, u, th) - 0.15 * val(c.t) + Math.random() * 0.3;
+      if (gsh > 0) { a[c.i]--; sc += 1.2 * ukeire(a, melds, u, new Set(['goal']), gsh); a[c.i]++; }
+      if (sc > bsc) { bsc = sc; bb = c.t; }
+    }
+    if (bb) return bb;
   }
   const minSh = Math.min(...cands.map(c => c.sh));
   const mult = minSh <= 0 ? 0.45 : minSh === 1 ? 0.8 : 1.0;
@@ -531,8 +565,53 @@ function proDiscard(g, seat) {
   }
   return best || h[0];
 }
+// 要不要放掉這次胡牌？只在牌山還長、現在只是小胡、而且保得住聽牌時才考慮
+function greedDecline(g, seat, ev, tile, tsumo) {
+  if (!RULES.PRO_GREED || ev.fan > 4 || g.wall.length < RULES.GREED_WALL) return false;
+  const names = ev.items.map(i => i.name), has = n => names.includes(n);
+  if (has('天胡') || has('地胡') || has('人胡')) return false;
+  const melds = g.melds[seat], hand = tsumo ? g.hands[seat] : g.hands[seat].concat([tile]);
+  const suits = new Set(hand.concat(...melds.map(m => m.tiles)).filter(t => t.s !== 'z').map(t => t.s));
+  if (suits.size !== 1) return false;
+  const su = ORD[[...suits][0] + 1] / 9, hz = hand.filter(t => t.s === 'z').length;
+  const goals = [];
+  if (has('混一色') && !melds.some(m => m.tiles[0].s === 'z') && hz === 2) goals.push({ t: 'pure', su, fan: Math.min(6, ev.fan + 2), dv: 4 * hz });
+  if ((has('混一色') || has('清一色')) && !has('對對胡') && !has('七對子') && !has('平胡') && melds.every(m => m.type !== 'chow')) goals.push({ t: 'dui', su, fan: Math.min(6, ev.fan + 1), dv: 0 });
+  if (!goals.length) return false;
+  const u = unseenArr(g, seat), tot = u.reduce((x, y) => x + y, 0) || 1, W = g.wall.length;
+  let h = 0.03; for (let o = 0; o < 4; o++) if (o !== seat) h += (proLevel(g, o) ? 0.02 : 0.012) + 0.012 * g.melds[o].length;
+  let bestV = 0, bestG = null;
+  for (const G of goals) {
+    PRO_G = G;
+    let bd = null; const seen = new Set();
+    for (const d of hand) {
+      if (seen.has(d.k)) continue; seen.add(d.k);
+      const a = arrOf(hand); a[ORD[d.k]]--;
+      const pl = planList(a, melds), gp = pl.find(p => p.n === 'goal'); if (!gp) continue;
+      if (bestSh(pl.filter(p => p.n !== 'goal')) > 0) continue;   // 放掉後原本還要聽牌，保底
+      const outs = ukeire(a, melds, u, new Set(['goal']), gp.sh), sc = -100 * gp.sh + outs;
+      if (!bd || sc > bd.sc) bd = { sc, gsh: gp.sh, outs };
+    }
+    if (!bd) continue;
+    const q = Math.min(0.5, bd.outs / tot); if (q <= 0) continue;
+    const steps = bd.gsh + 1, N = Math.max(1, W / 4); let P = 1;
+    for (let i = 0; i < steps; i++) P *= q / (q + h) * (1 - Math.exp(-(q + h) * N / steps));
+    const v = P * (ev.tilePts + G.dv) * G.fan + (1 - P) * 0.35 * ev.points;
+    if (v > bestV) { bestV = v; bestG = G; }
+  }
+  PRO_G = null;
+  if (!bestG || bestV < RULES.GREED_EV * ev.points) return false;
+  g.goal = g.goal || [null, null, null, null]; g.goal[seat] = bestG;
+  g.declines = (g.declines || 0) + 1;
+  (g.greedLog = g.greedLog || []).push({ seat, goal: bestG.t, tsumo });
+  return true;
+}
 function proSelf(g, seat, opts) {
-  if (opts.win) return { win: true };
+  PRO_G = proGoal(g, seat);
+  if (opts.win) {
+    if (opts.noGreed || !greedDecline(g, seat, opts.win, g.lastDraw, true)) return { win: true };
+    return { discard: proDiscard(g, seat).id };   // 放掉這次自摸，繼續做大
+  }
   if (opts.kongs.length) return { kong: opts.kongs[0] };
   return { discard: proDiscard(g, seat).id };
 }
@@ -547,11 +626,19 @@ function afterClaimSh(g, seat, opt, t, kind) {
   return best;
 }
 function curSh(g, seat) { return bestSh(planList(arrOf(g.hands[seat]), g.melds[seat])); }
+function goalAllows(kind, tiles) {
+  if (!PRO_G) return true;
+  const su = PRO_G.su, pure = PRO_G.t === 'pure';
+  if (!pure && kind === 'chow') return false;
+  return tiles.every(x => x.s === 'z' ? !pure : ORD[x.s + 1] === su * 9);
+}
 function proClaimKind(g, seat, t, list, kind) {
+  PRO_G = proGoal(g, seat);
   if (!list.length) return null;
   const cur = curSh(g, seat); if (cur <= 0) return null;       // 已聽牌：保住門清，不鳴
   let best = null, bs = cur;
   for (const o of list) {
+    if (!goalAllows(kind, [...o.tiles, t])) continue;
     const sh = afterClaimSh(g, seat, o, t, kind);
     const dragon = t.s === 'z';
     if (sh < bs || (sh === cur && dragon && !best && cur >= 1 && kind !== 'chow')) { bs = Math.min(bs, sh); best = o; }
@@ -590,4 +677,4 @@ function simGame(levels) {
   }
   return { draw: true, g };
 }
-if (typeof module !== 'undefined') module.exports = { RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
+if (typeof module !== 'undefined') module.exports = { greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
