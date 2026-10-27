@@ -150,7 +150,6 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 .tile.sel.clk:hover{transform:translateY(-.8em)}
 .tile.clk::before{content:"";position:absolute;left:-.12em;right:-.12em;top:100%;height:.6em}
 .tile.sel{transform:translateY(-.8em);outline:2px solid var(--gold);outline-offset:1px}
-.tile.dim{opacity:.55}
 .tile.down{background:repeating-linear-gradient(45deg,var(--jade) 0 .35em,#2f8660 .35em .7em)!important;border-color:var(--jade-d)!important;box-shadow:none}.tile.down>*{visibility:hidden}
 #hand{display:flex;flex-wrap:wrap;gap:21px 3px;align-items:flex-end;padding:6px 0 22px}
 #hand .tile{--u:clamp(11px,calc((100vw - 40px) / 52),16px)}
@@ -1173,7 +1172,6 @@ function meldEl(m, size, reveal) {
   const hide = m.type === 'kong' && !m.open && m.tiles.length >= 4 && !reveal;   // 暗槓：兩端兩張翻面（日式）
   (m.type === 'chow' ? m.tiles.slice().reverse() : m.tiles).forEach((t, i, arr) => {
     const e = tileEl(t, { [size]: true });
-    if (!m.open) e.classList.add('dim');
     if (hide && (i === 0 || i === arr.length - 1)) e.classList.add('down');
     if (m.mixed && t.id === m.claimed) { e.style.opacity = .6; e.querySelector('.v')?.remove(); }
     w.appendChild(e);
