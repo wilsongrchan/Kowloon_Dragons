@@ -2334,7 +2334,7 @@ function humanSelf(opts) {
       opts.kongs.forEach(k => {
         const nm = kn(k.k);
         addAction(L((k.big ? '大槓 ' : '槓 ') + nm + (k.kind === 'add' ? '（加槓）' : '（暗槓）'),
-          (k.big ? 'Grand Kong ' : 'Kong ') + nm + (k.kind === 'add' ? ' (add to Pung)' : ' (concealed)')), done({ Kong: k }));
+          (k.big ? 'Grand Kong ' : 'Kong ') + nm + (k.kind === 'add' ? ' (add to Pung)' : ' (concealed)')), done({ kong: k }));
       });
       setStatus(() => L('輪到你：選一張牌，再按「<b>打出</b>」。', 'Your turn: select a tile, then press <b>Discard</b>.'));
     };
