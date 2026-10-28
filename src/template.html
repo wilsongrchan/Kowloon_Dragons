@@ -647,6 +647,7 @@ const L = (zh, en) => LANG === 'en' ? en : LANG === 'ja' ? jaT(zh) : zh;
 const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Downstream', 'Across', 'Upstream'], ja: SEAT_JA };
 const NAMES = new Proxy({}, { get: (_, i) => SEAT[LANG][i] });
 /* ===== 線上房間狀態 / online room state (PeerJS, host-authoritative) ===== */
+let BOTP = [0, 1, 2, 3].map(() => pickPersona());
 const ROOM = { mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, afk: {}, seen: {}, rid: 0, handNo: 0, started: false, myName: '', conn: null, msg: '', ready: [true, false, false, false], tc: null, bank: [0, 0, 0, 0], zooming: false };
 const CLK = { banks: [0, 0, 0, 0], act: {} };
 { const lb = $('#lobby'); lb.open = false; lb.showModal = () => { lb.hidden = false; lb.open = true; }; lb.close = () => { lb.hidden = true; lb.open = false; }; }
@@ -1642,7 +1643,7 @@ const recOn = () => PREF.recOn === 'on' && ROOM.mode === 'solo';
 const recLoad = () => { try { return JSON.parse(localStorage.getItem(REC.key) || '[]'); } catch (e) { return []; } };
 function recStart() {
   REC.cur = null; if (!recOn()) return;
-  REC.cur = { t: Date.now(), bot: PREF.botLvl, dealer, scores: scores.slice(), hands: G.hands.map(h => h.map(t => t.k)), wall: G.wall.map(t => t.k), acts: [] };
+  REC.cur = { t: Date.now(), bot: PREF.botLvl, dealer, scores: scores.slice(), persona: G.persona0.map(p => p.label), hands: G.hands.map(h => h.map(t => t.k)), wall: G.wall.map(t => t.k), acts: [] };
 }
 const recAct = o => { if (REC.cur) REC.cur.acts.push(o); };
 function recEnd(res) {
@@ -1683,7 +1684,7 @@ function flushGreedLog() {
 async function play() {
   const my = ++runId; ROOM.handNo++;
   if (isHost() && ROOM.tc) { ROOM.bank = [0, 1, 2, 3].map(() => ROOM.tc.a); const m = { t: 'clk', reset: true, banks: ROOM.bank.slice() }; clkApply(m); bcast(m); }
-  G = newGame(dealer); G.turn = dealer; HIST = [0, 1, 2, 3].map(s => [handPts(s)]); UI.viewTable = false; UI.locks = []; UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
+  G = newGame(dealer); G.turn = dealer; G.persona = BOTP.slice(); G.persona0 = G.persona.slice(); HIST = [0, 1, 2, 3].map(s => [handPts(s)]); UI.viewTable = false; UI.locks = []; UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
   LOGS.length = 0; renderLog(); clearActions(); recStart();
   $('#result').close?.(); render();
   const dl = dealer; log(() => L(`新局，${WHO[dl]}做莊。`, !online() && dl === 0 ? 'New hand. You deal.' : `New hand. ${WHO[dl]} deals.`));
@@ -2152,7 +2153,7 @@ function sendLobby() {
 }
 function startGame() {
   if (!isHost() || !allReady()) return;
-  ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0;
+  ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0; BOTP = [0, 1, 2, 3].map(() => pickPersona());   // 電腦的性格：一場不變，離開再進來才重抽
   dragonZoom(() => { $('#lobby').close(); updateOnlineBtn(); play(); }); sendLobby();
 }
 const allReady = () => ROOM.kind.slice(1).every((k, i) => k === 'bot' || (k === 'human' && ROOM.ready[i + 1]));

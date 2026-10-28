@@ -854,6 +854,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
 function newGame(dealer = 0) {
   const g = { wall: shuffle(makeDeck()), hands: [[], [], [], []], melds: [[], [], [], []], discards: [[], [], [], []], dealer, last: null, over: null, drawN: [0, 0, 0, 0], discardN: 0, calls: 0 };
   for (let r = 0; r < 13; r++) for (let s = 0; s < 4; s++) g.hands[s].push(g.wall.pop());
+  g.persona = g.hands.map(() => pickPersona()); g.persona0 = g.persona.slice();
   return g;
 }
 function drawTile(g, seat, replacement) {
@@ -1006,6 +1007,69 @@ RULES.PRO_GREED = true;
 RULES.GREED_WALL = 56;   // 牌山至少剩這麼多張才肯放棄胡牌
 RULES.GREED_KEEP = 30;   // 目標做到一半，牌山剩不到這個數就放棄目標，回頭保底
 RULES.GREED_EV = 0.9;    // 預估期望值 ≥ 現有胡牌 × 這個比例，就賭一把
+/* ---- 高手電腦的「性格」：每位電腦開局依手牌隨機組合幾個特點（可疊加），不是個個都像同一個人 ----
+   routes：偏好的路線（番數加成 ×2.5；其他路線在還差 2 步以上時多算 1 步，前期會往偏好走）
+   pung：'any' 能碰就碰／'dragon' 只碰三元／預設 看向聽數；chow：'never' 不吃／'often' 愛吃
+   def：防守程度（<1 莽、>1 謹慎）；bon：番數加成權重（小＝求快、大＝求大）
+   一場遊戲開始時每位電腦挑一次，整場不變（重新整理或離開再回來才重抽）；
+   偏好的路線比最近的路線慢 3 步以上就放棄路線（轉向，只限這一手），其餘特點照舊。 */
+RULES.PERSONA = true;
+const ROUTE_ZH = { twosuit: '缺一門', nosmall: '斷小字', flush: '一色', duidui: '對對', dragon: '三元', closed: '門清', seven: '七對', pinfu: '平胡' };
+function mkPersona(o) {
+  const P = Object.assign({ routes: [], pung: null, chow: null, def: 1, bon: 0.4 }, o);
+  const tags = P.routes.map(r => ROUTE_ZH[r]);
+  if (P.pung === 'any') tags.push('愛碰'); if (P.pung === 'dragon') tags.push('只碰三元');
+  if (P.chow === 'never') tags.push('不吃'); if (P.chow === 'often') tags.push('愛吃');
+  if (P.def < 1) tags.push('莽'); if (P.def > 1) tags.push('謹慎');
+  if (P.bon < 0.3) tags.push('求快'); if (P.bon > 0.5) tags.push('求大');
+  P.label = tags.join('・') || '均衡';
+  return P;
+}
+const PERSONA_BAL = mkPersona({});
+function pickPersona() {   // 開局（一場）挑一次，之後整場不變；每手牌的路線若不合手牌會自己轉向
+  if (!RULES.PERSONA) return PERSONA_BAL;
+  const R = Math.random;
+  const fit = { nosmall: 0.2, flush: 0.18, duidui: 0.14, dragon: 0.14, closed: 0.16, seven: 0.05, pinfu: 0.12 };
+  let routes = Object.keys(fit).filter(k => R() < fit[k]);
+  if (routes.includes('closed')) routes = routes.filter(r => r !== 'duidui' && r !== 'dragon');
+  if (routes.length > 3) routes = routes.sort(() => R() - 0.5).slice(0, 3);
+  const closed = routes.includes('closed');
+  const pr = R(), cr = R(), dr = R(), br = R();
+  return mkPersona({
+    routes,
+    pung: closed ? null : pr < 0.22 ? 'any' : pr < 0.32 ? 'dragon' : null,
+    chow: cr < 0.12 ? 'never' : cr < 0.27 && !closed ? 'often' : null,
+    def: dr < 0.22 ? 0.5 : dr < 0.47 ? 1.6 : 1,
+    bon: br < 0.25 ? 0.2 : br < 0.5 ? 0.7 : 0.4,
+  });
+}
+let PRO_P = null;        // 目前這位電腦的性格（planList 會依此調整各路線）
+function applyPersona(plans, a, melds) {
+  const P = PRO_P; if (!P || !P.routes.length) return;
+  let su = -1;
+  if (P.routes.includes('flush')) {   // 主花色：手牌＋鳴牌裡最多的一門
+    const cnt = [0, 0, 0]; for (let i = 0; i < 27; i++) cnt[Math.floor(i / 9)] += a[i];
+    melds.forEach(m => m.tiles.forEach(t => { if (t.s !== 'z') cnt[ORD[t.s + 1] / 9]++; }));
+    su = cnt.indexOf(Math.max(...cnt));
+    // 一色＋對對疊加：同花色全刻子的專用路線
+    if (P.routes.includes('duidui') && melds.every(m => m.type !== 'chow' && m.tiles.every(t => t.s === 'z' || ORD[t.s + 1] === su * 9))) {
+      const mk = a.map((v, i) => (i >= 27 || Math.floor(i / 9) === su) ? v : 0), cnt2 = mk.reduce((x, y) => x + y, 0);
+      plans.push({ n: 'fdui', sh: shanten(mk, 4 - melds.length, 'duidui') + Math.max(0, 13 - 3 * melds.length - cnt2), b: 60 });
+    }
+  }
+  if (P.routes.includes('twosuit')) {   // 缺一門（沒有三元）：只用手牌＋鳴牌裡最多的兩門
+    const cnt = [0, 0, 0]; for (let i = 0; i < 27; i++) cnt[Math.floor(i / 9)] += a[i];
+    melds.forEach(m => m.tiles.forEach(t => { if (t.s !== 'z') cnt[ORD[t.s + 1] / 9]++; }));
+    const out = cnt.indexOf(Math.min(...cnt));
+    if (!melds.some(m => m.tiles.some(t => t.s === 'z' || ORD[t.s + 1] === out * 9))) plans.push({ n: 'twosuit', sh: shanten(a.map((v, i) => (i < 27 && Math.floor(i / 9) !== out) ? v : 0), 4 - melds.length, 'normal'), b: 14 });
+  }
+  for (const p of plans) {
+    if (p.n === 'goal' || p.n === 'any') continue;
+    const fav = p.n === 'fdui' || P.routes.includes(p.n) || (p.n.startsWith('flush') && +p.n.slice(5) === su);
+    if (fav) p.b *= 2.5; else if (p.sh >= 2) p.sh += 1;
+  }
+}
+function personaOf(g, seat) { return (g.persona && g.persona[seat]) || PERSONA_BAL; }
 let PRO_G = null;        // 目前這位高手的目標 {t:'pure'|'dui', su, fan, dv}，planList 會多算一條 'goal' 路線
 function proGoal(g, seat) {
   const G = g.goal && g.goal[seat];
@@ -1092,6 +1156,7 @@ function planList(a, melds) {
     }
   }
   if (!plans.length) plans.push({ n: 'any', sh: shanten(a, need, 'normal') + 2, b: 0 });
+  applyPersona(plans, a, melds);
   return plans;
 }
 const bestSh = plans => plans.reduce((m, p) => Math.min(m, p.sh), 99);
@@ -1152,8 +1217,19 @@ function dangerOf(g, seat, t, u, th) {
 }
 
 function proDiscard(g, seat) {
-  PRO_G = proGoal(g, seat);
+  PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   const h = g.hands[seat], melds = g.melds[seat];
+  if (PRO_P.routes.length) {   // 轉向：偏好的路線比最近的路線慢 3 步以上，就改走手牌現在最順的路線，並換掉會衝突的習慣
+    PRO_P = null; const pl = planList(arrOf(h), melds); PRO_P = personaOf(g, seat);
+    const fav = pl.filter(p => PRO_P.routes.includes(p.n) || (PRO_P.routes.includes('flush') && p.n.startsWith('flush')));
+    if (!fav.length || bestSh(fav) - bestSh(pl) >= 3) {
+      const top = pl.filter(p => p.n !== 'any' && p.n !== 'goal').sort((x, y) => (x.sh - y.sh) || (y.b - x.b))[0];
+      const nm = top ? (top.n.startsWith('flush') ? 'flush' : top.n) : null, o = { routes: nm ? [nm] : [] };
+      if (nm === 'pinfu') { o.routes.push('twosuit'); o.pung = null; o.chow = 'often'; }      // 全順子：不碰、多吃，順便缺一門（反正沒有三元）
+      if (nm === 'duidui' || nm === 'dragon' || nm === 'seven') { o.chow = 'never'; if (nm !== 'seven' && !PRO_P.pung) o.pung = 'any'; }
+      g.persona[seat] = PRO_P = mkPersona(Object.assign({}, PRO_P, o)); (g.pivots = g.pivots || []).push({ seat, to: nm });
+    }
+  }
   const a = arrOf(h), u = unseenArr(g, seat), th = threats(g, seat);
   const cands = [];
   const seenKey = new Set();
@@ -1191,8 +1267,8 @@ function proDiscard(g, seat) {
     }
     a[c.i]++;
     let bonus = 0; for (const p of c.plans) if (p.sh <= c.sh + 1) bonus = Math.max(bonus, p.b - 10 * (p.sh - c.sh));
-    sc += bonus * (RULES.PRO_BONUS == null ? 0.4 : RULES.PRO_BONUS);
-    sc -= 6 * mult * dangerOf(g, seat, c.t, u, th);
+    sc += bonus * (RULES.PRO_BONUS == null ? PRO_P.bon : RULES.PRO_BONUS * PRO_P.bon / 0.4);
+    sc -= 6 * mult * PRO_P.def * dangerOf(g, seat, c.t, u, th);
     sc -= 0.15 * val(c.t) + Math.random() * 0.3;
     if (sc > bs) { bs = sc; best = c.t; }
   }
@@ -1201,6 +1277,7 @@ function proDiscard(g, seat) {
 // 要不要放掉這次胡牌？只在牌山還長、現在只是小胡、而且保得住聽牌時才考慮
 function greedDecline(g, seat, ev, tile, tsumo) {
   if (!RULES.PRO_GREED || ev.fan > 4 || g.wall.length < RULES.GREED_WALL) return false;
+  PRO_P = personaOf(g, seat);
   const names = ev.items.map(i => i.name), has = n => names.includes(n);
   if (has('天胡') || has('地胡') || has('人胡')) return false;
   const melds = g.melds[seat], hand = tsumo ? g.hands[seat] : g.hands[seat].concat([tile]);
@@ -1266,17 +1343,37 @@ function goalAllows(kind, tiles) {
   return tiles.every(x => x.s === 'z' ? !pure : ORD[x.s + 1] === su * 9);
 }
 function proClaimKind(g, seat, t, list, kind) {
-  PRO_G = proGoal(g, seat);
+  PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   if (!list.length) return null;
   const cur = curSh(g, seat); if (cur <= 0) return null;       // 已聽牌：保住門清，不鳴
+  let P = PRO_P; const closed = P.routes.includes('closed');
+  if (P.pung || P.chow) {   // 習慣要讓位給手牌現在的方向：全順子就別碰、多吃；全刻子就別吃
+    PRO_P = null; const pl = planList(arrOf(g.hands[seat]), g.melds[seat]); PRO_P = P;
+    const m = bestSh(pl), at = new Set(pl.filter(p => p.sh === m).map(p => p.n));
+    const tri = at.has('duidui') || at.has('dragon') || at.has('seven');
+    if (at.has('pinfu') && !tri) P = Object.assign({}, P, { pung: null, chow: P.chow === 'never' ? null : 'often' });
+    else if (tri && !at.has('pinfu')) P = Object.assign({}, P, { chow: 'never' });
+  }
+  if (closed && g.wall.length >= 45) return null;               // 門清派：前期不鳴牌，後段才鬆口
+  if (kind === 'chow' && P.chow === 'never') return null;
+  if (kind !== 'chow' && P.pung === 'dragon' && t.s !== 'z') return null;
   let best = null, bs = cur;
+  const su = P.routes.includes('flush') ? flushSuit(g, seat) : -1;
   for (const o of list) {
     if (!goalAllows(kind, [...o.tiles, t])) continue;
+    if (su >= 0 && [...o.tiles, t].some(x => x.s !== 'z' && ORD[x.s + 1] !== su * 9)) continue;   // 一色派只鳴主花色／字牌
+    if (P.routes.includes('duidui') && kind === 'chow' && su >= 0) continue;
     const sh = afterClaimSh(g, seat, o, t, kind);
     const dragon = t.s === 'z';
-    if (sh < bs || (sh === cur && dragon && !best && cur >= 1 && kind !== 'chow')) { bs = Math.min(bs, sh); best = o; }
+    const loose = cur >= 1 && sh <= cur && ((kind !== 'chow' && (P.pung === 'any' || P.pung === 'dragon')) || (kind === 'chow' && P.chow === 'often'));   // 愛碰／愛吃：不退步就鳴
+    if (sh < bs || (sh === cur && ((dragon && !best && cur >= 1 && kind !== 'chow') || (loose && !best)))) { bs = Math.min(bs, sh); best = o; }
   }
   return best ? { seat, kind, opt: best } : null;
+}
+function flushSuit(g, seat) {
+  const cnt = [0, 0, 0]; g.hands[seat].forEach(t => { if (t.s !== 'z') cnt[ORD[t.s + 1] / 9]++; });
+  g.melds[seat].forEach(m => m.tiles.forEach(t => { if (t.s !== 'z') cnt[ORD[t.s + 1] / 9]++; }));
+  return cnt.indexOf(Math.max(...cnt));
 }
 function proClaim(g, seat, from, t, o) {
   const k = proClaimKind(g, seat, t, o.kong, 'kong'); if (k) return k;
@@ -1288,8 +1385,9 @@ function botDiscard(g, seat) { return proLevel(g, seat) ? proDiscard(g, seat) : 
 function botSelf(g, seat, opts) { return proLevel(g, seat) ? proSelf(g, seat, opts) : easySelf(g, seat, opts); }
 
 /* ---- headless simulation (all four seats are bots) ---- */
-function simGame(levels) {
+function simGame(levels, personas) {
   const g = newGame(0); if (levels) g.botLv = levels;
+  if (personas) { g.persona = personas.map((k, i) => k ? (typeof k === 'string' ? PERSONA_BAL : mkPersona(k)) : g.persona[i]); g.persona0 = g.persona.slice(); }
   let seat = 0, rep = false, needDraw = true, guard = 0;
   while (guard++ < 2000) {
     if (needDraw) { if (!drawTile(g, seat, rep)) return { draw: true, g }; }
@@ -1310,7 +1408,7 @@ function simGame(levels) {
   }
   return { draw: true, g };
 }
-if (false) module.exports = { greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
+if (false) module.exports = { mkPersona, pickPersona, greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
 
 
 /* ===== UI ===== */
@@ -1469,6 +1567,7 @@ const L = (zh, en) => LANG === 'en' ? en : LANG === 'ja' ? jaT(zh) : zh;
 const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Downstream', 'Across', 'Upstream'], ja: SEAT_JA };
 const NAMES = new Proxy({}, { get: (_, i) => SEAT[LANG][i] });
 /* ===== 線上房間狀態 / online room state (PeerJS, host-authoritative) ===== */
+let BOTP = [0, 1, 2, 3].map(() => pickPersona());
 const ROOM = { mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, afk: {}, seen: {}, rid: 0, handNo: 0, started: false, myName: '', conn: null, msg: '', ready: [true, false, false, false], tc: null, bank: [0, 0, 0, 0], zooming: false };
 const CLK = { banks: [0, 0, 0, 0], act: {} };
 { const lb = $('#lobby'); lb.open = false; lb.showModal = () => { lb.hidden = false; lb.open = true; }; lb.close = () => { lb.hidden = true; lb.open = false; }; }
@@ -2464,7 +2563,7 @@ const recOn = () => PREF.recOn === 'on' && ROOM.mode === 'solo';
 const recLoad = () => { try { return JSON.parse(localStorage.getItem(REC.key) || '[]'); } catch (e) { return []; } };
 function recStart() {
   REC.cur = null; if (!recOn()) return;
-  REC.cur = { t: Date.now(), bot: PREF.botLvl, dealer, scores: scores.slice(), hands: G.hands.map(h => h.map(t => t.k)), wall: G.wall.map(t => t.k), acts: [] };
+  REC.cur = { t: Date.now(), bot: PREF.botLvl, dealer, scores: scores.slice(), persona: G.persona0.map(p => p.label), hands: G.hands.map(h => h.map(t => t.k)), wall: G.wall.map(t => t.k), acts: [] };
 }
 const recAct = o => { if (REC.cur) REC.cur.acts.push(o); };
 function recEnd(res) {
@@ -2505,7 +2604,7 @@ function flushGreedLog() {
 async function play() {
   const my = ++runId; ROOM.handNo++;
   if (isHost() && ROOM.tc) { ROOM.bank = [0, 1, 2, 3].map(() => ROOM.tc.a); const m = { t: 'clk', reset: true, banks: ROOM.bank.slice() }; clkApply(m); bcast(m); }
-  G = newGame(dealer); G.turn = dealer; HIST = [0, 1, 2, 3].map(s => [handPts(s)]); UI.viewTable = false; UI.locks = []; UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
+  G = newGame(dealer); G.turn = dealer; G.persona = BOTP.slice(); G.persona0 = G.persona.slice(); HIST = [0, 1, 2, 3].map(s => [handPts(s)]); UI.viewTable = false; UI.locks = []; UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
   LOGS.length = 0; renderLog(); clearActions(); recStart();
   $('#result').close?.(); render();
   const dl = dealer; log(() => L(`新局，${WHO[dl]}做莊。`, !online() && dl === 0 ? 'New hand. You deal.' : `New hand. ${WHO[dl]} deals.`));
@@ -2974,7 +3073,7 @@ function sendLobby() {
 }
 function startGame() {
   if (!isHost() || !allReady()) return;
-  ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0;
+  ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0; BOTP = [0, 1, 2, 3].map(() => pickPersona());   // 電腦的性格：一場不變，離開再進來才重抽
   dragonZoom(() => { $('#lobby').close(); updateOnlineBtn(); play(); }); sendLobby();
 }
 const allReady = () => ROOM.kind.slice(1).every((k, i) => k === 'bot' || (k === 'human' && ROOM.ready[i + 1]));
