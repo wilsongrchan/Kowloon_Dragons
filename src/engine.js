@@ -16,7 +16,7 @@ const ORD = {}; ORDER.forEach((k, i) => ORD[k] = i);
 const tname = t => t.s === 'z' ? HON[t.n] : NUM[t.n] + SUITN[t.s];
 const val = t => t.s === 'z' ? 0 : 10 - t.n;
 const SORT_SUIT = { p: 0, m: 1, s: 2, z: 3 };   // 手牌顯示順序：藍筒、紅萬、綠索、三元（只影響排序，不動引擎的 ORD）
-const sortTiles = a => a.slice().sort((x, y) => (SORT_SUIT[x.s] - SORT_SUIT[y.s]) || (x.n - y.n) || x.id - y.id);
+const sortTiles = a => a.slice().sort((x, y) => (SORT_SUIT[x.s] - SORT_SUIT[y.s]) || (ORD[x.k] - ORD[y.k]) || x.id - y.id);
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function makeDeck() {
   let id = 0; const d = [];
