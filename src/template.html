@@ -1390,7 +1390,7 @@ $('#mixBtn').onclick = () => {
 function seqTiles(a) {
   const out = [], by = {};
   sortTiles(a).forEach(t => (by[t.s] = by[t.s] || []).push(t));
-  for (const sx of ['p', 's', 'm', 'z']) {
+  for (const sx of ['p', 'm', 's', 'z']) {
     let ts = by[sx] || []; if (!ts.length) continue;
     if (sx === 'z') { out.push(...ts); continue; }
     const left = [];
