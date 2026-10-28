@@ -1780,7 +1780,7 @@ function handRow(seat, who, res) {
   const r = document.createElement('div'); r.className = 'rvrow' + (win ? ' wn' : '');
   if (G.melds[seat].length) {
     const mb = document.createElement('div'); mb.className = 'rvm'; mb.dataset.l = L('已鳴', 'Declared');
-    G.melds[seat].forEach(m => mb.appendChild(meldEl(m, 'sm', true))); r.appendChild(mb);
+    G.melds[seat].forEach(m => mb.appendChild(meldEl(m, 'sm'))); r.appendChild(mb);
   }
   const mark = t => { const e = tileEl(t, { sm: true }); if (win && t.id === res.winId) { e.classList.add('wintile'); e.dataset.w = L('胡', 'Win'); } return e; };
   const groups = win ? winGroups(seat, res) : null;
