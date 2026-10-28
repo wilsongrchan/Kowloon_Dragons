@@ -1705,6 +1705,7 @@ async function play() {
     const tAsk = performance.now();
     act = await askSelf(seat, opts, drew ? t0 : null);
     if (!alive()) return;
+    if (!act || (!act.win && !act.kong && act.discard == null)) act = botSelf(G, seat, Object.assign({ noGreed: true }, opts));   // 保險：收到不認得的動作就讓電腦代打，不要卡死
     const askMs = ROOM.kind[seat] === 'host' ? Math.round(performance.now() - tAsk) : undefined;
     flushGreedLog();
     if (act.win) { recAct({ s: seat, a: 'win', tsumo: true, ms: askMs }); const wr = winResult(G, seat, true, null, opts.win); wr.winId = G.lastDraw.id; finish(wr); return; }
