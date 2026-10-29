@@ -1015,9 +1015,11 @@ RULES.GREED_EV = 0.9;    // 預估期望值 ≥ 現有胡牌 × 這個比例，�
    一場遊戲開始時每位電腦挑一次，整場不變（重新整理或離開再回來才重抽）；
    偏好的路線比最近的路線慢 3 步以上就放棄路線（轉向，只限這一手），其餘特點照舊。 */
 RULES.PERSONA = true;
+RULES.DEF_W = /*DEFW*/{"t": [-5.4466, 0.8031, 1.1623, 1.4475, 0.5785, 3.5944, -3.2035, 1.3889, 0.8955, -0.6498, -0.1408, 1.4314, 3.0034, 3.4279, 1.266, 0.6937], "w": [-2.7808, -0.1445, 0.0201, 0.0426, 0.088, -0.3295, -0.8736, -2.4204, -0.1385, -0.0412, -0.0886, -0.0024, -2.0787, -0.5551, -3.1467, 0.483, 3.03, 2.2139, 0.5133, 2.1115, 0.811, 0.7923, 0.6608, 0.3079]}/*ENDDEFW*/;      // 學習式防守的係數 {t:[...], w:[...]}（由 scripts/train_defense.py 產生）
+RULES.DEF_ML = 12;       // 學習式危險度的尺度（讓它和舊 dangerOf 的數量級相近）
 const ROUTE_ZH = { twosuit: '缺一門', nosmall: '斷小字', flush: '一色', duidui: '對對', dragon: '三元', closed: '門清', seven: '七對', pinfu: '平胡' };
 function mkPersona(o) {
-  const P = Object.assign({ routes: [], pung: null, chow: null, def: 1, bon: 0.4 }, o);
+  const P = Object.assign({ routes: [], pung: null, chow: null, def: 1, bon: 0.4, fast: false, vw: 0.15, uw: 1.5, dw: 8, ml: true }, o);
   const tags = P.routes.map(r => ROUTE_ZH[r]);
   if (P.pung === 'any') tags.push('愛碰'); if (P.pung === 'dragon') tags.push('只碰三元');
   if (P.chow === 'never') tags.push('不吃'); if (P.chow === 'often') tags.push('愛吃');
@@ -1042,6 +1044,7 @@ function pickPersona() {   // 開局（一場）挑一次，之後整場不變�
     chow: cr < 0.12 ? 'never' : cr < 0.27 && !closed ? 'often' : null,
     def: dr < 0.22 ? 0.5 : dr < 0.47 ? 1.6 : 1,
     bon: br < 0.25 ? 0.2 : br < 0.5 ? 0.7 : 0.4,
+    fast: br < 0.25,   // 求快：能鳴就鳴、有胡就胡，不放棄小胡
   });
 }
 let PRO_P = null;        // 目前這位電腦的性格（planList 會依此調整各路線）
@@ -1217,6 +1220,49 @@ function dangerOf(g, seat, t, u, th) {
   return tot;
 }
 
+/* ---- 學習式防守：P(對手 o 聽牌) × P(他聽的是 t)，係數由自我對戰的資料訓練（scripts/train_defense.py） ---- */
+const NUMCLS = t => t.s === 'z' ? 3 : t.n >= 7 ? 0 : t.n >= 4 ? 1 : 2;   // 0 小字(顯示1-3) 1 中字(4-6) 2 大字(7-9) 3 三元
+function lastDisc(g, o, n) { const d = g.discards[o]; return d.slice(Math.max(0, d.length - n)); }
+function defFeatT(g, o) {   // 對手 o 現在聽牌的機率用的特徵（只用公開資訊）
+  const ms = g.melds[o], prog = 1 - g.wall.length / 98, nm = Math.min(4, ms.length), last = lastDisc(g, o, 4), f = [1];
+  for (let k = 1; k <= 4; k++) f.push(nm === k ? 1 : 0);
+  f.push(prog, prog * prog, g.discards[o].length / 20, ms.filter(m => m.tiles[0].s === 'z').length, ms.filter(m => m.type === 'kong').length, nm * prog, nm === 0 ? prog : 0);
+  for (let c = 0; c < 4; c++) f.push(last.filter(t => NUMCLS(t) === c).length / 4);
+  return f;
+}
+function defFeatW(g, d, o, t, u) {   // 對手 o（已聽牌）聽 t 的機率用的特徵
+  const ms = g.melds[o], prog = 1 - g.wall.length / 98, c = NUMCLS(t), i = ORD[t.k], dd = g.discards[o], f = [1];
+  f.push(u[i] / 5);
+  for (let k = 0; k < 4; k++) f.push(c === k ? 1 : 0);
+  f.push(t.s === 'z' ? 0 : (10 - t.n) / 9);
+  f.push(Math.min(2, dd.filter(x => x.k === t.k).length));
+  let n1 = 0, n2 = 0; if (t.s !== 'z') for (const x of dd) if (x.s === t.s) { const df = Math.abs(x.n - t.n); if (df === 1) n1++; else if (df === 2) n2++; }
+  f.push(Math.min(3, n1), Math.min(3, n2));
+  const sm = ms.flatMap(m => m.tiles).filter(x => x.s !== 'z'), suits = new Set(sm.map(x => x.s));
+  f.push(t.s !== 'z' && suits.size === 1 && suits.has(t.s) ? 1 : 0, t.s !== 'z' && suits.size >= 1 && !suits.has(t.s) ? 1 : 0);
+  f.push(t.s === 'z' && ms.some(m => m.tiles[0].s === 'z') ? 1 : 0, ms.some(m => m.tiles.some(x => x.k === t.k)) ? 1 : 0);
+  let all = 0; for (const x of g.discards.flat()) if (x.k === t.k) all++;
+  f.push(Math.min(5, all) / 5);
+  let nb = 0; if (t.s !== 'z') { if (i % 9 > 0) nb += u[i - 1]; if (i % 9 < 8) nb += u[i + 1]; }
+  f.push(nb / 10);
+  for (let k = 0; k < 4; k++) f.push(c === k ? prog : 0);
+  for (let k = 0; k < 4; k++) f.push(c === k ? Math.min(4, ms.length) / 4 : 0);
+  return f;
+}
+const sigm = x => 1 / (1 + Math.exp(-x));
+const dotf = (w, f) => { let s = 0; for (let i = 0; i < f.length; i++) s += w[i] * f[i]; return s; };
+// 以學到的模型算「打出 t 被 o 胡」的機率；沒有模型時回傳 null（改用舊的 dangerOf）
+function dangerML(g, d, t, u) {
+  const W = RULES.DEF_W; if (!W) return null;
+  const i = ORD[t.k]; if (u[i] <= 0) return 0;
+  let tot = 0;
+  for (let o = 0; o < 4; o++) {
+    if (o === d) continue;
+    const pT = sigm(dotf(W.t, defFeatT(g, o))); if (pT < 0.002) continue;
+    tot += pT * sigm(dotf(W.w, defFeatW(g, d, o, t, u)));
+  }
+  return tot;
+}
 function proDiscard(g, seat) {
   PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   const h = g.hands[seat], melds = g.melds[seat];
@@ -1264,13 +1310,13 @@ function proDiscard(g, seat) {
     a[c.i]--;
     if (c.sh === minSh) {
       const act = new Set(c.plans.filter(p => p.sh === c.sh).map(p => p.n));
-      sc += 1.5 * ukeire(a, melds, u, act, c.sh);
+      sc += PRO_P.uw * ukeire(a, melds, u, act, c.sh);
     }
     a[c.i]++;
     let bonus = 0; for (const p of c.plans) if (p.sh <= c.sh + 1) bonus = Math.max(bonus, p.b - 10 * (p.sh - c.sh));
     sc += bonus * (RULES.PRO_BONUS == null ? PRO_P.bon : RULES.PRO_BONUS * PRO_P.bon / 0.4);
-    sc -= 6 * mult * PRO_P.def * dangerOf(g, seat, c.t, u, th);
-    sc -= 0.15 * val(c.t) + Math.random() * 0.3;
+    sc -= PRO_P.dw * mult * PRO_P.def * (PRO_P.ml && RULES.DEF_W ? RULES.DEF_ML * dangerML(g, seat, c.t, u) : dangerOf(g, seat, c.t, u, th));
+    sc -= PRO_P.vw * val(c.t) + Math.random() * 0.3;
     if (sc > bs) { bs = sc; best = c.t; }
   }
   return best || h[0];
@@ -1278,7 +1324,7 @@ function proDiscard(g, seat) {
 // 要不要放掉這次胡牌？只在牌山還長、現在只是小胡、而且保得住聽牌時才考慮
 function greedDecline(g, seat, ev, tile, tsumo) {
   if (!RULES.PRO_GREED || ev.fan > 4 || g.wall.length < RULES.GREED_WALL) return false;
-  PRO_P = personaOf(g, seat);
+  PRO_P = personaOf(g, seat); if (PRO_P.fast) return false;
   const names = ev.items.map(i => i.name), has = n => names.includes(n);
   if (has('天胡') || has('地胡') || has('人胡')) return false;
   const melds = g.melds[seat], hand = tsumo ? g.hands[seat] : g.hands[seat].concat([tile]);
@@ -1366,7 +1412,7 @@ function proClaimKind(g, seat, t, list, kind) {
     if (P.routes.includes('duidui') && kind === 'chow' && su >= 0) continue;
     const sh = afterClaimSh(g, seat, o, t, kind);
     const dragon = t.s === 'z';
-    const loose = cur >= 1 && sh <= cur && ((kind !== 'chow' && (P.pung === 'any' || P.pung === 'dragon')) || (kind === 'chow' && P.chow === 'often'));   // 愛碰／愛吃：不退步就鳴
+    const loose = cur >= 1 && sh <= cur && (P.fast || (kind !== 'chow' && (P.pung === 'any' || P.pung === 'dragon')) || (kind === 'chow' && P.chow === 'often'));   // 愛碰／愛吃：不退步就鳴
     if (sh < bs || (sh === cur && ((dragon && !best && cur >= 1 && kind !== 'chow') || (loose && !best)))) { bs = Math.min(bs, sh); best = o; }
   }
   return best ? { seat, kind, opt: best } : null;
@@ -1409,7 +1455,7 @@ function simGame(levels, personas) {
   }
   return { draw: true, g };
 }
-if (false) module.exports = { mkPersona, pickPersona, greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
+if (false) module.exports = { defFeatT, defFeatW, dangerML, mkPersona, pickPersona, greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
 
 
 /* ===== UI ===== */
