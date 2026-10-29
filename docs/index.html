@@ -1495,7 +1495,7 @@ const JA_EXACT = {
   '鳴牌不合（只可鳴 456、789，同花）': '副露が合いません（鳴けるのは同色の456・789のみ）', '鳴牌不合（只可鳴 456、789，同花，不能有碰槓）': '副露が合いません（同色の456・789のみ、ポン／カン不可）',
   '鳴牌不合（要紅中、發財、白板全槓）': '副露が合いません（白發中すべてカンが必要）', '已有鳴牌': 'すでに副露あり', '同花 456·567·678·789，只吃上家': '同色の456・567・678・789、上家からのみ',
   '音效': '効果音', '自摸！': 'ツモ！', '食胡！': 'ロン！', '▶ 點一下開始預覽（要點一下才有聲音）': '▶ タップでプレビュー開始（音を出すにはタップが必要）', '看牌桌': 'テーブルを見る', '回到結算': '結果に戻る', '已鳴': '副露', '胡': '和了', '背景音樂': 'BGM', '開': 'オン', '關': 'オフ',
-  '牌局記錄（分析用）': '対局記録（分析用）', '只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。': 'COMとの一人用の対局（配牌・牌山・すべての手と思考時間）だけを記録します。このブラウザ内にのみ保存され、アップロードされません。', '匯出': 'エクスポート', '清除': 'クリア', '還沒有記錄': 'まだ記録がありません', '清除所有牌局記錄？': 'すべての対局記録を削除しますか？',
+  '牌局記錄（分析用）': '対局記録（分析用）', '只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。': 'COMとの一人用の対局（配牌・牌山・すべての手と思考時間）だけを記録します。このブラウザ内にのみ保存され、アップロードされません。', '匯出': 'エクスポート', '匯出新的': '新しい分をエクスポート', '全部匯出': 'すべてエクスポート', '沒有新的記錄（上次匯出後）': '前回のエクスポート以降の新しい記録はありません', '清除': 'クリア', '還沒有記錄': 'まだ記録がありません', '清除所有牌局記錄？': 'すべての対局記録を削除しますか？',
   '意見回饋': 'フィードバック', '遊戲有問題或想法？告訴我！': 'バグやご意見があれば教えてください！', '類型': '種類', '錯誤': '不具合', '建議': 'ご提案', '其他': 'その他',
   '請描述你遇到的問題或想法…': '問題点やアイデアをご記入ください…', '聯絡方式（選填，方便回覆）': '連絡先（任意・返信用）',
   '會一併附上語言與裝置資訊，不會附上其他個人資料。': '言語と端末の情報が一緒に送信されます。それ以外の個人情報は送りません。',
@@ -2583,11 +2583,14 @@ function recAsk(seat, t, ho, ch, ms) {
   const opts = []; if (ho.ron) opts.push('ron'); if (ho.kong.length) opts.push('kong'); if (ho.pong.length) opts.push('pong'); if (ho.chow.length) opts.push('chow');
   recAct({ s: seat, a: 'ask', k: t.k, opts, pick: ch ? ch.kind : 'pass', ms: Math.round(ms) });
 }
-function recExport() {
-  const all = recLoad();
-  const blob = new Blob([JSON.stringify({ app: 'kowloon-dragons', v: 1, exported: new Date().toISOString(), hands: all })], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kowloon-hands-' + new Date().toISOString().slice(0, 10) + '.json';
+const recLast = () => { try { return +localStorage.getItem('yjl-recx') || 0; } catch (e) { return 0; } };   // 上次匯出時最新一手的時間
+const recNew = () => recLoad().filter(h => h.t > recLast());
+function recExport(all) {
+  const hands = all ? recLoad() : recNew();
+  const blob = new Blob([JSON.stringify({ app: 'kowloon-dragons', v: 1, exported: new Date().toISOString(), hands })], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kowloon-hands-' + new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '-') + (all ? '-all' : '') + '.json';
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  if (hands.length) try { localStorage.setItem('yjl-recx', String(Math.max(recLast(), ...hands.map(h => h.t)))); } catch (e) {}
 }
 // 除錯：網址加 ?botlog 時，高手電腦放棄胡牌改做大牌會記在牌局記錄裡
 const BOTLOG = /[?&]botlog\b/.test(location.search);
@@ -3537,7 +3540,7 @@ function renderSettings() {
     <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。', 'Expert bots plan their hands, track what has been played, read the table and play defensively.')}</p>
     <h3>${L('牌局記錄（分析用）', 'Hand history (for analysis)')}</h3><div class="chips">${chip('rec', 'on', '開', 'On', PREF.recOn === 'on')}${chip('rec', 'off', '關', 'Off', PREF.recOn !== 'on')}</div>
     <p class="note" style="margin:6px 0 0">${L('只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。', 'Records solo games against bots (deal, wall, every move and your thinking time). Stored only in this browser, never uploaded.')}</p>
-    <div class="chips" style="margin-top:6px"><button type="button" class="btn sm" id="recExp">${L('匯出', 'Export')} (${recLoad().length})</button><button type="button" class="btn sm" id="recClr">${L('清除', 'Clear')}</button></div>
+    <div class="chips" style="margin-top:6px"><button type="button" class="btn sm" id="recExp">${L('匯出新的', 'Export new')} (${recNew().length})</button><button type="button" class="btn sm" id="recExpAll">${L('全部匯出', 'Export all')} (${recLoad().length})</button><button type="button" class="btn sm" id="recClr">${L('清除', 'Clear')}</button></div>
     <h3>${L('意見回饋', 'Feedback')}</h3><button type="button" class="btn sm" id="stFb">${L('意見回饋', 'Feedback')} …</button>`;
 }
 $('#setDlg').addEventListener('click', e => {
@@ -3598,8 +3601,9 @@ $('#fbDlg').addEventListener('click', async e => {
 document.addEventListener('click', e => {
   if (e.target.closest('#stFb')) { $('#setDlg').close(); openFeedback(); }
   else if (e.target.closest('#lnFb')) { e.preventDefault(); openFeedback(); }
-  else if (e.target.closest('#recExp')) { if (recLoad().length) recExport(); else toast('還沒有記錄', 'No hands recorded yet'); }
-  else if (e.target.closest('#recClr')) { if (recLoad().length && confirm(L('清除所有牌局記錄？', 'Clear all recorded hands?'))) { try { localStorage.removeItem(REC.key); } catch (x) {} renderSettings(); } }
+  else if (e.target.closest('#recExpAll')) { if (recLoad().length) { recExport(true); renderSettings(); } else toast('還沒有記錄', 'No hands recorded yet'); }
+  else if (e.target.closest('#recExp')) { if (recNew().length) { recExport(false); renderSettings(); } else toast(recLoad().length ? '沒有新的記錄（上次匯出後）' : '還沒有記錄', recLoad().length ? 'No new hands since the last export' : 'No hands recorded yet'); }
+  else if (e.target.closest('#recClr')) { if (recLoad().length && confirm(L('清除所有牌局記錄？', 'Clear all recorded hands?'))) { try { localStorage.removeItem(REC.key); localStorage.removeItem('yjl-recx'); } catch (x) {} renderSettings(); } }
 });
 /* ===== 首頁 / landing ===== */
 const LAND = { join: false };
