@@ -344,7 +344,7 @@ header .meta{order:2}
   #discardBtn{min-height:42px;padding:8px 10px;font-size:calc(15px*var(--fs,1))}
   #me{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
   #me.dock .actrow{margin-top:var(--dockup);justify-content:flex-end;position:relative;z-index:2;pointer-events:none}
-  #me.dock #discardBtn{flex:0 0 calc(50% - 3px);pointer-events:auto}
+  #me.dock #discardBtn{flex:0 0 calc(50% - 3px);pointer-events:auto;min-height:0;height:calc(9.6px * 4);padding-top:0;padding-bottom:0}   /* 和手牌一樣高（#hand .tile 的 --u:9.6px，高 4em） */
   #me.dock.dl .actrow{justify-content:flex-start}
   .actions .btn{padding:6px 9px;min-height:42px;font-size:calc(13px*var(--fs,1))}
   .status{font-size:calc(13px*var(--fs,1));line-height:1.35}
