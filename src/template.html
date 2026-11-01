@@ -344,6 +344,9 @@ header .meta{order:2}
   #me{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
   #me.dock .actrow{margin-top:var(--dockup);justify-content:flex-end;position:relative;z-index:2;pointer-events:none}
   #me.dock #discardBtn{flex:0 0 calc(50% - 3px);pointer-events:auto}
+}
+@media (max-width:340px){
+  #me.dock #discardBtn{font-size:calc(12px*var(--fs,1));padding:8px 4px}
   .actions .btn{padding:6px 9px;min-height:42px;font-size:calc(13px*var(--fs,1))}
   .status{font-size:calc(13px*var(--fs,1));line-height:1.35}
   button.btn.sm{min-height:32px;padding:5px 10px}
