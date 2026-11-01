@@ -92,7 +92,8 @@ rt{font-size:.55em;font-weight:400;color:var(--muted);letter-spacing:0}
 .zone .pool{flex:1 1 auto;min-width:0}
 .zone .melds{flex:none;max-width:48%;justify-content:flex-end;margin:0;padding-left:10px;border-left:1px solid var(--line)}
 .zone .melds:empty{display:none}
-.backs{display:flex;gap:1px;flex-wrap:wrap}
+.backs{display:flex;gap:1px;flex-wrap:nowrap}
+.backs>*{flex:none}
 
 /* tiles: sized by font-size so everything scales together */
 .tile{--u:14px;font-size:var(--u);width:3.3em;height:4em;position:relative;flex:none;border-radius:.45em;
@@ -307,7 +308,7 @@ header .meta{order:2}
   .meta{gap:4px}
   #newBtn{flex:none;white-space:nowrap}
   .wrap{padding:6px 8px 14px}
-  header{gap:6px;margin-bottom:6px;flex-wrap:nowrap}
+  header{gap:6px;margin:0 -8px 6px;padding:6px 8px;flex-wrap:nowrap;position:sticky;top:0;z-index:30;background:var(--bg)}
   h1{font-size:calc(21px*var(--fs,1))}
   .meta{gap:5px;margin-left:auto;flex-wrap:nowrap}
   button.btn.icn{width:30px;height:30px}
@@ -344,14 +345,14 @@ header .meta{order:2}
   #me{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
   #me.dock .actrow{margin-top:var(--dockup);justify-content:flex-end;position:relative;z-index:2;pointer-events:none}
   #me.dock #discardBtn{flex:0 0 calc(50% - 3px);pointer-events:auto}
-}
-@media (max-width:340px){
-  #me.dock #discardBtn{font-size:calc(12px*var(--fs,1));padding:8px 4px}
   .actions .btn{padding:6px 9px;min-height:42px;font-size:calc(13px*var(--fs,1))}
   .status{font-size:calc(13px*var(--fs,1));line-height:1.35}
   button.btn.sm{min-height:32px;padding:5px 10px}
   #hand .tile{--u:9.6px}
   details.log{margin-top:6px}
+}
+@media (max-width:340px){
+  #me.dock #discardBtn{font-size:calc(12px*var(--fs,1));padding:8px 4px}
 }
 #lobby h2{margin-bottom:4px}
 #lobby .code{font:900 calc(28px*var(--fs,1))/1 var(--face);letter-spacing:.16em;color:var(--gold-t);margin:0}
@@ -2270,7 +2271,17 @@ $('#discardBtn').onclick = doDiscard;
 // 手機：手牌排成兩行、第二行只有幾張時，「打出」縮成右半邊、放進第二行的空位（有槓／胡等按鈕時不縮）
 let dockRaf = 0;
 const queueDock = () => { cancelAnimationFrame(dockRaf); dockRaf = requestAnimationFrame(dockDiscard); };
+// 對手的牌背：一行放不下就互相疊一點，永遠只佔一行
+function fitBacks() {
+  document.querySelectorAll('#opps .backs').forEach(el => {
+    const k = [...el.children]; if (k.length < 2) return;
+    k.forEach((c, i) => { if (i) c.style.marginLeft = ''; });
+    const w = k[0].offsetWidth, need = k.length * w + (k.length - 1), avail = el.clientWidth;
+    if (w && need > avail) { const ov = (need - avail) / (k.length - 1) + 0.01; k.forEach((c, i) => { if (i) c.style.marginLeft = -ov + 'px'; }); }
+  });
+}
 function dockDiscard() {
+  fitBacks();
   const me = $('#me'), hand = $('#hand'); if (!me || !hand) return;
   let on = false; me.classList.remove('dock');
   if (matchMedia('(max-width:520px)').matches && UI.mode !== 'claim' && !$('#actions').children.length) {
