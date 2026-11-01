@@ -2105,6 +2105,29 @@ $('#cheatDlg').addEventListener('close', syncCheatTab);
   const tab = $('#cheatTab'), bar = $('#cheatBar');
   attach(tab, p => { tab.style.right = p * W() + 'px'; }, () => { tab.style.right = tab.style.transition = tab.style.animation = ''; });
   attach(bar, p => { bar.style.transform = `translateX(${-p * W()}px)`; }, () => { bar.style.transform = bar.style.transition = ''; });
+  // 速查表打開時，在畫面任何地方（不用抓標籤）向右滑，也可以把速查表推回去
+  let sw = null;
+  const swFollow = dx => { dlg.style.transform = `translateX(${dx}px)`; bar.style.transform = `translateX(${dx - W()}px)`; tab.style.right = Math.max(0, W() - dx) + 'px'; };
+  const swReset = () => { dlg.style.transform = dlg.style.transition = ''; bar.style.transform = bar.style.transition = ''; tab.style.right = tab.style.transition = ''; };
+  document.addEventListener('touchstart', e => {
+    sw = null; if (!dlg.open || innerWidth >= 1180 || e.touches.length !== 1 || e.target.closest('#cheatTab, #cheatBar')) return;
+    sw = { x: e.touches[0].clientX, y: e.touches[0].clientY, last: e.touches[0].clientX, v: 0, on: false };
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!sw || !dlg.open) return;
+    const t = e.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+    if (!sw.on) { if (dx > 10 && dx > Math.abs(dy) * 1.4) { sw.on = true; dlg.style.animation = 'none'; dlg.style.transition = bar.style.transition = tab.style.transition = 'none'; } else if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) sw = null; if (!sw || !sw.on) return; }
+    sw.v = t.clientX - sw.last; sw.last = t.clientX; swFollow(Math.max(0, dx));
+  }, { passive: true });
+  const swEnd = () => {
+    if (!sw || !sw.on) { sw = null; return; }
+    const dx = Math.max(0, sw.last - sw.x), close = dx > W() * .3 || sw.v > 6; sw = null;
+    dlg.style.transition = bar.style.transition = 'transform .2s ease-out'; tab.style.transition = 'right .2s ease-out';
+    if (close) { dlg.style.transform = 'translateX(100%)'; bar.style.transform = 'translateX(0px)'; tab.style.right = '0px'; }
+    else { dlg.style.transform = 'translateX(0%)'; bar.style.transform = `translateX(${-W()}px)`; tab.style.right = W() + 'px'; }
+    setTimeout(() => { swReset(); if (close) dlg.close(); syncCheatTab(); }, 210);
+  };
+  document.addEventListener('touchend', swEnd); document.addEventListener('touchcancel', swEnd);
 }
 
 /* ============ 線上房間 / Online rooms (PeerJS WebRTC, host-authoritative) ============ */
