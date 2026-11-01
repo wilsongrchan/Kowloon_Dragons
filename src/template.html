@@ -1323,9 +1323,9 @@ function dockDiscard() {
     const kids = [...hand.children].filter(e => e.offsetWidth && e.classList.contains('tile')), tops = [...new Set(kids.map(e => e.offsetTop))];
     if (tops.length >= 2) {
       const lastTop = Math.max(...tops), right = Math.max(...kids.filter(e => e.offsetTop === lastTop).map(e => e.offsetLeft + e.offsetWidth));
-      if (right + 8 <= hand.clientWidth * 0.5) {   // 按鈕垂直置中在第二行牌的高度
-        const row = kids.find(e => e.offsetTop === lastTop).getBoundingClientRect(), ar = $('.actrow').getBoundingClientRect(), bh = $('#discardBtn').offsetHeight;
-        me.style.setProperty('--dockup', Math.round(row.top + row.height / 2 - bh / 2 - ar.top) + 'px'); on = true;
+      if (right + 8 <= hand.clientWidth * 0.5) {   // 按鈕頂端對齊第二行牌的頂端
+        const row = kids.find(e => e.offsetTop === lastTop).getBoundingClientRect(), ar = $('.actrow').getBoundingClientRect();
+        me.style.setProperty('--dockup', Math.round(row.top - ar.top + (parseFloat(getComputedStyle($('.actrow')).marginTop) || 0)) + 'px'); on = true;
         if (PREF.dockSide === 'left') {   // 按鈕放左半：第二行的牌靠右排
           const ft = kids.find(e => e.offsetTop === lastTop); me.classList.add('dl');
           ft.style.marginLeft = Math.max(0, hand.clientWidth - right - 1) + 'px'; ft.dataset.dm = 1;
