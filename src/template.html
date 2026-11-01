@@ -509,6 +509,13 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 
 :root[data-fs="s"]{--fs:.88}
 :root[data-fs="l"]{--fs:1.18}
+/* 高對比牌色：藍／綠／紅差得更開（藍更亮更飽和、綠更深偏黃），再加上淡淡的底色，不只靠顏色分辨 */
+:root[data-hc="on"]{--blue:#0033cc;--green:#0a5c12;--red:#b0000e}
+:root[data-hc="on"] .tile.p{background:linear-gradient(170deg,#f6f9ff,#dbe7ff 55%,#c4d8ff)}
+:root[data-hc="on"] .tile.s,:root[data-hc="on"] .tile.z2{background:linear-gradient(170deg,#f7fff3,#dcf2d3 55%,#c6e6b8)}
+:root[data-hc="on"] .tile.m,:root[data-hc="on"] .tile.z1{background:linear-gradient(170deg,#fff7f5,#ffe0da 55%,#ffcbc2)}
+:root[data-hc="on"] .tile .n{-webkit-text-stroke:.06em currentColor}
+:root[data-hc="on"] .tile .ic.k{width:.56em}
 :root[data-theme="dark"]{--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}}
 #setDlg h3{margin:14px 0 6px}
@@ -648,11 +655,11 @@ button.btn.hot:hover{background:var(--gold-hov)}
 const $ = s => document.querySelector(s);
 /*__JA__*/
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
-const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right' };
+const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-recv') !== '2') { PREF.recOn = 'on'; localStorage.setItem('yjl-recOn', 'on'); localStorage.setItem('yjl-recv', '2'); } if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
 const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' ? 'pro' : 'easy'; };
 applyBotLvl();
-const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-fs', PREF.fs); };
+const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-hc', PREF.hc === 'on' ? 'on' : 'off'); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
 const L = (zh, en) => LANG === 'en' ? en : LANG === 'ja' ? jaT(zh) : zh;
 const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Downstream', 'Across', 'Upstream'], ja: SEAT_JA };
@@ -2664,6 +2671,7 @@ function renderSettings() {
   const chip = (grp, v, zh, en, on) => `<button type="button" class="chip ${on ? 'on' : ''}" data-set="${grp}:${v}">${L(zh, en)}</button>`;
   d.innerHTML = `${XBTN()}<h2>${L('設定', 'Settings')}</h2>
     <h3>${L('外觀', 'Appearance')}</h3><div class="chips">${chip('theme', 'auto', '自動', 'Auto', PREF.theme === 'auto')}${chip('theme', 'light', '淺色', 'Light', PREF.theme === 'light')}${chip('theme', 'dark', '深色', 'Dark', PREF.theme === 'dark')}</div>
+    <h3>${L('高對比牌色', 'High-contrast tile colors')}</h3><div class="chips">${chip('hc', 'off', '關', 'Off', PREF.hc !== 'on')}${chip('hc', 'on', '開', 'On', PREF.hc === 'on')}</div>
     <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大', 'Large', PREF.fs === 'l')}</div>
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
@@ -2680,6 +2688,7 @@ $('#setDlg').addEventListener('click', e => {
   const b = e.target.closest('button[data-set]'); if (!b) return;
   const [g, v] = b.dataset.set.split(':');
   if (g === 'theme' || g === 'fs') { PREF[g] = v; applyPrefs(); }
+  else if (g === 'hc') { PREF.hc = v === 'on' ? 'on' : 'off'; applyPrefs(); savePref(); renderSettings(); return; }
   else if (g === 'sfx') { PREF.sfx = v; savePref(); renderSettings(); if (v === 'on') SFX.place(); }
   else if (g === 'music') { PREF.music = v; musicApply(); renderSettings(); }
   else if (g === 'dock') { PREF.dockSide = v === 'left' ? 'left' : 'right'; savePref(); renderSettings(); if (G) render(); return; }
