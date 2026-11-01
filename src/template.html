@@ -1332,7 +1332,7 @@ function dockDiscard() {
     const kids = [...hand.children].filter(e => e.offsetWidth && e.classList.contains('tile')), tops = [...new Set(kids.map(e => e.offsetTop))];
     if (tops.length >= 2) {
       const lastTop = Math.max(...tops), right = Math.max(...kids.filter(e => e.offsetTop === lastTop).map(e => e.offsetLeft + e.offsetWidth));
-      if (right + 8 <= hand.clientWidth * 0.5) {   // 按鈕頂端對齊第二行牌的頂端
+      if (right + 14 <= hand.clientWidth * 0.5) {   // 按鈕頂端對齊第二行牌的頂端
         const rowTop = hand.getBoundingClientRect().top + lastTop, ar = $('.actrow').getBoundingClientRect();   // 用版面位置（offsetTop），選牌時牌會浮起，不能用它的畫面位置
         me.style.setProperty('--dockup', (rowTop - ar.top + (parseFloat(getComputedStyle($('.actrow')).marginTop) || 0)).toFixed(2) + 'px'); on = true;
         if (PREF.dockSide === 'left') {   // 按鈕放左半：第二行由左到右＝按鈕、剛摸的牌、其餘的牌
@@ -1341,7 +1341,7 @@ function dockDiscard() {
           const dr = UI.drawnId != null ? hand.querySelector(`.tile[data-id="${UI.drawnId}"]`) : null, gp = hand.querySelector('.gap');
           let first = ft;
           if (dr && dr.offsetTop === lastTop) { dr.style.order = fi * 4 - 2; if (gp) gp.style.order = fi * 4 - 1; first = dr; }
-          first.style.marginLeft = Math.round(hand.clientWidth / 2 + 3) + 'px';
+          first.style.marginLeft = Math.round(hand.clientWidth / 2 + 11) + 'px';   // 按鈕右緣在 50%−3px，空 14px
         }
       }
     }
