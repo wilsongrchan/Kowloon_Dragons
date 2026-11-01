@@ -329,6 +329,8 @@ header .meta{order:2}
   #cheatBar{order:2;display:flex;flex:none;align-items:center;gap:6px;min-height:0;height:30px;margin-right:-14px;padding:0 22px 0 12px;border:1px solid var(--line);border-right:0;border-radius:99px 0 0 99px;background:var(--table2);color:var(--gold-t);font-weight:700;font-size:calc(13px*var(--fs,1));touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .22s ease-out;box-shadow:-2px 2px 8px rgba(0,0,0,.3);position:relative;z-index:17}
   #cheatBar.drag{transition:none}
   body:has(#cheatDlg[open]) #cheatBar{transform:translateX(calc(-1 * min(340px, 86vw)))}
+  body:has(#cheatDlg[open]) #cheatBarTxt{display:none}
+  body:has(#cheatDlg[open]) #cheatBar{padding:0 16px 0 10px}   /* 打開時只留一個向右的小三角 */
   #cheatBar b{font-size:calc(12px*var(--fs,1))}
   #cheatTab{display:none!important}
   .tbar .pill{flex:none;padding:2px 10px 2px 6px;gap:6px;font-size:calc(12px*var(--fs,1))}
