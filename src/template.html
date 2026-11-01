@@ -1725,8 +1725,9 @@ const recLast = () => { try { return +localStorage.getItem('yjl-recx') || 0; } c
 const recNew = () => recLoad().filter(h => h.t > recLast());
 function recExport(all) {
   const hands = all ? recLoad() : recNew();
-  const blob = new Blob([JSON.stringify({ app: 'kowloon-dragons', v: 1, exported: new Date().toISOString(), hands })], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kowloon-hands-' + new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '-') + (all ? '-all' : '') + '.json';
+  const blob = new Blob([JSON.stringify({ app: 'kowloon-dragons', v: 1, exported: new Date().toISOString(), tz: (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return ''; } })(), tzOffsetMin: -new Date().getTimezoneOffset(), hands })], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); const d0 = new Date(), z2 = n => String(n).padStart(2, '0');   // 檔名用你所在時區的當地時間（不是 UTC）
+  a.download = 'kowloon-hands-' + d0.getFullYear() + z2(d0.getMonth() + 1) + z2(d0.getDate()) + '-' + z2(d0.getHours()) + z2(d0.getMinutes()) + (all ? '-all' : '') + '.json';
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   if (hands.length) try { localStorage.setItem('yjl-recx', String(Math.max(recLast(), ...hands.map(h => h.t)))); } catch (e) {}
 }

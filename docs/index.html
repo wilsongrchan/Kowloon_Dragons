@@ -1361,16 +1361,18 @@ function proDiscard(g, seat) {
     a[c.i]--;
     if (c.sh === minSh) {
       const act = new Set(c.plans.filter(p => p.sh === c.sh).map(p => p.n));
-      sc += PRO_P.uw * ukeire(a, melds, u, act, c.sh);
+      c.uke = ukeire(a, melds, u, act, c.sh); sc += PRO_P.uw * c.uke;
     }
     a[c.i]++;
     let bonus = 0; for (const p of c.plans) if (p.sh <= c.sh + 1) bonus = Math.max(bonus, p.b - 10 * (p.sh - c.sh));
     sc += bonus * (RULES.PRO_BONUS == null ? PRO_P.bon : RULES.PRO_BONUS * PRO_P.bon / 0.4);
-    sc -= PRO_P.dw * mult * PRO_P.def * (PRO_P.ml && RULES.DEF_W ? RULES.DEF_ML * dangerML(g, seat, c.t, u) : dangerOf(g, seat, c.t, u, th));
+    c.dg = PRO_P.ml && RULES.DEF_W ? RULES.DEF_ML * dangerML(g, seat, c.t, u) : dangerOf(g, seat, c.t, u, th);
+    sc -= PRO_P.dw * mult * PRO_P.def * c.dg;
     sc -= PRO_P.vw * val(c.t) + Math.random() * 0.3;
-    c.sc = sc; c.bonus = bonus; pool.push(c);
+    c.sc = sc; c.bonus = bonus; if (c.uke == null) c.uke = 0; pool.push(c);
     if (sc > bs) { bs = sc; best = c.t; }
   }
+  if (g.rollHook && pool.length > 1) { const pk = g.rollHook(g, seat, pool, { a, melds, u, th, minSh, g, seat }); if (pk) return pk; }
   const useQ = RULES.Q && g.useQ && g.useQ[seat], rec = g.qrec && g.qrec[seat];
   if ((useQ || rec) && pool.length > 1) {   // 學習式選牌：算每個候選的特徵，用 Q 模型挑；收資料時偶爾隨機探索
     const ctx = { a, melds, u, th, minSh, g, seat };
@@ -1498,7 +1500,10 @@ function botSelf(g, seat, opts) { return proLevel(g, seat) ? proSelf(g, seat, op
 function simGame(levels, personas, extra) {
   const g = newGame(0); if (levels) g.botLv = levels; if (extra) Object.assign(g, extra);
   if (personas) { g.persona = personas.map((k, i) => k ? (typeof k === 'string' ? PERSONA_BAL : mkPersona(k)) : g.persona[i]); g.persona0 = g.persona.slice(); }
-  let seat = 0, rep = false, needDraw = true, guard = 0;
+  return runLoop(g, 0, false, true);
+}
+function runLoop(g, seat, rep, needDraw) {
+  let guard = 0;
   while (guard++ < 2000) {
     if (needDraw) { if (!drawTile(g, seat, rep)) return { draw: true, g }; }
     const drew = needDraw; needDraw = true; rep = false;
@@ -1518,7 +1523,33 @@ function simGame(levels, personas, extra) {
   }
   return { draw: true, g };
 }
-if (false) module.exports = { defFeatT, defFeatW, dangerML, mkPersona, pickPersona, greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
+/* ---- 模擬用（訓練／分析）：複製局面、把看不到的牌（牌山＋對手手牌）重新洗過，再用電腦打完 ---- */
+function cloneWorld(g, seat, resample) {
+  const c = Object.assign({}, g);
+  c.hands = g.hands.map(h => h.slice()); c.discards = g.discards.map(d => d.slice());
+  c.melds = g.melds.map(ms => ms.map(m => Object.assign({}, m, { tiles: m.tiles.slice() })));
+  c.drawN = g.drawN.slice(); c.persona = g.persona ? g.persona.slice() : g.persona; c.goal = g.goal ? g.goal.slice() : g.goal; c.pivots = g.pivots ? g.pivots.slice() : g.pivots;
+  c.botLv = g.botLv; c.useQ = null; c.qrec = null; c.rollHook = null; c.wall = g.wall.slice();
+  if (resample) {
+    const pool = c.wall.slice(); const sizes = [];
+    for (let o = 0; o < 4; o++) if (o !== seat) { sizes.push([o, c.hands[o].length]); pool.push(...c.hands[o]); }
+    shuffle(pool);
+    for (const [o, n] of sizes) c.hands[o] = pool.splice(0, n);
+    c.wall = pool;
+  }
+  return c;
+}
+// seat 剛打出 tile（已從手牌拿掉並進棄牌）之後，由所有電腦接手打完；回傳 simGame 的結果
+function continueAfterDiscard(g, seat, t) {
+  const c = botClaims(g, seat, t, []);
+  if (c) {
+    if (c.kind === 'ron') return { res: winResult(g, c.seat, false, seat, c.ev), g };
+    applyClaim(g, c.seat, c.kind, c.opt, t, seat);
+    return runLoop(g, c.seat, c.kind === 'kong', c.kind === 'kong');
+  }
+  return runLoop(g, (seat + 1) % 4, false, true);
+}
+if (false) module.exports = { qFeat, cloneWorld, continueAfterDiscard, discardTile, defFeatT, defFeatW, dangerML, mkPersona, pickPersona, greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
 
 
 /* ===== UI ===== */
@@ -2735,8 +2766,9 @@ const recLast = () => { try { return +localStorage.getItem('yjl-recx') || 0; } c
 const recNew = () => recLoad().filter(h => h.t > recLast());
 function recExport(all) {
   const hands = all ? recLoad() : recNew();
-  const blob = new Blob([JSON.stringify({ app: 'kowloon-dragons', v: 1, exported: new Date().toISOString(), hands })], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kowloon-hands-' + new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '-') + (all ? '-all' : '') + '.json';
+  const blob = new Blob([JSON.stringify({ app: 'kowloon-dragons', v: 1, exported: new Date().toISOString(), tz: (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return ''; } })(), tzOffsetMin: -new Date().getTimezoneOffset(), hands })], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); const d0 = new Date(), z2 = n => String(n).padStart(2, '0');   // 檔名用你所在時區的當地時間（不是 UTC）
+  a.download = 'kowloon-hands-' + d0.getFullYear() + z2(d0.getMonth() + 1) + z2(d0.getDate()) + '-' + z2(d0.getHours()) + z2(d0.getMinutes()) + (all ? '-all' : '') + '.json';
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   if (hands.length) try { localStorage.setItem('yjl-recx', String(Math.max(recLast(), ...hands.map(h => h.t)))); } catch (e) {}
 }
