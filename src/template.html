@@ -1304,7 +1304,7 @@ function dockDiscard() {
   const me = $('#me'), hand = $('#hand'); if (!me || !hand) return;
   let on = false; me.classList.remove('dock');
   if (matchMedia('(max-width:520px)').matches && UI.mode === 'discard' && !$('#actions').children.length) {
-    const kids = [...hand.children].filter(e => e.offsetWidth && !e.classList.contains('lbar')), tops = [...new Set(kids.map(e => e.offsetTop))];
+    const kids = [...hand.children].filter(e => e.offsetWidth && e.classList.contains('tile')), tops = [...new Set(kids.map(e => e.offsetTop))];
     if (tops.length >= 2) {
       const lastTop = Math.max(...tops), right = Math.max(...kids.filter(e => e.offsetTop === lastTop).map(e => e.offsetLeft + e.offsetWidth));
       if (right + 8 <= hand.clientWidth * 0.5) {   // 按鈕垂直置中在第二行牌的高度
@@ -1320,7 +1320,7 @@ function updateDiscardBtn() {
   queueDock();
   $('#me').classList.toggle('claiming', UI.mode === 'claim');
   const b = $('#discardBtn'), tl = UI.sel != null ? G.hands[0].find(x => x.id === UI.sel) : null;
-  if (UI.mode === 'discard' && tl) { b.disabled = false; b.textContent = L('打出 ', 'Discard ') + tn(tl); }
+  if (UI.mode === 'discard' && tl) { b.disabled = false; b.textContent = L('打出 ', 'Discard ') + (LANG === 'en' ? tn(tl).replace('Characters', 'Charac.').replace(' Dragon', ' Dr.') : tn(tl)); }   // 英文縮短，半寬按鈕才不會被「…」截掉
   else { b.disabled = true; b.textContent = UI.mode === 'discard' ? L('先選一張牌，再按打出', 'Select a tile, then press Discard') : (UI.mode === 'claim' ? L('先決定要不要這張牌', 'Decide on the discard first') : L('還沒輪到你', 'Not your turn')); }
 }
 /* ---- 手牌順序：按鈕 ---- */
