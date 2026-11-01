@@ -1318,7 +1318,7 @@ function dockDiscard() {
   fitBacks();
   const me = $('#me'), hand = $('#hand'); if (!me || !hand) return;
   let on = false; me.classList.remove('dock', 'dl');
-  hand.querySelectorAll('[data-dm]').forEach(e => { e.style.marginLeft = ''; delete e.dataset.dm; });
+  hand.querySelectorAll('[data-dm]').forEach(e => { e.style.marginLeft = ''; e.style.order = ''; delete e.dataset.dm; });
   if (matchMedia('(max-width:520px)').matches && UI.mode !== 'claim' && !$('#actions').children.length) {
     const kids = [...hand.children].filter(e => e.offsetWidth && e.classList.contains('tile')), tops = [...new Set(kids.map(e => e.offsetTop))];
     if (tops.length >= 2) {
@@ -1326,9 +1326,13 @@ function dockDiscard() {
       if (right + 8 <= hand.clientWidth * 0.5) {   // 按鈕頂端對齊第二行牌的頂端
         const row = kids.find(e => e.offsetTop === lastTop).getBoundingClientRect(), ar = $('.actrow').getBoundingClientRect();
         me.style.setProperty('--dockup', Math.round(row.top - ar.top + (parseFloat(getComputedStyle($('.actrow')).marginTop) || 0)) + 'px'); on = true;
-        if (PREF.dockSide === 'left') {   // 按鈕放左半：第二行的牌靠右排
-          const ft = kids.find(e => e.offsetTop === lastTop); me.classList.add('dl');
-          ft.style.marginLeft = Math.max(0, hand.clientWidth - right - 1) + 'px'; ft.dataset.dm = 1;
+        if (PREF.dockSide === 'left') {   // 按鈕放左半：第二行由左到右＝按鈕、剛摸的牌、其餘的牌
+          const all = [...hand.children].filter(e => !e.classList.contains('lbar')), ft = kids.find(e => e.offsetTop === lastTop), fi = all.indexOf(ft);
+          me.classList.add('dl'); all.forEach((e, i) => { e.style.order = i * 4; e.dataset.dm = 1; });   // CSS order 只能整數
+          const dr = UI.drawnId != null ? hand.querySelector(`.tile[data-id="${UI.drawnId}"]`) : null, gp = hand.querySelector('.gap');
+          let first = ft;
+          if (dr && dr.offsetTop === lastTop) { dr.style.order = fi * 4 - 2; if (gp) gp.style.order = fi * 4 - 1; first = dr; }
+          first.style.marginLeft = Math.round(hand.clientWidth / 2 + 3) + 'px';
         }
       }
     }
