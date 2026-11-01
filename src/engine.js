@@ -630,6 +630,37 @@ function dangerML(g, d, t, u) {
   }
   return tot;
 }
+/* ---- 學習式選牌（Q 模型）：特徵＋小型神經網路。權重由 scripts/rl/train_q.py 訓練，放在 RULES.Q ---- */
+const QFAM = ['closed', 'pinfu', 'duidui', 'dragon', 'nosmall', 'flush', 'seven'];
+function qFeat(c, ctx) {
+  const { a, melds, u, th, minSh, g, seat } = ctx, f = [], sh = c.sh;
+  f.push(Math.min(sh, 6) / 6, sh === minSh ? 1 : 0, Math.min(2, sh - minSh) / 2, Math.min(c.uke, 40) / 40);
+  for (const fam of QFAM) {
+    let m = 99; for (const p of c.plans) if (p.n === fam || (fam === 'flush' && p.n.startsWith('flush'))) m = Math.min(m, p.sh);
+    f.push(m === 99 ? 1 : Math.min(m, 6) / 6, m === 99 ? 0 : 1, m === 99 ? 0 : (m - sh <= 0 ? 1 : 0));
+  }
+  f.push((c.bonus || 0) / 60);
+  const t = c.t, i = c.i, cls = NUMCLS(t);
+  f.push(Math.min(c.dg || 0, 12) / 12, t.s === 'z' ? 0 : (10 - t.n) / 9, t.s === 'z' ? 1 : 0, cls === 0 ? 1 : 0, cls === 1 ? 1 : 0, cls === 2 ? 1 : 0, u[i] / copiesIdx(i), a[i] / 4);
+  let om = 0, mth = 0; for (let o = 0; o < 4; o++) if (o !== seat) { om += g.melds[o].length; mth = Math.max(mth, th[o].w || 0); }
+  f.push(g.wall.length / 98, om / 8, melds.length / 4, melds.some(m => m.open) ? 1 : 0, mth / 2);
+  const su = [0, 0, 0]; let hon = 0, sm = 0, md = 0, bg = 0, pr = 0, tr = 0, kd = 0, hp = 0;
+  for (let k = 0; k < NK; k++) {
+    const n = a[k]; if (!n) continue; kd++; if (n === 2) pr++; if (n >= 3) tr++;
+    if (k >= 27) { hon += n; continue; }
+    su[Math.floor(k / 9)] += n; const nn = k % 9; if (nn >= 6) sm += n; else if (nn >= 3) md += n; else bg += n; hp += n * (9 - nn);
+  }
+  f.push(su[0] / 13, su[1] / 13, su[2] / 13, Math.max(...su) / 13, hon / 13, sm / 13, md / 13, bg / 13, pr / 6, tr / 4, kd / 13, hp / 100);
+  f.push(c.sc / 100);
+  return f;
+}
+function qEval(f) {
+  const Q = RULES.Q; let h = [];
+  for (let o = 0; o < Q.b1.length; o++) { let x = Q.b1[o]; const w = Q.W1[o]; for (let i = 0; i < f.length; i++) x += w[i] * (f[i] - Q.mu[i]) / Q.sd[i]; h.push(x > 0 ? x : 0); }
+  let h2 = []; for (let o = 0; o < Q.b2.length; o++) { let x = Q.b2[o]; const w = Q.W2[o]; for (let i = 0; i < h.length; i++) x += w[i] * h[i]; h2.push(x > 0 ? x : 0); }
+  let y = Q.b3; for (let i = 0; i < h2.length; i++) y += Q.w3[i] * h2[i];
+  return y;
+}
 function proDiscard(g, seat) {
   PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   const h = g.hands[seat], melds = g.melds[seat];
@@ -669,7 +700,7 @@ function proDiscard(g, seat) {
   }
   const minSh = Math.min(...cands.map(c => c.sh));
   const mult = minSh <= 0 ? 0.45 : minSh === 1 ? 0.8 : 1.0;
-  let best = null, bs = -1e9;
+  let best = null, bs = -1e9; const pool = [];
   for (const c of cands) {
     if (c.sh > minSh + 1) continue;
     let sc = -100 * c.sh;
@@ -684,7 +715,19 @@ function proDiscard(g, seat) {
     sc += bonus * (RULES.PRO_BONUS == null ? PRO_P.bon : RULES.PRO_BONUS * PRO_P.bon / 0.4);
     sc -= PRO_P.dw * mult * PRO_P.def * (PRO_P.ml && RULES.DEF_W ? RULES.DEF_ML * dangerML(g, seat, c.t, u) : dangerOf(g, seat, c.t, u, th));
     sc -= PRO_P.vw * val(c.t) + Math.random() * 0.3;
+    c.sc = sc; c.bonus = bonus; pool.push(c);
     if (sc > bs) { bs = sc; best = c.t; }
+  }
+  const useQ = RULES.Q && g.useQ && g.useQ[seat], rec = g.qrec && g.qrec[seat];
+  if ((useQ || rec) && pool.length > 1) {   // 學習式選牌：算每個候選的特徵，用 Q 模型挑；收資料時偶爾隨機探索
+    const ctx = { a, melds, u, th, minSh, g, seat };
+    for (const c of pool) { a[c.i]--; c.f = qFeat(c, ctx); a[c.i]++; }
+    let pick = null;
+    if (useQ) { let qb = -1e18; for (const c of pool) { c.q = qEval(c.f); if (c.q > qb) { qb = c.q; pick = c; } } }
+    else pick = pool.reduce((x, y) => y.sc > x.sc ? y : x);
+    if (rec && Math.random() < (RULES.Q_EPS == null ? 0.3 : RULES.Q_EPS)) { const top = pool.slice().sort((x, y) => y.sc - x.sc).slice(0, 4); pick = top[Math.floor(Math.random() * top.length)]; }
+    if (rec) g.qrows.push({ s: seat, f: pick.f });
+    return pick.t;
   }
   return best || h[0];
 }
@@ -799,8 +842,8 @@ function botDiscard(g, seat) { return proLevel(g, seat) ? proDiscard(g, seat) : 
 function botSelf(g, seat, opts) { return proLevel(g, seat) ? proSelf(g, seat, opts) : easySelf(g, seat, opts); }
 
 /* ---- headless simulation (all four seats are bots) ---- */
-function simGame(levels, personas) {
-  const g = newGame(0); if (levels) g.botLv = levels;
+function simGame(levels, personas, extra) {
+  const g = newGame(0); if (levels) g.botLv = levels; if (extra) Object.assign(g, extra);
   if (personas) { g.persona = personas.map((k, i) => k ? (typeof k === 'string' ? PERSONA_BAL : mkPersona(k)) : g.persona[i]); g.persona0 = g.persona.slice(); }
   let seat = 0, rep = false, needDraw = true, guard = 0;
   while (guard++ < 2000) {
