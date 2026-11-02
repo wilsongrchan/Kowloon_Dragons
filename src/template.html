@@ -56,7 +56,14 @@ h1{font:900 calc(30px*var(--fs,1))/1 var(--face);margin:0;letter-spacing:.08em;c
 .meta{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--pgm);font-size:calc(13px*var(--fs,1))}
 .tbar{display:flex;justify-content:center;margin:-2px 0}
 #cheatBar{display:none}
-@media (min-width:521px){.table{position:relative}.tbar{position:absolute;top:10px;right:12px;margin:0;z-index:2}}
+@media (min-width:521px){.table{position:relative}.tbar{position:absolute;top:10px;right:12px;margin:0;z-index:2;flex-direction:column;align-items:flex-end;gap:6px}}
+.tbar .mf{order:1;font-size:calc(12px*var(--fs,1));font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 10px;white-space:nowrap}
+.tbar .mf.two{color:var(--gold-t);border-color:var(--gold)}
+@keyframes wallshake{0%,100%{transform:translateX(0) rotate(0)}15%{transform:translateX(-4px) rotate(-2deg)}35%{transform:translateX(4px) rotate(2deg)}55%{transform:translateX(-3px) rotate(-1.5deg)}75%{transform:translateX(3px) rotate(1.5deg)}}
+@keyframes wallflash{0%,100%{box-shadow:0 0 0 0 rgba(var(--gold-rgb),0);background-color:var(--pillbg,rgba(0,0,0,.28))}50%{box-shadow:0 0 0 3px rgba(var(--gold-rgb),.75);background-color:rgba(var(--gold-rgb),.35)}}
+.tbar .pill.low{animation:wallshake .5s ease-in-out 6,wallflash .5s ease-in-out 6}
+.tbar .pill.lowstay b{color:#ff8a65}
+@media (prefers-reduced-motion:reduce){.tbar .pill.low{animation:wallflash .8s ease-in-out 4}}
 .tbar .pill{display:flex;align-items:center;gap:8px;background:var(--pillbg,rgba(0,0,0,.28));color:var(--muted);padding:5px 14px 5px 10px;border-radius:99px;font-size:calc(14px*var(--fs,1))}
 .tbar .pill svg{width:56px;height:38px;display:block}
 .tbar .pill b{color:var(--gold-t);font-size:calc(22px*var(--fs,1));line-height:1;font-variant-numeric:tabular-nums}
@@ -639,7 +646,7 @@ button.btn.hot:hover{background:var(--gold-hov)}
   <div class="col">
   <div class="table">
     <div id="opps"></div>
-    <div class="tbar"><button type="button" class="btn" id="cheatBar"><b>◀</b><span id="cheatBarTxt">速查</span></button><span class="pill" id="wall">牌山 —</span></div>
+    <div class="tbar"><button type="button" class="btn" id="cheatBar"><b>◀</b><span id="cheatBarTxt">速查</span></button><span class="mf" id="minFan"></span><span class="pill" id="wall">牌山 —</span></div>
     <section class="seat" id="me">
       <div class="seat-head"><b id="meName">你</b><span id="meTag"></span><span class="tclk" data-v="0"></span><span id="meTotal" class="total"></span><span class="score" id="meScore"></span></div>
       <div class="zone">
@@ -1286,6 +1293,13 @@ function render() {
   if (!G) return;
   const rb = $('#resBack'); rb.hidden = !UI.viewTable; rb.textContent = L('回到結算', 'Back to results');
   $('#wall').innerHTML = WALL_SVG + `<span>${L('牌山', 'Wall')}</span><b>${G.wall.length}</b>`;
+  const mf = $('#minFan'), two = RULES.MIN_TOTAL === 2; mf.textContent = two ? L('兩番起胡', '2 fan min') : L('一番起胡', '1 fan min'); mf.classList.toggle('two', two);
+  const wl = $('#wall'), LOW = 20;   // 牌山剩 20 張：抖動＋閃爍一下提醒快沒牌了（每手一次），之後數字維持橘紅
+  if (G.wall.length > LOW + 4) { UI.lowShown = false; wl.classList.remove('low', 'lowstay'); }
+  else if (G.wall.length <= LOW) {
+    wl.classList.add('lowstay');
+    if (!UI.lowShown) { UI.lowShown = true; wl.classList.add('low'); setTimeout(() => wl.classList.remove('low'), 3200); }
+  }
   refreshCheat();
   const opps = $('#opps'); opps.innerHTML = '';
   for (const seat of [2, 3, 1]) {
