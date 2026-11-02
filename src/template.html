@@ -2719,7 +2719,7 @@ function renderSettings() {
   const d = $('#setDlg'); if (!d) return;
   const chip = (grp, v, zh, en, on) => `<button type="button" class="chip ${on ? 'on' : ''}" data-set="${grp}:${v}">${L(zh, en)}</button>`;
   d.innerHTML = `${XBTN()}<h2>${L('設定', 'Settings')}</h2>
-    <h3>${L('外觀', 'Appearance')}</h3><div class="chips">${chip('theme', 'auto', '自動', 'Auto', PREF.theme === 'auto')}${chip('theme', 'light', '淺色', 'Light', PREF.theme === 'light')}${chip('theme', 'dark', '深色', 'Dark', PREF.theme === 'dark')}${chip('theme', 'autumn', '秋色', 'Autumn', PREF.theme === 'autumn')}${chip('theme', 'cny', '新年', 'New Year', PREF.theme === 'cny')}</div>
+    <h3>${L('外觀', 'Appearance')}</h3><div class="chips">${chip('theme', 'auto', '自動', 'Auto', PREF.theme === 'auto')}${chip('theme', 'light', '淺色', 'Light', PREF.theme === 'light')}${chip('theme', 'dark', '深色', 'Dark', PREF.theme === 'dark')}${chip('theme', 'autumn', '落葉', 'Harvest', PREF.theme === 'autumn')}${chip('theme', 'cny', '燈籠', 'Festivity', PREF.theme === 'cny')}</div>
     <h3>${L('高對比牌色', 'High-contrast tile colors')}</h3><div class="chips">${chip('hc', 'off', '關', 'Off', PREF.hc !== 'on')}${chip('hc', 'on', '開', 'On', PREF.hc === 'on')}</div>
     <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大', 'Large', PREF.fs === 'l')}</div>
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
