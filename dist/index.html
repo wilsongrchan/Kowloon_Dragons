@@ -92,7 +92,8 @@ rt{font-size:.55em;font-weight:400;color:var(--muted);letter-spacing:0}
 .zone .pool{flex:1 1 auto;min-width:0}
 .zone .melds{flex:none;max-width:48%;justify-content:flex-end;margin:0;padding-left:10px;border-left:1px solid var(--line)}
 .zone .melds:empty{display:none}
-.backs{display:flex;gap:1px;flex-wrap:wrap}
+.backs{display:flex;gap:1px;flex-wrap:nowrap}
+.backs>*{flex:none}
 
 /* tiles: sized by font-size so everything scales together */
 .tile{--u:14px;font-size:var(--u);width:3.3em;height:4em;position:relative;flex:none;border-radius:.45em;
@@ -151,7 +152,7 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 .tile.clk::before{content:"";position:absolute;left:-.12em;right:-.12em;top:100%;height:.6em}
 .tile.sel{transform:translateY(-.8em);outline:2px solid var(--gold);outline-offset:1px}
 .tile.down{background:repeating-linear-gradient(45deg,var(--jade) 0 .35em,#2f8660 .35em .7em)!important;border-color:var(--jade-d)!important;box-shadow:none}.tile.down>*{visibility:hidden}
-#hand{display:flex;flex-wrap:wrap;gap:21px 3px;align-items:flex-end;padding:6px 0 22px}
+#hand{position:relative;display:flex;flex-wrap:wrap;gap:21px 3px;align-items:flex-end;padding:6px 0 22px}
 #hand .tile{--u:clamp(11px,calc((100vw - 40px) / 52),16px)}
 #hand .gap{width:.9em}
 .opp .tile.back{--u:6px}
@@ -307,7 +308,7 @@ header .meta{order:2}
   .meta{gap:4px}
   #newBtn{flex:none;white-space:nowrap}
   .wrap{padding:6px 8px 14px}
-  header{gap:6px;margin-bottom:6px;flex-wrap:nowrap}
+  header{gap:6px;margin:0 -8px 6px;padding:6px 8px;flex-wrap:nowrap;position:sticky;top:0;z-index:15;background:var(--bg)}   /* 低於首頁／房間大廳（z-index 20）與速查抽屜（16） */
   h1{font-size:calc(21px*var(--fs,1))}
   .meta{gap:5px;margin-left:auto;flex-wrap:nowrap}
   button.btn.icn{width:30px;height:30px}
@@ -328,6 +329,8 @@ header .meta{order:2}
   #cheatBar{order:2;display:flex;flex:none;align-items:center;gap:6px;min-height:0;height:30px;margin-right:-14px;padding:0 22px 0 12px;border:1px solid var(--line);border-right:0;border-radius:99px 0 0 99px;background:var(--table2);color:var(--gold-t);font-weight:700;font-size:calc(13px*var(--fs,1));touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .22s ease-out;box-shadow:-2px 2px 8px rgba(0,0,0,.3);position:relative;z-index:17}
   #cheatBar.drag{transition:none}
   body:has(#cheatDlg[open]) #cheatBar{transform:translateX(calc(-1 * min(340px, 86vw)))}
+  body:has(#cheatDlg[open]) #cheatBarTxt{display:none}
+  body:has(#cheatDlg[open]) #cheatBar{padding:0 16px 0 10px}   /* 打開時只留一個向右的小三角 */
   #cheatBar b{font-size:calc(12px*var(--fs,1))}
   #cheatTab{display:none!important}
   .tbar .pill{flex:none;padding:2px 10px 2px 6px;gap:6px;font-size:calc(12px*var(--fs,1))}
@@ -337,15 +340,22 @@ header .meta{order:2}
   #myDiscards .tile,#me .melds .tile{--u:7.4px}
   #hand{padding:4px 0 20px}
   .handbar{margin-top:3px}
-  .infoarea{min-height:2.6em;margin-top:3px;align-items:start}
+  .infoarea{min-height:3.35em;margin-top:3px;align-items:start}   /* 3 行：彩牌（7–9）的說明會到 3 行，不留空間的話選到它時下面整個會往下跳 */
   #selinfo{font-size:calc(12px*var(--fs,1));line-height:1.35}
   .actrow{margin-top:4px}
   #discardBtn{min-height:42px;padding:8px 10px;font-size:calc(15px*var(--fs,1))}
+  #me{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+  #me.dock .actrow{margin-top:var(--dockup);justify-content:flex-end;position:relative;z-index:2;pointer-events:none}
+  #me.dock #discardBtn{flex:0 0 calc(50% - 3px);pointer-events:auto;min-height:0;height:calc(9.6px * 4);padding-top:0;padding-bottom:0}   /* 和手牌一樣高（#hand .tile 的 --u:9.6px，高 4em） */
+  #me.dock.dl .actrow{justify-content:flex-start}
   .actions .btn{padding:6px 9px;min-height:42px;font-size:calc(13px*var(--fs,1))}
   .status{font-size:calc(13px*var(--fs,1));line-height:1.35}
   button.btn.sm{min-height:32px;padding:5px 10px}
   #hand .tile{--u:9.6px}
   details.log{margin-top:6px}
+}
+@media (max-width:340px){
+  #me.dock #discardBtn{font-size:calc(12px*var(--fs,1));padding:8px 4px}
 }
 #lobby h2{margin-bottom:4px}
 #lobby .code{font:900 calc(28px*var(--fs,1))/1 var(--face);letter-spacing:.16em;color:var(--gold-t);margin:0}
@@ -403,6 +413,8 @@ header .meta{order:2}
 #cheatTab{display:none}
 #cheatDlg{position:fixed;inset:0 0 0 auto;margin:0;width:min(340px,86vw);max-width:none;height:100vh;height:100dvh;max-height:none;border-radius:14px 0 0 14px;border-right:0;z-index:16;box-shadow:-6px 0 24px rgba(0,0,0,.45)}
 #cheatDlg[open]{animation:cdin .22s ease-out}
+#cheatDlg{overscroll-behavior:contain}
+@media (max-width:1179px){html:has(#cheatDlg[open]),body:has(#cheatDlg[open]){overflow:hidden;overscroll-behavior:none}}
 @keyframes cdin{from{transform:translateX(100%)}to{transform:none}}
 body:has(#cheatDlg[open]) #cheatTab{right:min(340px,86vw);animation:none}
 @media (min-width:1180px){#cheatDlg{display:none!important}}
@@ -436,6 +448,7 @@ body:has(#cheatDlg[open]) #cheatTab{right:min(340px,86vw);animation:none}
 #landing .nml{display:block;font-size:calc(12px*var(--fs,1));color:var(--muted);text-align:center;margin:0 0 4px}
 #landing .nmwrap .pen,#lobby .myw .pen{position:absolute;right:13px;bottom:11px;color:var(--gold-t);font-size:calc(17px*var(--fs,1));line-height:1;pointer-events:none}
 #landing .nm{padding-left:40px;padding-right:40px;text-align:center;width:100%;font:500 calc(15px*var(--fs,1)) var(--ui);padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--fieldA);color:var(--text)}
+#landing .cd::placeholder{font:500 calc(15px*var(--fs,1)) var(--ui);letter-spacing:0;text-transform:none;color:var(--muted);opacity:.8}
 #landing .nm:focus-visible,#landing .cd:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #landing button.big{width:100%;padding:14px 16px;font-size:calc(17px*var(--fs,1));font-weight:700;border-radius:12px;display:flex;flex-direction:column;gap:2px;align-items:center}
 #landing button.big small{font:400 calc(12px*var(--fs,1)) var(--ui);opacity:.78}
@@ -498,6 +511,13 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 
 :root[data-fs="s"]{--fs:.88}
 :root[data-fs="l"]{--fs:1.18}
+/* 高對比牌色：藍／綠／紅差得更開（藍更亮更飽和、綠更深偏黃），再加上淡淡的底色，不只靠顏色分辨 */
+:root[data-hc="on"]{--blue:#0033cc;--green:#0a5c12;--red:#b0000e}
+:root[data-hc="on"] .tile.p{background:linear-gradient(170deg,#f6f9ff,#dbe7ff 55%,#c4d8ff)}
+:root[data-hc="on"] .tile.s,:root[data-hc="on"] .tile.z2{background:linear-gradient(170deg,#f7fff3,#dcf2d3 55%,#c6e6b8)}
+:root[data-hc="on"] .tile.m,:root[data-hc="on"] .tile.z1{background:linear-gradient(170deg,#fff7f5,#ffe0da 55%,#ffcbc2)}
+:root[data-hc="on"] .tile .n{-webkit-text-stroke:.06em currentColor}
+:root[data-hc="on"] .tile .ic.k{width:.56em}
 :root[data-theme="dark"]{--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}}
 #setDlg h3{margin:14px 0 6px}
@@ -636,7 +656,10 @@ button.btn.hot:hover{background:var(--gold-hov)}
 const RULES = {
   ALLOW_789_ANKAN: false,      // 7-9 可否暗槓（字面解讀：不可）
   PAIR_HONOR_BREAKS_PINGHU: true, // 平胡的將不可以是中發白
-  RON_MULT: 2,                 // 出銃者付 2x，自摸每家付 1x
+  RON_MULT: 2,
+  BQ_FAN: 1,                   // 不求人番數（2026-11-01 由 2 改為 1；測試用開關）
+  SAN_FAN: 1,                  // 三暗刻番數（2026-11-01 由 2 改為 1；0 = 取消）
+  SAN_NOSTACK: false,          // 三暗刻不與對對胡疊加（像四暗刻）                 // 出銃者付 2x，自摸每家付 1x
 };
 const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
 const SUITN = { p: '筒', s: '索', m: '萬' };
@@ -648,7 +671,8 @@ const ORD = {}; ORDER.forEach((k, i) => ORD[k] = i);
 
 const tname = t => t.s === 'z' ? HON[t.n] : NUM[t.n] + SUITN[t.s];
 const val = t => t.s === 'z' ? 0 : 10 - t.n;
-const sortTiles = a => a.slice().sort((x, y) => ORD[x.k] - ORD[y.k] || x.id - y.id);
+const SORT_SUIT = { p: 0, m: 1, s: 2, z: 3 };   // 手牌顯示順序：藍筒、紅萬、綠索、三元（只影響排序，不動引擎的 ORD）
+const sortTiles = a => a.slice().sort((x, y) => (SORT_SUIT[x.s] - SORT_SUIT[y.s]) || (ORD[x.k] - ORD[y.k]) || x.id - y.id);
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function makeDeck() {
   let id = 0; const d = [];
@@ -754,6 +778,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
       const noMen = has('不求人') || has('全小字') || has('門清幺九順') || has('七對子');
       if (isConcealed) { if (!tsumo && !noMen) halves.push({ name: '門清', fan: 0.5 }); }
       else if (tsumo) halves.push({ name: '自摸', fan: 0.5 });
+      if (isConcealed && tsumo && !has('不求人')) halves.push({ name: '自摸', fan: 0.5 });   // 四暗刻自摸：4 番 + 自摸半番
       // 斷一門無三元：缺筒索萬其中一門，且沒有中發白；清一色／混一色不重複
       const suits = new Set(allTiles.filter(t => t.s !== 'z').map(t => t.s));
       if (suits.size < 3 && suits.size !== 1 && !allTiles.some(t => t.s === 'z')) halves.push({ name: '斷一門無三元', fan: 0.5 });
@@ -784,7 +809,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
       shapeOk = true;
       const items = [{ name: '七對子', fan: 2 }];
       const fl = flushOf(sp.pairs.flatMap(k => [k, k]), 0, 0); if (fl) items.push(fl);
-      if (isConcealed && tsumo) items.push({ name: '不求人', fan: 2 });
+      if (isConcealed && tsumo) items.push({ name: '不求人', fan: RULES.BQ_FAN });
       if (concealed.every(t => t.s !== 'z' && t.n >= 7)) items.push({ name: '全小字', fan: 3 });
       if (concealed.every(t => t.s === 'z' || t.n <= 6)) items.push({ name: '斷小字', fan: 2 });
       cands.push(finish(items, 0, null, { pair: 'seven' }));
@@ -816,7 +841,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     const altPlace = winK && (d.pair.split('/').includes(winK) || d.sets.some(s => s.type === 'chow' && inChow(s.k, winK)));
     for (const s of d.sets) if (s.type === 'pong' && !(winK && (s.keys ? s.keys.includes(winK) : s.k === winK) && !altPlace)) anko++;
     if (anko >= 4) { add('四暗刻', 4); const ai = items.findIndex(x => x.name === '對對胡'); if (ai >= 0) items.splice(ai, 1); } // 四暗刻不重複算對對胡
-    else if (anko === 3) add('三暗刻', 2);
+    else if (anko === 3 && RULES.SAN_FAN > 0 && !(RULES.SAN_NOSTACK && items.some(x => x.name === '對對胡'))) add('三暗刻', RULES.SAN_FAN);
     // 幺九順：同花 123+456+789，剩下一組可順可碰（可不同花色），眼任意；門清的話是門清幺九順（+30，不重複算門清）
     for (const su of ['p', 's', 'm']) {
       const a = sets.find(s => s.kind === 'chow' && s.k === su + 1), b = sets.find(s => s.kind === 'chow' && s.k === su + 4), c3 = sets.find(s => s.kind === 'chow' && s.k === su + 7);
@@ -839,7 +864,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     if (fl && fl.name !== '清一色') { const di = items.findIndex(x => x.name === '三元刻'); if (di >= 0) items.splice(di, 1); }
     if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全小字', 3);
     if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷小字', 2);
-    if (isConcealed && tsumo) add('不求人', 2);
+    if (isConcealed && tsumo && !items.some(x => x.name === '四暗刻')) add('不求人', RULES.BQ_FAN);   // 四暗刻已經是門清，自摸只加自摸半番
     cands.push(finish(items, bonus, bonusName, { pair: d.pair, sets: d.sets }));
   }
   // 天胡／地胡／人胡：手牌成形即可（不需另有番種），固定 6 番
@@ -854,6 +879,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
 function newGame(dealer = 0) {
   const g = { wall: shuffle(makeDeck()), hands: [[], [], [], []], melds: [[], [], [], []], discards: [[], [], [], []], dealer, last: null, over: null, drawN: [0, 0, 0, 0], discardN: 0, calls: 0 };
   for (let r = 0; r < 13; r++) for (let s = 0; s < 4; s++) g.hands[s].push(g.wall.pop());
+  g.persona = g.hands.map(() => pickPersona()); g.persona0 = g.persona.slice();
   return g;
 }
 function drawTile(g, seat, replacement) {
@@ -1006,6 +1032,72 @@ RULES.PRO_GREED = true;
 RULES.GREED_WALL = 56;   // 牌山至少剩這麼多張才肯放棄胡牌
 RULES.GREED_KEEP = 30;   // 目標做到一半，牌山剩不到這個數就放棄目標，回頭保底
 RULES.GREED_EV = 0.9;    // 預估期望值 ≥ 現有胡牌 × 這個比例，就賭一把
+/* ---- 高手電腦的「性格」：每位電腦開局依手牌隨機組合幾個特點（可疊加），不是個個都像同一個人 ----
+   routes：偏好的路線（番數加成 ×2.5；其他路線在還差 2 步以上時多算 1 步，前期會往偏好走）
+   pung：'any' 能碰就碰／'dragon' 只碰三元／預設 看向聽數；chow：'never' 不吃／'often' 愛吃
+   def：防守程度（<1 莽、>1 謹慎）；bon：番數加成權重（小＝求快、大＝求大）
+   一場遊戲開始時每位電腦挑一次，整場不變（重新整理或離開再回來才重抽）；
+   偏好的路線比最近的路線慢 3 步以上就放棄路線（轉向，只限這一手），其餘特點照舊。 */
+RULES.PERSONA = true;
+RULES.DEF_W = /*DEFW*/{"t": [-5.4466, 0.8031, 1.1623, 1.4475, 0.5785, 3.5944, -3.2035, 1.3889, 0.8955, -0.6498, -0.1408, 1.4314, 3.0034, 3.4279, 1.266, 0.6937], "w": [-2.7808, -0.1445, 0.0201, 0.0426, 0.088, -0.3295, -0.8736, -2.4204, -0.1385, -0.0412, -0.0886, -0.0024, -2.0787, -0.5551, -3.1467, 0.483, 3.03, 2.2139, 0.5133, 2.1115, 0.811, 0.7923, 0.6608, 0.3079]}/*ENDDEFW*/;      // 學習式防守的係數 {t:[...], w:[...]}（由 scripts/train_defense.py 產生）
+RULES.DEF_ML = 12;       // 學習式危險度的尺度（讓它和舊 dangerOf 的數量級相近）
+const ROUTE_ZH = { twosuit: '缺一門', nosmall: '斷小字', flush: '一色', duidui: '對對', dragon: '三元', closed: '門清', seven: '七對', pinfu: '平胡' };
+function mkPersona(o) {
+  const P = Object.assign({ routes: [], pung: null, chow: null, def: 1, bon: 0.4, fast: false, vw: 0.15, uw: 1.5, dw: 8, ml: true }, o);
+  const tags = P.routes.map(r => ROUTE_ZH[r]);
+  if (P.pung === 'any') tags.push('愛碰'); if (P.pung === 'dragon') tags.push('只碰三元');
+  if (P.chow === 'never') tags.push('不吃'); if (P.chow === 'often') tags.push('愛吃');
+  if (P.def < 1) tags.push('莽'); if (P.def > 1) tags.push('謹慎');
+  if (P.bon < 0.3) tags.push('求快'); if (P.bon > 0.5) tags.push('求大');
+  P.label = tags.join('・') || '均衡';
+  return P;
+}
+const PERSONA_BAL = mkPersona({});
+function pickPersona() {   // 開局（一場）挑一次，之後整場不變；每手牌的路線若不合手牌會自己轉向
+  if (!RULES.PERSONA) return PERSONA_BAL;
+  const R = Math.random;
+  const fit = { nosmall: 0.2, flush: 0.18, duidui: 0.14, dragon: 0.14, closed: 0.16, seven: 0.05, pinfu: 0.12 };
+  let routes = Object.keys(fit).filter(k => R() < fit[k]);
+  if (routes.includes('closed')) routes = routes.filter(r => r !== 'duidui' && r !== 'dragon');
+  if (routes.length > 3) routes = routes.sort(() => R() - 0.5).slice(0, 3);
+  const closed = routes.includes('closed');
+  const pr = R(), cr = R(), dr = R(), br = R();
+  return mkPersona({
+    routes,
+    pung: closed ? null : pr < 0.22 ? 'any' : pr < 0.32 ? 'dragon' : null,
+    chow: cr < 0.12 ? 'never' : cr < 0.27 && !closed ? 'often' : null,
+    def: dr < 0.22 ? 0.5 : dr < 0.47 ? 1.6 : 1,
+    bon: br < 0.25 ? 0.2 : br < 0.5 ? 0.7 : 0.4,
+    fast: br < 0.25,   // 求快：能鳴就鳴、有胡就胡，不放棄小胡
+  });
+}
+let PRO_P = null;        // 目前這位電腦的性格（planList 會依此調整各路線）
+function applyPersona(plans, a, melds) {
+  const P = PRO_P; if (!P || !P.routes.length) return;
+  let su = -1;
+  if (P.routes.includes('flush')) {   // 主花色：手牌＋鳴牌裡最多的一門
+    const cnt = [0, 0, 0]; for (let i = 0; i < 27; i++) cnt[Math.floor(i / 9)] += a[i];
+    melds.forEach(m => m.tiles.forEach(t => { if (t.s !== 'z') cnt[ORD[t.s + 1] / 9]++; }));
+    su = cnt.indexOf(Math.max(...cnt));
+    // 一色＋對對疊加：同花色全刻子的專用路線
+    if (P.routes.includes('duidui') && melds.every(m => m.type !== 'chow' && m.tiles.every(t => t.s === 'z' || ORD[t.s + 1] === su * 9))) {
+      const mk = a.map((v, i) => (i >= 27 || Math.floor(i / 9) === su) ? v : 0), cnt2 = mk.reduce((x, y) => x + y, 0);
+      plans.push({ n: 'fdui', sh: shanten(mk, 4 - melds.length, 'duidui') + Math.max(0, 13 - 3 * melds.length - cnt2), b: 60 });
+    }
+  }
+  if (P.routes.includes('twosuit')) {   // 缺一門（沒有三元）：只用手牌＋鳴牌裡最多的兩門
+    const cnt = [0, 0, 0]; for (let i = 0; i < 27; i++) cnt[Math.floor(i / 9)] += a[i];
+    melds.forEach(m => m.tiles.forEach(t => { if (t.s !== 'z') cnt[ORD[t.s + 1] / 9]++; }));
+    const out = cnt.indexOf(Math.min(...cnt));
+    if (!melds.some(m => m.tiles.some(t => t.s === 'z' || ORD[t.s + 1] === out * 9))) plans.push({ n: 'twosuit', sh: shanten(a.map((v, i) => (i < 27 && Math.floor(i / 9) !== out) ? v : 0), 4 - melds.length, 'normal'), b: 14 });
+  }
+  for (const p of plans) {
+    if (p.n === 'goal' || p.n === 'any') continue;
+    const fav = p.n === 'fdui' || P.routes.includes(p.n) || (p.n.startsWith('flush') && +p.n.slice(5) === su);
+    if (fav) p.b *= 2.5; else if (p.sh >= 2) p.sh += 1;
+  }
+}
+function personaOf(g, seat) { return (g.persona && g.persona[seat]) || PERSONA_BAL; }
 let PRO_G = null;        // 目前這位高手的目標 {t:'pure'|'dui', su, fan, dv}，planList 會多算一條 'goal' 路線
 function proGoal(g, seat) {
   const G = g.goal && g.goal[seat];
@@ -1092,6 +1184,7 @@ function planList(a, melds) {
     }
   }
   if (!plans.length) plans.push({ n: 'any', sh: shanten(a, need, 'normal') + 2, b: 0 });
+  applyPersona(plans, a, melds);
   return plans;
 }
 const bestSh = plans => plans.reduce((m, p) => Math.min(m, p.sh), 99);
@@ -1151,9 +1244,94 @@ function dangerOf(g, seat, t, u, th) {
   return tot;
 }
 
+/* ---- 學習式防守：P(對手 o 聽牌) × P(他聽的是 t)，係數由自我對戰的資料訓練（scripts/train_defense.py） ---- */
+const NUMCLS = t => t.s === 'z' ? 3 : t.n >= 7 ? 0 : t.n >= 4 ? 1 : 2;   // 0 小字(顯示1-3) 1 中字(4-6) 2 大字(7-9) 3 三元
+function lastDisc(g, o, n) { const d = g.discards[o]; return d.slice(Math.max(0, d.length - n)); }
+function defFeatT(g, o) {   // 對手 o 現在聽牌的機率用的特徵（只用公開資訊）
+  const ms = g.melds[o], prog = 1 - g.wall.length / 98, nm = Math.min(4, ms.length), last = lastDisc(g, o, 4), f = [1];
+  for (let k = 1; k <= 4; k++) f.push(nm === k ? 1 : 0);
+  f.push(prog, prog * prog, g.discards[o].length / 20, ms.filter(m => m.tiles[0].s === 'z').length, ms.filter(m => m.type === 'kong').length, nm * prog, nm === 0 ? prog : 0);
+  for (let c = 0; c < 4; c++) f.push(last.filter(t => NUMCLS(t) === c).length / 4);
+  return f;
+}
+function defFeatW(g, d, o, t, u) {   // 對手 o（已聽牌）聽 t 的機率用的特徵
+  const ms = g.melds[o], prog = 1 - g.wall.length / 98, c = NUMCLS(t), i = ORD[t.k], dd = g.discards[o], f = [1];
+  f.push(u[i] / 5);
+  for (let k = 0; k < 4; k++) f.push(c === k ? 1 : 0);
+  f.push(t.s === 'z' ? 0 : (10 - t.n) / 9);
+  f.push(Math.min(2, dd.filter(x => x.k === t.k).length));
+  let n1 = 0, n2 = 0; if (t.s !== 'z') for (const x of dd) if (x.s === t.s) { const df = Math.abs(x.n - t.n); if (df === 1) n1++; else if (df === 2) n2++; }
+  f.push(Math.min(3, n1), Math.min(3, n2));
+  const sm = ms.flatMap(m => m.tiles).filter(x => x.s !== 'z'), suits = new Set(sm.map(x => x.s));
+  f.push(t.s !== 'z' && suits.size === 1 && suits.has(t.s) ? 1 : 0, t.s !== 'z' && suits.size >= 1 && !suits.has(t.s) ? 1 : 0);
+  f.push(t.s === 'z' && ms.some(m => m.tiles[0].s === 'z') ? 1 : 0, ms.some(m => m.tiles.some(x => x.k === t.k)) ? 1 : 0);
+  let all = 0; for (const x of g.discards.flat()) if (x.k === t.k) all++;
+  f.push(Math.min(5, all) / 5);
+  let nb = 0; if (t.s !== 'z') { if (i % 9 > 0) nb += u[i - 1]; if (i % 9 < 8) nb += u[i + 1]; }
+  f.push(nb / 10);
+  for (let k = 0; k < 4; k++) f.push(c === k ? prog : 0);
+  for (let k = 0; k < 4; k++) f.push(c === k ? Math.min(4, ms.length) / 4 : 0);
+  return f;
+}
+const sigm = x => 1 / (1 + Math.exp(-x));
+const dotf = (w, f) => { let s = 0; for (let i = 0; i < f.length; i++) s += w[i] * f[i]; return s; };
+// 以學到的模型算「打出 t 被 o 胡」的機率；沒有模型時回傳 null（改用舊的 dangerOf）
+function dangerML(g, d, t, u) {
+  const W = RULES.DEF_W; if (!W) return null;
+  const i = ORD[t.k]; if (u[i] <= 0) return 0;
+  let tot = 0;
+  for (let o = 0; o < 4; o++) {
+    if (o === d) continue;
+    const pT = sigm(dotf(W.t, defFeatT(g, o))); if (pT < 0.002) continue;
+    tot += pT * sigm(dotf(W.w, defFeatW(g, d, o, t, u)));
+  }
+  return tot;
+}
+/* ---- 學習式選牌（Q 模型）：特徵＋小型神經網路。權重由 scripts/rl/train_q.py 訓練，放在 RULES.Q ---- */
+const QFAM = ['closed', 'pinfu', 'duidui', 'dragon', 'nosmall', 'flush', 'seven'];
+function qFeat(c, ctx) {
+  const { a, melds, u, th, minSh, g, seat } = ctx, f = [], sh = c.sh;
+  f.push(Math.min(sh, 6) / 6, sh === minSh ? 1 : 0, Math.min(2, sh - minSh) / 2, Math.min(c.uke, 40) / 40);
+  for (const fam of QFAM) {
+    let m = 99; for (const p of c.plans) if (p.n === fam || (fam === 'flush' && p.n.startsWith('flush'))) m = Math.min(m, p.sh);
+    f.push(m === 99 ? 1 : Math.min(m, 6) / 6, m === 99 ? 0 : 1, m === 99 ? 0 : (m - sh <= 0 ? 1 : 0));
+  }
+  f.push((c.bonus || 0) / 60);
+  const t = c.t, i = c.i, cls = NUMCLS(t);
+  f.push(Math.min(c.dg || 0, 12) / 12, t.s === 'z' ? 0 : (10 - t.n) / 9, t.s === 'z' ? 1 : 0, cls === 0 ? 1 : 0, cls === 1 ? 1 : 0, cls === 2 ? 1 : 0, u[i] / copiesIdx(i), a[i] / 4);
+  let om = 0, mth = 0; for (let o = 0; o < 4; o++) if (o !== seat) { om += g.melds[o].length; mth = Math.max(mth, th[o].w || 0); }
+  f.push(g.wall.length / 98, om / 8, melds.length / 4, melds.some(m => m.open) ? 1 : 0, mth / 2);
+  const su = [0, 0, 0]; let hon = 0, sm = 0, md = 0, bg = 0, pr = 0, tr = 0, kd = 0, hp = 0;
+  for (let k = 0; k < NK; k++) {
+    const n = a[k]; if (!n) continue; kd++; if (n === 2) pr++; if (n >= 3) tr++;
+    if (k >= 27) { hon += n; continue; }
+    su[Math.floor(k / 9)] += n; const nn = k % 9; if (nn >= 6) sm += n; else if (nn >= 3) md += n; else bg += n; hp += n * (9 - nn);
+  }
+  f.push(su[0] / 13, su[1] / 13, su[2] / 13, Math.max(...su) / 13, hon / 13, sm / 13, md / 13, bg / 13, pr / 6, tr / 4, kd / 13, hp / 100);
+  f.push(c.sc / 100);
+  return f;
+}
+function qEval(f) {
+  const Q = RULES.Q; let h = [];
+  for (let o = 0; o < Q.b1.length; o++) { let x = Q.b1[o]; const w = Q.W1[o]; for (let i = 0; i < f.length; i++) x += w[i] * (f[i] - Q.mu[i]) / Q.sd[i]; h.push(x > 0 ? x : 0); }
+  let h2 = []; for (let o = 0; o < Q.b2.length; o++) { let x = Q.b2[o]; const w = Q.W2[o]; for (let i = 0; i < h.length; i++) x += w[i] * h[i]; h2.push(x > 0 ? x : 0); }
+  let y = Q.b3; for (let i = 0; i < h2.length; i++) y += Q.w3[i] * h2[i];
+  return y;
+}
 function proDiscard(g, seat) {
-  PRO_G = proGoal(g, seat);
+  PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   const h = g.hands[seat], melds = g.melds[seat];
+  if (PRO_P.routes.length) {   // 轉向：偏好的路線比最近的路線慢 3 步以上，就改走手牌現在最順的路線，並換掉會衝突的習慣
+    PRO_P = null; const pl = planList(arrOf(h), melds); PRO_P = personaOf(g, seat);
+    const fav = pl.filter(p => PRO_P.routes.includes(p.n) || (PRO_P.routes.includes('flush') && p.n.startsWith('flush')));
+    if (!fav.length || bestSh(fav) - bestSh(pl) >= 3) {
+      const top = pl.filter(p => p.n !== 'any' && p.n !== 'goal').sort((x, y) => (x.sh - y.sh) || (y.b - x.b))[0];
+      const nm = top ? (top.n.startsWith('flush') ? 'flush' : top.n) : null, o = { routes: nm ? [nm] : [] };
+      if (nm === 'pinfu') { o.routes.push('twosuit'); o.pung = null; o.chow = 'often'; }      // 全順子：不碰、多吃，順便缺一門（反正沒有三元）
+      if (nm === 'duidui' || nm === 'dragon' || nm === 'seven') { o.chow = 'never'; if (nm !== 'seven' && !PRO_P.pung) o.pung = 'any'; }
+      g.persona[seat] = PRO_P = mkPersona(Object.assign({}, PRO_P, o)); (g.pivots = g.pivots || []).push({ seat, to: nm });
+    }
+  }
   const a = arrOf(h), u = unseenArr(g, seat), th = threats(g, seat);
   const cands = [];
   const seenKey = new Set();
@@ -1179,7 +1357,7 @@ function proDiscard(g, seat) {
   }
   const minSh = Math.min(...cands.map(c => c.sh));
   const mult = minSh <= 0 ? 0.45 : minSh === 1 ? 0.8 : 1.0;
-  let best = null, bs = -1e9;
+  let best = null, bs = -1e9; const pool = [];
   for (const c of cands) {
     if (c.sh > minSh + 1) continue;
     let sc = -100 * c.sh;
@@ -1187,20 +1365,35 @@ function proDiscard(g, seat) {
     a[c.i]--;
     if (c.sh === minSh) {
       const act = new Set(c.plans.filter(p => p.sh === c.sh).map(p => p.n));
-      sc += 1.5 * ukeire(a, melds, u, act, c.sh);
+      c.uke = ukeire(a, melds, u, act, c.sh); sc += PRO_P.uw * c.uke;
     }
     a[c.i]++;
     let bonus = 0; for (const p of c.plans) if (p.sh <= c.sh + 1) bonus = Math.max(bonus, p.b - 10 * (p.sh - c.sh));
-    sc += bonus * (RULES.PRO_BONUS == null ? 0.4 : RULES.PRO_BONUS);
-    sc -= 6 * mult * dangerOf(g, seat, c.t, u, th);
-    sc -= 0.15 * val(c.t) + Math.random() * 0.3;
+    sc += bonus * (RULES.PRO_BONUS == null ? PRO_P.bon : RULES.PRO_BONUS * PRO_P.bon / 0.4);
+    c.dg = PRO_P.ml && RULES.DEF_W ? RULES.DEF_ML * dangerML(g, seat, c.t, u) : dangerOf(g, seat, c.t, u, th);
+    sc -= PRO_P.dw * mult * PRO_P.def * c.dg;
+    sc -= PRO_P.vw * val(c.t) + Math.random() * 0.3;
+    c.sc = sc; c.bonus = bonus; if (c.uke == null) c.uke = 0; pool.push(c);
     if (sc > bs) { bs = sc; best = c.t; }
+  }
+  if (g.rollHook && pool.length > 1) { const pk = g.rollHook(g, seat, pool, { a, melds, u, th, minSh, g, seat }); if (pk) return pk; }
+  const useQ = RULES.Q && g.useQ && g.useQ[seat], rec = g.qrec && g.qrec[seat];
+  if ((useQ || rec) && pool.length > 1) {   // 學習式選牌：算每個候選的特徵，用 Q 模型挑；收資料時偶爾隨機探索
+    const ctx = { a, melds, u, th, minSh, g, seat };
+    for (const c of pool) { a[c.i]--; c.f = qFeat(c, ctx); a[c.i]++; }
+    let pick = null;
+    if (useQ) { const lam = RULES.Q_LAMBDA == null ? null : RULES.Q_LAMBDA; let qb = -1e18; for (const c of pool) { c.q = qEval(c.f); const v = lam == null ? c.q : c.sc + lam * 100 * c.q; if (v > qb) { qb = v; pick = c; } } }   // Q_LAMBDA：只拿 Q 當小幅修正
+    else pick = pool.reduce((x, y) => y.sc > x.sc ? y : x);
+    if (rec && Math.random() < (RULES.Q_EPS == null ? 0.3 : RULES.Q_EPS)) { const top = pool.slice().sort((x, y) => y.sc - x.sc).slice(0, 4); pick = top[Math.floor(Math.random() * top.length)]; }
+    if (rec) g.qrows.push({ s: seat, f: pick.f });
+    return pick.t;
   }
   return best || h[0];
 }
 // 要不要放掉這次胡牌？只在牌山還長、現在只是小胡、而且保得住聽牌時才考慮
 function greedDecline(g, seat, ev, tile, tsumo) {
   if (!RULES.PRO_GREED || ev.fan > 4 || g.wall.length < RULES.GREED_WALL) return false;
+  PRO_P = personaOf(g, seat); if (PRO_P.fast) return false;
   const names = ev.items.map(i => i.name), has = n => names.includes(n);
   if (has('天胡') || has('地胡') || has('人胡')) return false;
   const melds = g.melds[seat], hand = tsumo ? g.hands[seat] : g.hands[seat].concat([tile]);
@@ -1266,17 +1459,37 @@ function goalAllows(kind, tiles) {
   return tiles.every(x => x.s === 'z' ? !pure : ORD[x.s + 1] === su * 9);
 }
 function proClaimKind(g, seat, t, list, kind) {
-  PRO_G = proGoal(g, seat);
+  PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   if (!list.length) return null;
   const cur = curSh(g, seat); if (cur <= 0) return null;       // 已聽牌：保住門清，不鳴
+  let P = PRO_P; const closed = P.routes.includes('closed');
+  if (P.pung || P.chow) {   // 習慣要讓位給手牌現在的方向：全順子就別碰、多吃；全刻子就別吃
+    PRO_P = null; const pl = planList(arrOf(g.hands[seat]), g.melds[seat]); PRO_P = P;
+    const m = bestSh(pl), at = new Set(pl.filter(p => p.sh === m).map(p => p.n));
+    const tri = at.has('duidui') || at.has('dragon') || at.has('seven');
+    if (at.has('pinfu') && !tri) P = Object.assign({}, P, { pung: null, chow: P.chow === 'never' ? null : 'often' });
+    else if (tri && !at.has('pinfu')) P = Object.assign({}, P, { chow: 'never' });
+  }
+  if (closed && g.wall.length >= 45) return null;               // 門清派：前期不鳴牌，後段才鬆口
+  if (kind === 'chow' && P.chow === 'never') return null;
+  if (kind !== 'chow' && P.pung === 'dragon' && t.s !== 'z') return null;
   let best = null, bs = cur;
+  const su = P.routes.includes('flush') ? flushSuit(g, seat) : -1;
   for (const o of list) {
     if (!goalAllows(kind, [...o.tiles, t])) continue;
+    if (su >= 0 && [...o.tiles, t].some(x => x.s !== 'z' && ORD[x.s + 1] !== su * 9)) continue;   // 一色派只鳴主花色／字牌
+    if (P.routes.includes('duidui') && kind === 'chow' && su >= 0) continue;
     const sh = afterClaimSh(g, seat, o, t, kind);
     const dragon = t.s === 'z';
-    if (sh < bs || (sh === cur && dragon && !best && cur >= 1 && kind !== 'chow')) { bs = Math.min(bs, sh); best = o; }
+    const loose = cur >= 1 && sh <= cur && (P.fast || (kind !== 'chow' && (P.pung === 'any' || P.pung === 'dragon')) || (kind === 'chow' && P.chow === 'often'));   // 愛碰／愛吃：不退步就鳴
+    if (sh < bs || (sh === cur && ((dragon && !best && cur >= 1 && kind !== 'chow') || (loose && !best)))) { bs = Math.min(bs, sh); best = o; }
   }
   return best ? { seat, kind, opt: best } : null;
+}
+function flushSuit(g, seat) {
+  const cnt = [0, 0, 0]; g.hands[seat].forEach(t => { if (t.s !== 'z') cnt[ORD[t.s + 1] / 9]++; });
+  g.melds[seat].forEach(m => m.tiles.forEach(t => { if (t.s !== 'z') cnt[ORD[t.s + 1] / 9]++; }));
+  return cnt.indexOf(Math.max(...cnt));
 }
 function proClaim(g, seat, from, t, o) {
   const k = proClaimKind(g, seat, t, o.kong, 'kong'); if (k) return k;
@@ -1288,9 +1501,13 @@ function botDiscard(g, seat) { return proLevel(g, seat) ? proDiscard(g, seat) : 
 function botSelf(g, seat, opts) { return proLevel(g, seat) ? proSelf(g, seat, opts) : easySelf(g, seat, opts); }
 
 /* ---- headless simulation (all four seats are bots) ---- */
-function simGame(levels) {
-  const g = newGame(0); if (levels) g.botLv = levels;
-  let seat = 0, rep = false, needDraw = true, guard = 0;
+function simGame(levels, personas, extra) {
+  const g = newGame(0); if (levels) g.botLv = levels; if (extra) Object.assign(g, extra);
+  if (personas) { g.persona = personas.map((k, i) => k ? (typeof k === 'string' ? PERSONA_BAL : mkPersona(k)) : g.persona[i]); g.persona0 = g.persona.slice(); }
+  return runLoop(g, 0, false, true);
+}
+function runLoop(g, seat, rep, needDraw) {
+  let guard = 0;
   while (guard++ < 2000) {
     if (needDraw) { if (!drawTile(g, seat, rep)) return { draw: true, g }; }
     const drew = needDraw; needDraw = true; rep = false;
@@ -1310,7 +1527,33 @@ function simGame(levels) {
   }
   return { draw: true, g };
 }
-if (false) module.exports = { greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
+/* ---- 模擬用（訓練／分析）：複製局面、把看不到的牌（牌山＋對手手牌）重新洗過，再用電腦打完 ---- */
+function cloneWorld(g, seat, resample) {
+  const c = Object.assign({}, g);
+  c.hands = g.hands.map(h => h.slice()); c.discards = g.discards.map(d => d.slice());
+  c.melds = g.melds.map(ms => ms.map(m => Object.assign({}, m, { tiles: m.tiles.slice() })));
+  c.drawN = g.drawN.slice(); c.persona = g.persona ? g.persona.slice() : g.persona; c.goal = g.goal ? g.goal.slice() : g.goal; c.pivots = g.pivots ? g.pivots.slice() : g.pivots;
+  c.botLv = g.botLv; c.useQ = null; c.qrec = null; c.rollHook = null; c.wall = g.wall.slice();
+  if (resample) {
+    const pool = c.wall.slice(); const sizes = [];
+    for (let o = 0; o < 4; o++) if (o !== seat) { sizes.push([o, c.hands[o].length]); pool.push(...c.hands[o]); }
+    shuffle(pool);
+    for (const [o, n] of sizes) c.hands[o] = pool.splice(0, n);
+    c.wall = pool;
+  }
+  return c;
+}
+// seat 剛打出 tile（已從手牌拿掉並進棄牌）之後，由所有電腦接手打完；回傳 simGame 的結果
+function continueAfterDiscard(g, seat, t) {
+  const c = botClaims(g, seat, t, []);
+  if (c) {
+    if (c.kind === 'ron') return { res: winResult(g, c.seat, false, seat, c.ev), g };
+    applyClaim(g, c.seat, c.kind, c.opt, t, seat);
+    return runLoop(g, c.seat, c.kind === 'kong', c.kind === 'kong');
+  }
+  return runLoop(g, (seat + 1) % 4, false, true);
+}
+if (false) module.exports = { qFeat, cloneWorld, continueAfterDiscard, discardTile, defFeatT, defFeatW, dangerML, mkPersona, pickPersona, greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
 
 
 /* ===== UI ===== */
@@ -1330,7 +1573,7 @@ const YAKU_JA = {
 const JA_EXACT = {
   '摸牌山最後一張自摸（連自摸共 +1）': '牌山の最後の1枚でツモ（ツモと合わせて +1）',
   /* table */
-  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '電腦強度': 'COMの強さ', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
+  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
   '手牌＋鳴牌的點值總和（未乘番數；彩碰被要的那張不計）': '手牌＋副露の点の合計（翻数を掛ける前。彩ポンで鳴いた1枚は数えません）',
   '整理': '理牌', '彩組': '彩まとめ', '把手上的彩眼／彩刻湊在一起並鎖定': '手牌の彩雀頭／彩刻子をまとめてロックします',
   '目前沒有可組的彩眼／彩刻': 'まとめられる彩雀頭／彩刻子はありません', '解鎖': 'ロック解除', '鎖定': 'ロック',
@@ -1338,7 +1581,7 @@ const JA_EXACT = {
   '點擊鎖定：整理不會拆開這組牌（打牌不受影響）': 'クリックでロック：理牌でこの組が崩れません（打牌には影響なし）',
   '輪到你：選一張牌，再按「<b>打出</b>」。': 'あなたの番です。牌を選んで「<b>打牌</b>」を押してください。',
   '打出 ': '打牌 ', '先選一張牌，再按打出': '牌を選んで「打牌」を押してください', '先決定要不要這張牌': 'まず、この捨て牌を鳴くか決めてください',
-  '還沒輪到你': 'まだあなたの番ではありません', '　': '　', '分': '点', '＋': '＋', '（混）': '（彩）',
+  '還沒輪到你': '相手の番', '　': '　', '分': '点', '＋': '＋', '（混）': '（彩）',
   '自摸': 'ツモ', '過': 'パス', '流局': '流局', '流局。': '流局です。', '本局結束。': 'この局は終了です。', '下一局': '次の局へ',
   '牌山摸完，沒有人胡牌。': '牌山がなくなり、誰も和了しませんでした。', '合計（取整、6 番封頂）': '合計（切り捨て・6翻で上限）',
   '自摸：每家付一份': 'ツモ：各家が1人分ずつ払う', '出銃者付兩份': '放銃者が2人分払う', '本局': '今局', '累計': '累計', '（自摸：每家付一份）': '（ツモ：各家が1人分ずつ払う）', '（出銃者付兩份）': '（放銃者が2人分払う）', '得分': '得点', '最終得分': '最終得点', '點': '点',
@@ -1351,7 +1594,7 @@ const JA_EXACT = {
   '得分 = 全手點值（一＝1 … 九＝9）× 番數（上限 6）；番數取整數，1+0.5＝1.5 算 1、1+0.5+0.5＝2。': '得点 ＝ 手牌の合計点（一＝1 … 九＝9）× 翻数（上限6）。翻数は切り捨て：1+0.5＝1、1+0.5+0.5＝2。',
   '關閉': '閉じる', '幺九龍 試玩': '幺九龍 テストプレイ', '幺九龍': '幺九龍', '切換語言（English）': '言語切替（English）',
   '規則': 'ルール', '設定': '設定', '返回首頁': 'ホームに戻る', '重新開局': 'リスタート', '按住牌拖曳來排序': '長押ししてドラッグで並べ替え',
-  '向左移': '左へ移動', '向右移': '右へ移動', '牌局記錄': '牌譜', '先選一張牌': '牌を選んでください',
+  '向左移': '左へ移動', '向右移': '右へ移動', '牌局記錄': '牌譜', '先選一張牌': '牌を選ぶ',
   /* restart vote / toasts */
   '重新開局？': 'リスタートしますか？', '不同意': '反対', '同意': '賛成', '玩家': 'プレイヤー', '逾時': '時間切れ', '不同意重新開局': 'リスタートに反対しました',
   '收起': '閉じる', '速查': '役一覧', '收起速查': '役一覧を閉じる', '速查表': '役一覧', ' (電腦)': '（CPU）',
@@ -1385,7 +1628,7 @@ const JA_EXACT = {
   '一門 + 三元（首副三元刻不另計）': '1色＋三元牌（最初の三元刻は別計算しない）', '無鳴牌、自摸': '副露なし・ツモ', '沒有 1–3': '1〜3を含まない',
   '3 組暗刻': '暗刻3組', '7 對，可重複，不可彩眼': '7対（同じ牌4枚＝2対も可）、彩雀頭は不可',
   '2 刻 + 1 眼 · +30': '刻子2＋雀頭1 ・ +30', '全部 1–3': 'すべて1〜3', '同花 123·456·789 · 其餘任一面子': '同色123・456・789 ＋ 残り1組は何でも',
-  '一門、無三元（不含彩碰／彩眼）': '1色のみ・三元牌なし（彩ポン／彩雀頭は不可）', '4 組暗刻': '暗刻4組', '三元全刻 · +60': '三元牌すべて刻子 ・ +60',
+  '一門、無三元（不含彩碰／彩眼）': '1色のみ・三元牌なし（彩ポン／彩雀頭は不可）', '4 組暗刻': '暗刻4組', '4 組暗刻（不另計對對胡、不求人）': '暗刻4組（対々和・不求人は別計算しない）', '有鳴牌，或四暗刻自摸': '副露がある手、または四暗刻のツモ', '三元全刻 · +60': '三元牌すべて刻子 ・ +60',
   '同花 123·456·789 + 紅中、發財、白板 + 眼 · +30': '同色123・456・789 ＋ 白發中 ＋ 雀頭 ・ +30', '紅中、發財、白板全槓 · +90': '白發中すべてカン ・ +90',
   '莊家起手即胡': '親の配牌でそのまま和了', '閒家胡莊家第一隻打出的牌': '子が親の第1打でロン', '閒家第一次摸牌自摸，之前無人吃碰槓': '子が最初のツモで和了（それまで誰も鳴いていない）',
   '每次': '1回ごと', '補第 5 張紅中、發財、白板': '5枚目の白發中を加える', '無鳴牌': '副露なし', '只限有鳴牌': '副露がある手のみ',
@@ -1396,7 +1639,7 @@ const JA_EXACT = {
   '鳴牌不合（只可鳴 456、789，同花）': '副露が合いません（鳴けるのは同色の456・789のみ）', '鳴牌不合（只可鳴 456、789，同花，不能有碰槓）': '副露が合いません（同色の456・789のみ、ポン／カン不可）',
   '鳴牌不合（要紅中、發財、白板全槓）': '副露が合いません（白發中すべてカンが必要）', '已有鳴牌': 'すでに副露あり', '同花 456·567·678·789，只吃上家': '同色の456・567・678・789、上家からのみ',
   '音效': '効果音', '自摸！': 'ツモ！', '食胡！': 'ロン！', '▶ 點一下開始預覽（要點一下才有聲音）': '▶ タップでプレビュー開始（音を出すにはタップが必要）', '看牌桌': 'テーブルを見る', '回到結算': '結果に戻る', '已鳴': '副露', '胡': '和了', '背景音樂': 'BGM', '開': 'オン', '關': 'オフ',
-  '牌局記錄（分析用）': '対局記録（分析用）', '只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。': 'COMとの一人用の対局（配牌・牌山・すべての手と思考時間）だけを記録します。このブラウザ内にのみ保存され、アップロードされません。', '匯出': 'エクスポート', '清除': 'クリア', '還沒有記錄': 'まだ記録がありません', '清除所有牌局記錄？': 'すべての対局記録を削除しますか？',
+  '牌局記錄（分析用）': '対局記録（分析用）', '只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。': 'COMとの一人用の対局（配牌・牌山・すべての手と思考時間）だけを記録します。このブラウザ内にのみ保存され、アップロードされません。', '匯出': 'エクスポート', '匯出新的': '新しい分をエクスポート', '全部匯出': 'すべてエクスポート', '沒有新的記錄（上次匯出後）': '前回のエクスポート以降の新しい記録はありません', '清除': 'クリア', '還沒有記錄': 'まだ記録がありません', '清除所有牌局記錄？': 'すべての対局記録を削除しますか？',
   '意見回饋': 'フィードバック', '遊戲有問題或想法？告訴我！': 'バグやご意見があれば教えてください！', '類型': '種類', '錯誤': '不具合', '建議': 'ご提案', '其他': 'その他',
   '請描述你遇到的問題或想法…': '問題点やアイデアをご記入ください…', '聯絡方式（選填，方便回覆）': '連絡先（任意・返信用）',
   '會一併附上語言與裝置資訊，不會附上其他個人資料。': '言語と端末の情報が一緒に送信されます。それ以外の個人情報は送りません。',
@@ -1459,16 +1702,17 @@ function jaRuby(html) {
 }
 
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
-const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'off' };
-try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
+const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off' };
+try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-recv') !== '2') { PREF.recOn = 'on'; localStorage.setItem('yjl-recOn', 'on'); localStorage.setItem('yjl-recv', '2'); } if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
 const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' ? 'pro' : 'easy'; };
 applyBotLvl();
-const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-fs', PREF.fs); };
+const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-hc', PREF.hc === 'on' ? 'on' : 'off'); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
 const L = (zh, en) => LANG === 'en' ? en : LANG === 'ja' ? jaT(zh) : zh;
 const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Downstream', 'Across', 'Upstream'], ja: SEAT_JA };
 const NAMES = new Proxy({}, { get: (_, i) => SEAT[LANG][i] });
 /* ===== 線上房間狀態 / online room state (PeerJS, host-authoritative) ===== */
+let BOTP = [0, 1, 2, 3].map(() => pickPersona());
 const ROOM = { mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, afk: {}, seen: {}, rid: 0, handNo: 0, started: false, myName: '', conn: null, msg: '', ready: [true, false, false, false], tc: null, bank: [0, 0, 0, 0], zooming: false };
 const CLK = { banks: [0, 0, 0, 0], act: {} };
 { const lb = $('#lobby'); lb.open = false; lb.showModal = () => { lb.hidden = false; lb.open = true; }; lb.close = () => { lb.hidden = true; lb.open = false; }; }
@@ -1513,7 +1757,7 @@ const HAND_EX = [
   [1, '彩一色', 'Mixed Flush', 'p1 s1 m1|p2 p3 p4|p4 p5 p6|p5 p6 p7|p8 p8'],
   [2, '混一色', 'Half Flush', 'p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'],
   [2, '斷小字', 'No Small', 'p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'],
-  [2, '三暗刻', 'Three Concealed Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'],
+  [1, '三暗刻', 'Three Concealed Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'],
   [2, '七對子', 'Seven Pairs', 'p8 p8|p8 p8|s7 s7|s9 s9|m7 m7|m9 m9|z1 z1'],
   [3, '小三元', 'Small Dragons', 'z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'],
   [3, '全小字', 'All Small', 'p7 p7 p7|s8 s8 s8|m9 m9 m9|p7 p8 p9|s9 s9'],
@@ -1651,15 +1895,15 @@ zh: `  <h2>規則</h2>
         <li><b>三元刻</b>：紅中、發財、白板任一組刻子，明碰或暗刻都算，每組可疊加。</li>
         <li><b>平胡</b>：全順子、無三元。</li>
         <li><b>對對胡</b>：4 刻 + 眼，彩碰可。</li>
+        <li><b>不求人</b>：無鳴牌、自摸。門清加自摸，不重複算門清或自摸。</li>
+        <li><b>三暗刻</b>：有 3 組暗刻（自己手牌湊成、不是碰別人的牌；暗槓也算）。第四組面子可鳴、可順子、可刻子、可碰。</li>
         <li><b>彩一色</b>：混一色或清一色，但其中恰有一處是「彩」：眼是彩眼，或其中一刻是彩碰／彩刻；該彩眼／彩碰／彩刻必須至少有一張是主色（例如 8筒8筒8萬 在筒子手牌）；彩眼和彩碰不可同時有，多於一刻彩碰也不可；第一副三元刻不另計。</li>
       </ul>
     </li>
     <li><b>2 番</b>
       <ul>
         <li><b>混一色</b>：一門 + 三元。不可彩碰、彩刻、彩眼，否則只視為彩一色；第一副三元刻不另計。</li>
-        <li><b>不求人</b>：無鳴牌、自摸。門清加自摸，不重複算門清或自摸。</li>
         <li><b>斷小字</b>：整副手牌沒有 1–3。</li>
-        <li><b>三暗刻</b>：有 3 組暗刻（自己手牌湊成、不是碰別人的牌；暗槓也算）。第四組面子可鳴、可順子、可刻子、可碰。</li>
         <li><b>七對子</b>：門清狀態下組成 7 對。四張相同算兩對（如 2222）；可疊混一色、清一色；不可彩眼；不重複算門清。</li>
       </ul>
     </li>
@@ -1673,7 +1917,7 @@ zh: `  <h2>規則</h2>
     <li><b>4 番</b>
       <ul>
         <li><b>清一色</b>：只有一門、無三元。不可彩碰、彩刻、彩眼，否則只視為彩一色；不重複算斷一門無三元。</li>
-        <li><b>四暗刻</b>：4 組刻子全部是暗刻（自己手牌湊成、不是碰別人的牌；暗槓也算）。不重複算對對胡。</li>
+        <li><b>四暗刻</b>：4 組刻子全部是暗刻（自己手牌湊成、不是碰別人的牌；暗槓也算）。不重複算對對胡和不求人；自摸時只加自摸半番（4 番＋半番）。榮胡時，如果胡的那張牌是放進眼（對子）、不屬於 4 組刻子中的任何一組，仍算四暗刻；若那張牌補成其中一組刻子，該組算明刻，只能算三暗刻。</li>
         <li><b>大三元</b>：三元全刻。不另計三元刻，手牌點值立即 +60。</li>
         <li><b>門清幺九順</b>：同幺九順但無鳴牌，手牌點值立即 +30；不重複算門清。</li>
       </ul>
@@ -1697,7 +1941,7 @@ zh: `  <h2>規則</h2>
     <li><b>槓</b>：每次槓。</li>
     <li><b>三元大補槓</b></li>
     <li><b>門清</b>：無鳴牌。不求人、全小字、七對子、門清幺九順不再加。</li>
-    <li><b>自摸</b>：只給有鳴牌的手牌；不求人已包含自摸。</li>
+    <li><b>自摸</b>：只給有鳴牌的手牌，以及四暗刻自摸；不求人已包含自摸。</li>
     <li><b>槓上自摸</b>：槓後補牌自摸。與自摸及槓重疊，合共追加 1.5 番。</li>
     <li><b>海底撈月</b>：摸到牌山最後一張牌並自摸胡。與自摸重疊（有鳴牌時合共追加 1 番）。</li>
     <li><b>斷一門無三元</b>：筒索萬缺一門且沒有紅中、發財、白板；清一色不重複算。</li>
@@ -1798,15 +2042,15 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
         <li><b>Dragon triplet (三元刻)</b>: each triplet of Red, Green or White Dragon counts, whether it is a revealed Pung or a concealed triplet. They stack.</li>
         <li><b>All Sequences (平胡)</b>: all sequences, no dragons.</li>
         <li><b>All Triplets (對對胡)</b>: 4 triplets + pair. Mixed Pungs are allowed.</li>
+        <li><b>Concealed Self-Draw (不求人)</b>: no calls and you win by drawing. Replaces Concealed and Self-draw.</li>
+        <li><b>Three Concealed Triplets (三暗刻)</b>: three triplets you formed yourself in your hand (not Pung'd from someone else's discard; a concealed Kong counts). The fourth meld can be anything: open or concealed, a sequence or a triplet, even a Pung or Chow.</li>
         <li><b>Mixed Flush (彩一色)</b>: a Half Flush or Full Flush with exactly one mixed part: either the pair is a mixed pair, or one of the triplets is a mixed Pung / mixed triplet. That mixed pair, Pung or triplet must contain at least one tile of the main suit (e.g. 8-Circle 8-Circle 8-Character in a Circles hand). A mixed pair and a mixed Pung together, or more than one mixed Pung, don't count. The first dragon triplet isn't counted separately.</li>
       </ul>
     </li>
     <li><b>2 fan</b>
       <ul>
         <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed Pung, mixed triplet or mixed pair (otherwise it counts only as a Mixed Flush). The first dragon triplet isn't counted separately.</li>
-        <li><b>Concealed Self-Draw (不求人)</b>: no calls and you win by drawing. Replaces Concealed and Self-draw.</li>
         <li><b>No Small (斷小字)</b>: no 1–3 anywhere in the hand.</li>
-        <li><b>Three Concealed Triplets (三暗刻)</b>: three triplets you formed yourself in your hand (not Pung'd from someone else's discard; a concealed Kong counts). The fourth meld can be anything: open or concealed, a sequence or a triplet, even a Pung or Chow.</li>
         <li><b>Seven Pairs (七對子)</b>: seven pairs, all concealed. Four of a kind counts as two pairs (2222). No mixed pair. Can stack with Half Flush and Full Flush. No Concealed bonus on top.</li>
       </ul>
     </li>
@@ -1820,7 +2064,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
     <li><b>4 fan</b>
       <ul>
         <li><b>Full Flush (清一色)</b>: one suit only, no dragons. No mixed Pung, mixed triplet or mixed pair (otherwise it counts only as a Mixed Flush). Doesn't also get Missing suit, no dragons.</li>
-        <li><b>Four Concealed Triplets (四暗刻)</b>: all four triplets are concealed (formed yourself in your hand; a concealed Kong counts). Doesn't also get All Triplets.</li>
+        <li><b>Four Concealed Triplets (四暗刻)</b>: all four triplets are concealed (formed yourself in your hand; a concealed Kong counts). Doesn't also get All Triplets or Concealed Self-Draw; winning by self-draw adds only the Self-draw half fan (4 fan + ½). Winning by Ron counts as Four Concealed Triplets only if the winning tile goes into your pair and not into any of the four triplets; if it completes one of the triplets, that triplet counts as open and the hand is only Three Concealed Triplets.</li>
         <li><b>Great Dragons (大三元)</b>: triplets of all three dragons. Replaces the dragon triplet fan; hand points +60.</li>
         <li><b>Concealed Kowloon Straight (門清幺九順)</b>: a Kowloon Straight with no open melds. Hand points +30. No Concealed bonus on top.</li>
       </ul>
@@ -1844,7 +2088,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
     <li><b>Kong (槓)</b>: each kong.</li>
     <li><b>Grand dragon Kong (三元大補槓)</b></li>
     <li><b>Concealed (門清)</b>: no calls. Not given with Concealed Self-Draw, All Small, Seven Pairs or Concealed Kowloon Straight.</li>
-    <li><b>Self-draw (自摸)</b>: open hands only. Concealed Self-Draw already includes it.</li>
+    <li><b>Self-draw (自摸)</b>: open hands, and Four Concealed Triplets won by self-draw. Concealed Self-Draw already includes it.</li>
     <li><b>Win on Last Tile (海底撈月)</b>: you win by self-draw on the very last tile of the wall. It stacks with Self-draw, so for a hand with calls it adds 1 fan in total.</li>
     <li><b>Win on Kong (槓上自摸)</b>: you win by self-draw on the replacement tile drawn after a Kong. It stacks with Self-draw and Kong, so a win like that adds 1½ fan in total.</li>
     <li><b>Missing suit, no dragons (斷一門無三元)</b>: one of the three suits is absent and the hand has no dragons. Full Flush doesn't get it.</li>
@@ -1901,15 +2145,15 @@ RULES_HTML.ja = `  <h2>ルール</h2>
         <li><b>役牌（三元刻）</b>：白・發・中の刻子。明刻も暗刻も可、1組ごとに加算。</li>
         <li><b>平和</b>：順子のみ・三元牌なし。</li>
         <li><b>対々和</b>：刻子4組＋雀頭。彩ポン可。</li>
+        <li><b>不求人（門前ツモ）</b>：副露なし・ツモ。門前・ツモは別計算しない。</li>
+        <li><b>三暗刻</b>：自分の手牌で作った暗刻が3組（他家から鳴いた刻子は不可。暗槓も可）。4つ目の面子は、鳴いていても、順子でも刻子でも（ポン・チーでも）かまいません。</li>
         <li><b>彩一色</b>：混一色または清一色で、「彩」の部分がちょうど1つだけあるもの（雀頭が彩雀頭、または刻子の1つが彩ポン／彩刻子）。該当の彩雀頭・彩ポン・彩刻子に主色が1枚以上あること（例：八筒八筒八萬 を筒子の手で）。彩雀頭と彩ポンの併用、彩ポン2組以上は不可。最初の三元刻は別計算しない。</li>
       </ul>
     </li>
     <li><b>2翻</b>
       <ul>
         <li><b>混一色</b>：1色＋三元牌。彩ポン・彩刻子・彩雀頭は不可（あれば彩一色のみ）。最初の三元刻は別計算しない。</li>
-        <li><b>不求人（門前ツモ）</b>：副露なし・ツモ。門前・ツモは別計算しない。</li>
         <li><b>断小字</b>：手牌に1〜3が1枚もない。</li>
-        <li><b>三暗刻</b>：自分の手牌で作った暗刻が3組（他家から鳴いた刻子は不可。暗槓も可）。4つ目の面子は、鳴いていても、順子でも刻子でも（ポン・チーでも）かまいません。</li>
         <li><b>七対子</b>：門前（鳴きなし）で7対をそろえる。同じ牌4枚＝2対も可（2222）。混一色・清一色と複合可。彩雀頭は不可。門前は別計算しない。</li>
       </ul>
     </li>
@@ -1923,7 +2167,7 @@ RULES_HTML.ja = `  <h2>ルール</h2>
     <li><b>4翻</b>
       <ul>
         <li><b>清一色</b>：1色のみ・三元牌なし。彩ポン・彩刻子・彩雀頭は不可（あれば彩一色のみ）。欠一門無字は別計算しない。</li>
-        <li><b>四暗刻</b>：4組の刻子がすべて暗刻（自分の手牌で作ったもの。暗槓も可）。対々和は重複して数えません。</li>
+        <li><b>四暗刻</b>：4組の刻子がすべて暗刻（自分の手牌で作ったもの。暗槓も可）。対々和と不求人は重複して数えません。ツモのときはツモの半翻だけ加算（4翻＋半翻）。ロンの場合、和了牌が雀頭に入り4組の刻子のどれにも入らないときだけ四暗刻になります。刻子を完成させる場合、その刻子は明刻扱いとなり、三暗刻にしかなりません。</li>
         <li><b>大三元</b>：三元牌すべて刻子。三元刻は別計算しない。手牌の点に即 +60。</li>
         <li><b>門前幺九順</b>：幺九順の副露なし版。手牌の点に即 +30。門前は別計算しない。</li>
       </ul>
@@ -1947,7 +2191,7 @@ RULES_HTML.ja = `  <h2>ルール</h2>
     <li><b>カン</b>：1回ごと。</li>
     <li><b>三元大カン</b></li>
     <li><b>門前</b>：副露なし。不求人・全小字・七対子・門前幺九順には付きません。</li>
-    <li><b>ツモ</b>：副露のある手のみ。不求人にはすでに含まれます。</li>
+    <li><b>ツモ</b>：副露のある手と、四暗刻のツモ。不求人にはすでに含まれます。</li>
     <li><b>嶺上開花</b>：カン後の補充牌でツモ。ツモ・カンと重なり、合計 +1.5翻。</li>
     <li><b>海底摸月</b>：牌山の最後の1枚でツモあがり。ツモと重なり、鳴いている手なら合計 +1翻。</li>
     <li><b>欠一門無字</b>：筒索萬の1色が欠け、三元牌もない。清一色とは重ならない。</li>
@@ -2015,10 +2259,10 @@ function claimBtn(kind, opt, fn) {
   opt.tiles.forEach(t => { const e = tileEl(t, { sm: true }); if (opt.claimed && t.id === opt.claimed) e.classList.add('cmk'); delete e.dataset.id; delete e.dataset.k; row.appendChild(e); });
   b.appendChild(row); b.classList.add('cb'); b.ariaLabel = plabel(kind, opt); return b;
 }
-function clearActions() { $('#actions').innerHTML = ''; }
+function clearActions() { $('#actions').innerHTML = ''; queueDock(); }
 function addAction(label, fn, primary) {
   const b = document.createElement('button'); b.className = 'btn' + (primary ? ' primary' : ''); b.type = 'button'; b.textContent = label;
-  b.onclick = () => { clearActions(); fn(); render(); }; $('#actions').appendChild(b); return b;
+  b.onclick = () => { clearActions(); fn(); render(); }; $('#actions').appendChild(b); queueDock(); return b;
 }
 
 function render() {
@@ -2114,11 +2358,50 @@ function onHandClick(id) {
   UI.sel = UI.sel === id ? null : id; render();
 }
 $('#discardBtn').onclick = doDiscard;
+// 手機：手牌排成兩行、第二行只有幾張時，「打出」縮成右半邊、放進第二行的空位（有槓／胡等按鈕時不縮）
+let dockRaf = 0;
+const queueDock = () => { cancelAnimationFrame(dockRaf); dockRaf = requestAnimationFrame(dockDiscard); };
+// 對手的牌背：一行放不下就互相疊一點，永遠只佔一行
+function fitBacks() {
+  document.querySelectorAll('#opps .backs').forEach(el => {
+    const k = [...el.children]; if (k.length < 2) return;
+    k.forEach((c, i) => { if (i) c.style.marginLeft = ''; });
+    const w = k[0].offsetWidth, need = k.length * w + (k.length - 1), avail = el.clientWidth;
+    if (w && need > avail) { const ov = (need - avail) / (k.length - 1) + 0.01; k.forEach((c, i) => { if (i) c.style.marginLeft = -ov + 'px'; }); }
+  });
+}
+function dockDiscard() {
+  fitBacks();
+  const me = $('#me'), hand = $('#hand'); if (!me || !hand) return;
+  let on = false; me.classList.remove('dock', 'dl');
+  hand.querySelectorAll('[data-dm]').forEach(e => { e.style.marginLeft = ''; e.style.order = ''; delete e.dataset.dm; });
+  if (matchMedia('(max-width:520px)').matches && UI.mode !== 'claim' && !$('#actions').children.length) {
+    const kids = [...hand.children].filter(e => e.offsetWidth && e.classList.contains('tile')), tops = [...new Set(kids.map(e => e.offsetTop))];
+    if (tops.length >= 2) {
+      const lastTop = Math.max(...tops), right = Math.max(...kids.filter(e => e.offsetTop === lastTop).map(e => e.offsetLeft + e.offsetWidth));
+      if (right + 14 <= hand.clientWidth * 0.5) {   // 按鈕頂端對齊第二行牌的頂端
+        const rowTop = hand.getBoundingClientRect().top + lastTop, ar = $('.actrow').getBoundingClientRect();   // 用版面位置（offsetTop），選牌時牌會浮起，不能用它的畫面位置
+        me.style.setProperty('--dockup', (rowTop - ar.top + (parseFloat(getComputedStyle($('.actrow')).marginTop) || 0)).toFixed(2) + 'px'); on = true;
+        if (PREF.dockSide === 'left') {   // 按鈕放左半：第二行由左到右＝按鈕、剛摸的牌、其餘的牌
+          const all = [...hand.children].filter(e => !e.classList.contains('lbar')), ft = kids.find(e => e.offsetTop === lastTop), fi = all.indexOf(ft);
+          me.classList.add('dl'); all.forEach((e, i) => { e.style.order = i * 4; e.dataset.dm = 1; });   // CSS order 只能整數
+          const dr = UI.drawnId != null ? hand.querySelector(`.tile[data-id="${UI.drawnId}"]`) : null, gp = hand.querySelector('.gap');
+          let first = ft;
+          if (dr && dr.offsetTop === lastTop) { dr.style.order = fi * 4 - 2; if (gp) gp.style.order = fi * 4 - 1; first = dr; }
+          first.style.marginLeft = Math.round(hand.clientWidth / 2 + 11) + 'px';   // 按鈕右緣在 50%−3px，空 14px
+        }
+      }
+    }
+  }
+  me.classList.toggle('dock', on);
+}
+addEventListener('resize', queueDock);
 function updateDiscardBtn() {
+  queueDock();
   $('#me').classList.toggle('claiming', UI.mode === 'claim');
   const b = $('#discardBtn'), tl = UI.sel != null ? G.hands[0].find(x => x.id === UI.sel) : null;
-  if (UI.mode === 'discard' && tl) { b.disabled = false; b.textContent = L('打出 ', 'Discard ') + tn(tl); }
-  else { b.disabled = true; b.textContent = UI.mode === 'discard' ? L('先選一張牌，再按打出', 'Select a tile, then press Discard') : (UI.mode === 'claim' ? L('先決定要不要這張牌', 'Decide on the discard first') : L('還沒輪到你', 'Not your turn')); }
+  if (UI.mode === 'discard' && tl) { b.disabled = false; b.textContent = L('打出 ', 'Discard ') + (LANG === 'en' ? tn(tl).replace('Characters', 'Charac.').replace(' Dragon', ' Dr.') : tn(tl)); }   // 英文縮短，半寬按鈕才不會被「…」截掉
+  else { b.disabled = true; b.textContent = UI.mode === 'discard' ? L('先選一張牌', 'Select a tile') : (UI.mode === 'claim' ? L('先決定要不要這張牌', 'Decide on the discard first') : L('還沒輪到你', 'Not your turn')); }
 }
 /* ---- 手牌順序：按鈕 ---- */
 const domOrder = () => [...document.querySelectorAll('#hand .tile')].map(t => +t.dataset.id);
@@ -2211,7 +2494,7 @@ $('#mixBtn').onclick = () => {
 function seqTiles(a) {
   const out = [], by = {};
   sortTiles(a).forEach(t => (by[t.s] = by[t.s] || []).push(t));
-  for (const sx of ['p', 's', 'm', 'z']) {
+  for (const sx of ['p', 'm', 's', 'z']) {
     let ts = by[sx] || []; if (!ts.length) continue;
     if (sx === 'z') { out.push(...ts); continue; }
     const left = [];
@@ -2334,7 +2617,7 @@ function humanSelf(opts) {
       opts.kongs.forEach(k => {
         const nm = kn(k.k);
         addAction(L((k.big ? '大槓 ' : '槓 ') + nm + (k.kind === 'add' ? '（加槓）' : '（暗槓）'),
-          (k.big ? 'Grand Kong ' : 'Kong ') + nm + (k.kind === 'add' ? ' (add to Pung)' : ' (concealed)')), done({ Kong: k }));
+          (k.big ? 'Grand Kong ' : 'Kong ') + nm + (k.kind === 'add' ? ' (add to Pung)' : ' (concealed)')), done({ kong: k }));
       });
       setStatus(() => L('輪到你：選一張牌，再按「<b>打出</b>」。', 'Your turn: select a tile, then press <b>Discard</b>.'));
     };
@@ -2464,7 +2747,7 @@ const recOn = () => PREF.recOn === 'on' && ROOM.mode === 'solo';
 const recLoad = () => { try { return JSON.parse(localStorage.getItem(REC.key) || '[]'); } catch (e) { return []; } };
 function recStart() {
   REC.cur = null; if (!recOn()) return;
-  REC.cur = { t: Date.now(), bot: PREF.botLvl, dealer, scores: scores.slice(), hands: G.hands.map(h => h.map(t => t.k)), wall: G.wall.map(t => t.k), acts: [] };
+  REC.cur = { t: Date.now(), bot: PREF.botLvl, dealer, scores: scores.slice(), persona: G.persona0.map(p => p.label), hands: G.hands.map(h => h.map(t => t.k)), wall: G.wall.map(t => t.k), acts: [] };
 }
 const recAct = o => { if (REC.cur) REC.cur.acts.push(o); };
 function recEnd(res) {
@@ -2483,11 +2766,15 @@ function recAsk(seat, t, ho, ch, ms) {
   const opts = []; if (ho.ron) opts.push('ron'); if (ho.kong.length) opts.push('kong'); if (ho.pong.length) opts.push('pong'); if (ho.chow.length) opts.push('chow');
   recAct({ s: seat, a: 'ask', k: t.k, opts, pick: ch ? ch.kind : 'pass', ms: Math.round(ms) });
 }
-function recExport() {
-  const all = recLoad();
-  const blob = new Blob([JSON.stringify({ app: 'kowloon-dragons', v: 1, exported: new Date().toISOString(), hands: all })], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kowloon-hands-' + new Date().toISOString().slice(0, 10) + '.json';
+const recLast = () => { try { return +localStorage.getItem('yjl-recx') || 0; } catch (e) { return 0; } };   // 上次匯出時最新一手的時間
+const recNew = () => recLoad().filter(h => h.t > recLast());
+function recExport(all) {
+  const hands = all ? recLoad() : recNew();
+  const blob = new Blob([JSON.stringify({ app: 'kowloon-dragons', v: 1, exported: new Date().toISOString(), tz: (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return ''; } })(), tzOffsetMin: -new Date().getTimezoneOffset(), hands })], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); const d0 = new Date(), z2 = n => String(n).padStart(2, '0');   // 檔名用你所在時區的當地時間（不是 UTC）
+  a.download = 'kowloon-hands-' + d0.getFullYear() + z2(d0.getMonth() + 1) + z2(d0.getDate()) + '-' + z2(d0.getHours()) + z2(d0.getMinutes()) + (all ? '-all' : '') + '.json';
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  if (hands.length) try { localStorage.setItem('yjl-recx', String(Math.max(recLast(), ...hands.map(h => h.t)))); } catch (e) {}
 }
 // 除錯：網址加 ?botlog 時，高手電腦放棄胡牌改做大牌會記在牌局記錄裡
 const BOTLOG = /[?&]botlog\b/.test(location.search);
@@ -2505,7 +2792,7 @@ function flushGreedLog() {
 async function play() {
   const my = ++runId; ROOM.handNo++;
   if (isHost() && ROOM.tc) { ROOM.bank = [0, 1, 2, 3].map(() => ROOM.tc.a); const m = { t: 'clk', reset: true, banks: ROOM.bank.slice() }; clkApply(m); bcast(m); }
-  G = newGame(dealer); G.turn = dealer; HIST = [0, 1, 2, 3].map(s => [handPts(s)]); UI.viewTable = false; UI.locks = []; UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
+  G = newGame(dealer); G.turn = dealer; G.persona = BOTP.slice(); G.persona0 = G.persona.slice(); HIST = [0, 1, 2, 3].map(s => [handPts(s)]); UI.viewTable = false; UI.locks = []; UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
   LOGS.length = 0; renderLog(); clearActions(); recStart();
   $('#result').close?.(); render();
   const dl = dealer; log(() => L(`新局，${WHO[dl]}做莊。`, !online() && dl === 0 ? 'New hand. You deal.' : `New hand. ${WHO[dl]} deals.`));
@@ -2523,6 +2810,7 @@ async function play() {
     const tAsk = performance.now();
     act = await askSelf(seat, opts, drew ? t0 : null);
     if (!alive()) return;
+    if (!act || (!act.win && !act.kong && act.discard == null)) act = botSelf(G, seat, Object.assign({ noGreed: true }, opts));   // 保險：收到不認得的動作就讓電腦代打，不要卡死
     const askMs = ROOM.kind[seat] === 'host' ? Math.round(performance.now() - tAsk) : undefined;
     flushGreedLog();
     if (act.win) { recAct({ s: seat, a: 'win', tsumo: true, ms: askMs }); const wr = winResult(G, seat, true, null, opts.win); wr.winId = G.lastDraw.id; finish(wr); return; }
@@ -2602,7 +2890,7 @@ function handRow(seat, who, res) {
   const r = document.createElement('div'); r.className = 'rvrow' + (win ? ' wn' : '');
   if (G.melds[seat].length) {
     const mb = document.createElement('div'); mb.className = 'rvm'; mb.dataset.l = L('已鳴', 'Declared');
-    G.melds[seat].forEach(m => mb.appendChild(meldEl(m, 'sm', true))); r.appendChild(mb);
+    G.melds[seat].forEach(m => mb.appendChild(meldEl(m, 'sm'))); r.appendChild(mb);
   }
   const mark = t => { const e = tileEl(t, { sm: true }); if (win && t.id === res.winId) { e.classList.add('wintile'); e.dataset.w = L('胡', 'Win'); } return e; };
   const groups = win ? winGroups(seat, res) : null;
@@ -2679,13 +2967,13 @@ function renderResult() {
 }
 $('#resBack').onclick = () => { UI.viewTable = false; renderResult(); const d = $('#result'); d.showModal(); d.scrollTop = 0; render(); };
 const CHEAT_TIERS = [
-  [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all sequences, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed Pung ok)'], ['彩一色', '混一色或清一色，恰有一處彩（彩眼或一刻彩碰），至少一張為主色（首副三元刻不另計）', 'half/full flush with exactly one mixed part (mixed pair or one mixed Pung), at least one tile in the main suit (1st dragon triplet not counted)']]],
-  [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['斷小字', '沒有 1–3', 'no 1–3'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 2222 ok, no mixed pair']]],
+  [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all sequences, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed Pung ok)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['彩一色', '混一色或清一色，恰有一處彩（彩眼或一刻彩碰），至少一張為主色（首副三元刻不另計）', 'half/full flush with exactly one mixed part (mixed pair or one mixed Pung), at least one tile in the main suit (1st dragon triplet not counted)']]],
+  [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['斷小字', '沒有 1–3', 'no 1–3'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 2222 ok, no mixed pair']]],
   [3, [['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['全小字', '全部 1–3', 'only 1–3'], ['幺九順', '同花 123·456·789 · 其餘任一面子', 'same-suit 123·456·789 + any set']]],
-  [4, [['清一色', '一門、無三元（不含彩碰／彩眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻（不另計對對胡）', '4 concealed triplets (no All Triplets on top)'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
+  [4, [['清一色', '一門、無三元（不含彩碰／彩眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻（不另計對對胡、不求人）', '4 concealed triplets (no All Triplets or Concealed Self-Draw on top)'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
   [6, [['幺九龍', '同花 123·456·789 + 紅中、發財、白板 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White Dragon + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '紅中、發財、白板全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer\'s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]
 ];
-const CHEAT_MINOR = [['槓', '每次', 'each Kong'], ['三元大補槓', '補第 5 張紅中、發財、白板', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '只限有鳴牌', 'open hands only'], ['海底撈月', '摸牌山最後一張自摸（連自摸共 +1）', 'self-draw on the last tile of the wall (with self-draw: +1)'], ['槓上自摸', '槓後補牌自摸（連自摸、槓共 +1.5）', 'self-draw on the Kong replacement (with Kong + self-draw: +1½)'], ['斷一門無三元', '缺一門、無紅中、發財、白板', 'a suit missing, no dragons'], ['胡大字', '胡牌是 7–9', 'winning tile is 7–9']];
+const CHEAT_MINOR = [['槓', '每次', 'each Kong'], ['三元大補槓', '補第 5 張紅中、發財、白板', 'dragon 5th tile'], ['門清', '無鳴牌', 'no calls'], ['自摸', '有鳴牌，或四暗刻自摸', 'open hands, or Four Concealed Triplets by self-draw'], ['海底撈月', '摸牌山最後一張自摸（連自摸共 +1）', 'self-draw on the last tile of the wall (with self-draw: +1)'], ['槓上自摸', '槓後補牌自摸（連自摸、槓共 +1.5）', 'self-draw on the Kong replacement (with Kong + self-draw: +1½)'], ['斷一門無三元', '缺一門、無紅中、發財、白板', 'a suit missing, no dragons'], ['胡大字', '胡牌是 7–9', 'winning tile is 7–9']];
 /* 速查表即時狀態：只標示「你目前已經有的」（✓ 金色），並把「已不可能」的灰掉（原因顯示在右邊） */
 function cheatStates() {
   const st = {}; if (!G) return st;
@@ -2829,6 +3117,8 @@ function syncCheatTab() {
   const o = $('#cheatDlg').open; $('#cheatTab b').textContent = o ? '▶' : '◀'; $('#cheatTabTxt').textContent = o ? L('收起', 'Hide') : L('速查', 'Cheat sheet');
   $('#cheatBar b').textContent = o ? '▶' : '◀'; $('#cheatBarTxt').textContent = o ? L('收起速查', 'Hide cheat sheet') : L('速查表', 'Cheat sheet');
 }
+// 手機：速查表打開時，背後的牌桌不能上下滑（只有速查表自己可以捲動；拉標籤向右收起照舊）
+document.addEventListener('touchmove', e => { if ($('#cheatDlg').open && innerWidth < 1180 && !e.target.closest('#cheatDlg, #cheatTab, #cheatBar')) e.preventDefault(); }, { passive: false });
 $('#cheatBar').onclick = $('#cheatTab').onclick = () => { const d = $('#cheatDlg'); if (d.open) d.close(); else d.show(); syncCheatTab(); };
 $('#cheatDlg').addEventListener('close', syncCheatTab);
 /* 手機：速查標籤可拖出／推回（標籤貼著面板邊緣一起滑），點一下也可開關 */
@@ -2863,6 +3153,29 @@ $('#cheatDlg').addEventListener('close', syncCheatTab);
   const tab = $('#cheatTab'), bar = $('#cheatBar');
   attach(tab, p => { tab.style.right = p * W() + 'px'; }, () => { tab.style.right = tab.style.transition = tab.style.animation = ''; });
   attach(bar, p => { bar.style.transform = `translateX(${-p * W()}px)`; }, () => { bar.style.transform = bar.style.transition = ''; });
+  // 速查表打開時，在畫面任何地方（不用抓標籤）向右滑，也可以把速查表推回去
+  let sw = null;
+  const swFollow = dx => { dlg.style.transform = `translateX(${dx}px)`; bar.style.transform = `translateX(${dx - W()}px)`; tab.style.right = Math.max(0, W() - dx) + 'px'; };
+  const swReset = () => { dlg.style.transform = dlg.style.transition = ''; bar.style.transform = bar.style.transition = ''; tab.style.right = tab.style.transition = ''; };
+  document.addEventListener('touchstart', e => {
+    sw = null; if (!dlg.open || innerWidth >= 1180 || e.touches.length !== 1 || e.target.closest('#cheatTab, #cheatBar')) return;
+    sw = { x: e.touches[0].clientX, y: e.touches[0].clientY, last: e.touches[0].clientX, v: 0, on: false };
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!sw || !dlg.open) return;
+    const t = e.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+    if (!sw.on) { if (dx > 10 && dx > Math.abs(dy) * 1.4) { sw.on = true; dlg.style.animation = 'none'; dlg.style.transition = bar.style.transition = tab.style.transition = 'none'; } else if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) sw = null; if (!sw || !sw.on) return; }
+    sw.v = t.clientX - sw.last; sw.last = t.clientX; swFollow(Math.max(0, dx));
+  }, { passive: true });
+  const swEnd = () => {
+    if (!sw || !sw.on) { sw = null; return; }
+    const dx = Math.max(0, sw.last - sw.x), close = dx > W() * .3 || sw.v > 6; sw = null;
+    dlg.style.transition = bar.style.transition = 'transform .2s ease-out'; tab.style.transition = 'right .2s ease-out';
+    if (close) { dlg.style.transform = 'translateX(100%)'; bar.style.transform = 'translateX(0px)'; tab.style.right = '0px'; }
+    else { dlg.style.transform = 'translateX(0%)'; bar.style.transform = `translateX(${-W()}px)`; tab.style.right = W() + 'px'; }
+    setTimeout(() => { swReset(); if (close) dlg.close(); syncCheatTab(); }, 210);
+  };
+  document.addEventListener('touchend', swEnd); document.addEventListener('touchcancel', swEnd);
 }
 
 /* ============ 線上房間 / Online rooms (PeerJS WebRTC, host-authoritative) ============ */
@@ -2974,7 +3287,7 @@ function sendLobby() {
 }
 function startGame() {
   if (!isHost() || !allReady()) return;
-  ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0;
+  ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0; BOTP = [0, 1, 2, 3].map(() => pickPersona());   // 電腦的性格：一場不變，離開再進來才重抽
   dragonZoom(() => { $('#lobby').close(); updateOnlineBtn(); play(); }); sendLobby();
 }
 const allReady = () => ROOM.kind.slice(1).every((k, i) => k === 'bot' || (k === 'human' && ROOM.ready[i + 1]));
@@ -3429,23 +3742,27 @@ function renderSettings() {
   const chip = (grp, v, zh, en, on) => `<button type="button" class="chip ${on ? 'on' : ''}" data-set="${grp}:${v}">${L(zh, en)}</button>`;
   d.innerHTML = `${XBTN()}<h2>${L('設定', 'Settings')}</h2>
     <h3>${L('外觀', 'Appearance')}</h3><div class="chips">${chip('theme', 'auto', '自動', 'Auto', PREF.theme === 'auto')}${chip('theme', 'light', '淺色', 'Light', PREF.theme === 'light')}${chip('theme', 'dark', '深色', 'Dark', PREF.theme === 'dark')}</div>
+    <h3>${L('高對比牌色', 'High-contrast tile colors')}</h3><div class="chips">${chip('hc', 'off', '關', 'Off', PREF.hc !== 'on')}${chip('hc', 'on', '開', 'On', PREF.hc === 'on')}</div>
     <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大', 'Large', PREF.fs === 'l')}</div>
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
     <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
     <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}</div>
     <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。', 'Expert bots plan their hands, track what has been played, read the table and play defensively.')}</p>
+    <h3>${L('打出按鈕位置（手機）', 'Discard button side (phone)')}</h3><div class="chips">${chip('dock', 'right', '右', 'Right', PREF.dockSide !== 'left')}${chip('dock', 'left', '左', 'Left', PREF.dockSide === 'left')}</div>
     <h3>${L('牌局記錄（分析用）', 'Hand history (for analysis)')}</h3><div class="chips">${chip('rec', 'on', '開', 'On', PREF.recOn === 'on')}${chip('rec', 'off', '關', 'Off', PREF.recOn !== 'on')}</div>
     <p class="note" style="margin:6px 0 0">${L('只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。', 'Records solo games against bots (deal, wall, every move and your thinking time). Stored only in this browser, never uploaded.')}</p>
-    <div class="chips" style="margin-top:6px"><button type="button" class="btn sm" id="recExp">${L('匯出', 'Export')} (${recLoad().length})</button><button type="button" class="btn sm" id="recClr">${L('清除', 'Clear')}</button></div>
+    <div class="chips" style="margin-top:6px"><button type="button" class="btn sm" id="recExp">${L('匯出新的', 'Export new')} (${recNew().length})</button><button type="button" class="btn sm" id="recExpAll">${L('全部匯出', 'Export all')} (${recLoad().length})</button><button type="button" class="btn sm" id="recClr">${L('清除', 'Clear')}</button></div>
     <h3>${L('意見回饋', 'Feedback')}</h3><button type="button" class="btn sm" id="stFb">${L('意見回饋', 'Feedback')} …</button>`;
 }
 $('#setDlg').addEventListener('click', e => {
   const b = e.target.closest('button[data-set]'); if (!b) return;
   const [g, v] = b.dataset.set.split(':');
   if (g === 'theme' || g === 'fs') { PREF[g] = v; applyPrefs(); }
+  else if (g === 'hc') { PREF.hc = v === 'on' ? 'on' : 'off'; applyPrefs(); savePref(); renderSettings(); return; }
   else if (g === 'sfx') { PREF.sfx = v; savePref(); renderSettings(); if (v === 'on') SFX.place(); }
   else if (g === 'music') { PREF.music = v; musicApply(); renderSettings(); }
+  else if (g === 'dock') { PREF.dockSide = v === 'left' ? 'left' : 'right'; savePref(); renderSettings(); if (G) render(); return; }
   else if (g === 'rec') { PREF.recOn = v === 'on' ? 'on' : 'off'; savePref(); renderSettings(); return; }
   else if (g === 'bot') { PREF.botLvl = v === 'pro' ? 'pro' : 'easy'; applyBotLvl(); savePref(); renderSettings(); return; }
   else { LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't'; }
@@ -3498,8 +3815,9 @@ $('#fbDlg').addEventListener('click', async e => {
 document.addEventListener('click', e => {
   if (e.target.closest('#stFb')) { $('#setDlg').close(); openFeedback(); }
   else if (e.target.closest('#lnFb')) { e.preventDefault(); openFeedback(); }
-  else if (e.target.closest('#recExp')) { if (recLoad().length) recExport(); else toast('還沒有記錄', 'No hands recorded yet'); }
-  else if (e.target.closest('#recClr')) { if (recLoad().length && confirm(L('清除所有牌局記錄？', 'Clear all recorded hands?'))) { try { localStorage.removeItem(REC.key); } catch (x) {} renderSettings(); } }
+  else if (e.target.closest('#recExpAll')) { if (recLoad().length) { recExport(true); renderSettings(); } else toast('還沒有記錄', 'No hands recorded yet'); }
+  else if (e.target.closest('#recExp')) { if (recNew().length) { recExport(false); renderSettings(); } else toast(recLoad().length ? '沒有新的記錄（上次匯出後）' : '還沒有記錄', recLoad().length ? 'No new hands since the last export' : 'No hands recorded yet'); }
+  else if (e.target.closest('#recClr')) { if (recLoad().length && confirm(L('清除所有牌局記錄？', 'Clear all recorded hands?'))) { try { localStorage.removeItem(REC.key); localStorage.removeItem('yjl-recx'); } catch (x) {} renderSettings(); } }
 });
 /* ===== 首頁 / landing ===== */
 const LAND = { join: false };
@@ -3508,7 +3826,7 @@ function showLanding() { renderLanding(); $('#landing').hidden = false; }
 function renderLanding() {
   const el = $('#lnInner'); if (!el) return;
   const nm = ($('#lnName') || {}).value ?? savedName(), cd = ($('#lnCode') || {}).value || '';
-  el.innerHTML = `<div class="top"><button class="btn icn" id="lnRules" type="button" title="${L('規則', 'Rules')}" aria-label="${L('規則', 'Rules')}">?</button><button class="btn icn" id="lnLang" type="button" title="${L('切換語言', 'Switch language')}" aria-label="${L('切換語言', 'Switch language')}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19"/><path d="M12 2.5c2.6 2.6 4 5.9 4 9.5s-1.4 6.9-4 9.5c-2.6-2.6-4-5.9-4-9.5s1.4-6.9 4-9.5z"/></svg></button><button class="btn icn" id="lnSet" type="button" title="${L('設定', 'Settings')}" aria-label="${L('設定', 'Settings')}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
+  el.innerHTML = `<div class="top"><button class="btn icn" id="lnLang" type="button" title="${L('切換語言', 'Switch language')}" aria-label="${L('切換語言', 'Switch language')}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19"/><path d="M12 2.5c2.6 2.6 4 5.9 4 9.5s-1.4 6.9-4 9.5c-2.6-2.6-4-5.9-4-9.5s1.4-6.9 4-9.5z"/></svg></button><button class="btn icn" id="lnRules" type="button" title="${L('規則', 'Rules')}" aria-label="${L('規則', 'Rules')}">?</button><button class="btn icn" id="lnSet" type="button" title="${L('設定', 'Settings')}" aria-label="${L('設定', 'Settings')}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
     <div class="lhero">
       <h2 class="zh" style="font-weight:900">幺九龍</h2>
       <div class="en">Kowloon Dragons</div>
