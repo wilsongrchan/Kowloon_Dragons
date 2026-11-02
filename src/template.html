@@ -849,6 +849,8 @@ zh: `  <h2>規則</h2>
     <li>沒有搶槓。槓之後從牌山尾補牌。</li>
   </ul>
   ${EG('牌面示例：吃碰槓、彩碰、三元大槓', [X('吃','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('碰／槓','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('彩碰（被要的牌變淡）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('彩刻（手牌內暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('彩眼','p1 s1|p2 m2|s3 m3'),X('三元大槓（5 張）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('1–3 不能吃碰槓','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
+  <h3>起胡番數</h3>
+  <ul><li>一般是<b>一番起胡</b>：至少要有 1 番才能胡。也可以改玩<b>兩番起胡</b>：總番數（碎番也計，例如 1 番＋半番＋半番）要有 2 番才能胡。對電腦在設定裡選，開房間時由房主選。</li></ul>
   <h3>番種（疊加，6 番封頂）</h3>
   <ul>
     <li><b>1 番</b>
@@ -899,7 +901,6 @@ zh: `  <h2>規則</h2>
   <h3>半番（碎番，每項 +0.5 番）</h3>
   <ul>
     <li>必須已有至少 1 番才能追加；只有碎番、沒有全番不能胡，兩個半番不能起胡。</li>
-    <li>一般是<b>一番起胡</b>（至少 1 番）。也可以改玩<b>兩番起胡</b>：總番數（碎番也計，例如 1 番＋半番＋半番）要有 2 番才能胡。對電腦在設定裡選，開房間時由房主選。</li>
     <li><b>槓</b>：每次槓。</li>
     <li><b>三元大補槓</b></li>
     <li><b>門清</b>：無鳴牌。不求人、全小字、七對子、門清幺九順不再加。</li>
@@ -932,7 +933,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
   <h3>Goal</h3>
   <ul>
     <li>Hand of 13 tiles; you win on the 14th with <b>4 melds + 1 pair</b> (a meld is a sequence, a triplet or a kong).</li>
-    <li>You need at least <b>1 full fan</b> to win (<b>1 fan min</b>, the default). Minor fans (½) alone don't count. Optionally play <b>2 fan min</b>: a win needs 2 fan in total (half fans count, e.g. 1 + ½ + ½); choose it in Settings (vs bots) or when creating a room.</li>
+    <li>You need at least <b>1 full fan</b> to win. Minor fans (½) alone don't count.</li>
   </ul>
   <h3>Tiles and points</h3>
   <ul>
@@ -1062,6 +1063,8 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
     <li>On a discard win, a triplet completed by the winning tile counts as open.</li>
     <li>But if the winning tile could instead sit in the pair or in a sequence, the triplet stays concealed.</li>
   </ul>
+  <h3>Minimum to win</h3>
+  <ul><li>Usually <b>1 fan min</b>: you need at least 1 full fan to win. You can also play <b>2 fan min</b>: the total (half fans count, e.g. 1 + ½ + ½) must reach 2 fan. Choose it in Settings (vs bots) or when creating a room.</li></ul>
   <h3>Scoring</h3>
   <ul>
     <li>Total fan is rounded down, so 1 + ½ = 1.5 counts as 1 fan, while 1 + ½ + ½ = 2 fan.</li>
@@ -1100,6 +1103,8 @@ RULES_HTML.ja = `  <h2>ルール</h2>
     <li>搶槓（槍カン）はありません。カンのあとは牌山の末尾から補充します。</li>
   </ul>
   ${EG('牌の例：チー・ポン・カン・彩ポン・三元大カン', [X('チー','s2 s3 s4|p4 p5 p6|m1 m2 m3'),X('ポン／カン','p5 p5 p5|s6 s6 s6 s6|z1 z1 z1'),X('彩ポン（鳴いた牌は薄く表示）','p1 s1 m1*|s2 s2 p2*|m3 p3* s3'),X('彩刻子（手牌内の暗刻）','p1 s1 m1|p2 s2 m2|p3 s3 m3'),X('彩雀頭','p1 s1|p2 m2|s3 m3'),X('三元大カン（5枚）','z1 z1 z1 z1 z1|z2 z2 z2 z2 z2|z3 z3 z3 z3 z3'),X('7〜9は鳴けない','p7 p8 p9|s8 s8 s8|m9 m9 m9')])}
+  <h3>和了に必要な翻数</h3>
+  <ul><li>通常は<b>1翻縛り</b>：最低1翻が必要です。<b>2翻縛り</b>にすると、半翻を含む合計が2翻以上（例：1＋0.5＋0.5）で和了できます。COM戦は設定で、ルームは部屋を作る人が選びます。</li></ul>
   <h3>役（重ねられます。6翻で上限）</h3>
   <ul>
     <li><b>1翻</b>
@@ -1150,7 +1155,6 @@ RULES_HTML.ja = `  <h2>ルール</h2>
   <h3>無役翻（各 +0.5翻）</h3>
   <ul>
     <li>先に1翻が必要です。無役翻だけでは和了できず（役にならない翻）、0.5翻が2つでも起こしになりません。</li>
-    <li>通常は<b>1翻縛り</b>（最低1翻）。<b>2翻縛り</b>にすると、半翻を含む合計が2翻以上（例：1＋0.5＋0.5）で和了できます。COM戦は設定で、ルームは部屋を作る人が選びます。</li>
     <li><b>カン</b>：1回ごと。</li>
     <li><b>三元大カン</b></li>
     <li><b>門前</b>：副露なし。不求人・全小字・七対子・門前幺九順には付きません。</li>
