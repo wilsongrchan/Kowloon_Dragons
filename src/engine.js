@@ -134,7 +134,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     const total = base + halves.reduce((a, h) => a + h.fan, 0);
     const fan = Math.min(CAP, Math.floor(total)), mult = fan;
     const points = Math.round((pts + bonus) * mult);
-    return Object.assign({ ok: base >= 1, items, halves, base, total, fan, mult, tilePts: pts + bonus, bonus, bonusName, points, tsumo }, extra || {});
+    return Object.assign({ ok: base >= 1 && total >= (RULES.MIN_TOTAL || 0), items, halves, base, total, fan, mult, tilePts: pts + bonus, bonus, bonusName, points, tsumo }, extra || {});
   };
   const cands = [];
   let shapeOk = false;
@@ -355,7 +355,7 @@ function botClaims(g, from, t, skip = []) {
   for (let i = 1; i < 4; i++) {
     const s = (from + i) % 4; if (skip.includes(s)) continue;
     const o = claimOptions(g, s, t, from);
-    if (o.ron && !tooSmall(g, s, o.ron) && !(proLevel(g, s) && greedDecline(g, s, o.ron, t, false))) return { seat: s, kind: 'ron', ev: o.ron };
+    if (o.ron && !(proLevel(g, s) && greedDecline(g, s, o.ron, t, false))) return { seat: s, kind: 'ron', ev: o.ron };
   }
   for (let i = 1; i < 4; i++) {
     const s = (from + i) % 4; if (skip.includes(s)) continue;
@@ -453,8 +453,7 @@ function proGoal(g, seat) {
 }
 const levelOf = (g, seat) => (g.botLv && g.botLv[seat]) || RULES.BOT_LEVEL;
 function proLevel(g, seat) { const l = levelOf(g, seat); return l === 'pro' || l === 'pro2'; }
-// 高手（兩番起胡）：自己只胡總番數（含碎番）>= 2 的牌
-const tooSmall = (g, seat, ev) => levelOf(g, seat) === 'pro2' && ev.total < 2;
+// 「兩番起胡」是整桌規則（RULES.MIN_TOTAL = 2，含碎番），由牌桌的電腦強度決定；evaluateHand 直接擋掉不夠的胡牌
 const NK = ORDER.length;                                    // 30 種牌，順序同 ORDER：p1-9 s1-9 m1-9 z1-3
 const copiesIdx = i => i >= 27 ? 5 : (i % 9) + 1;           // 引擎編號 n 有 n 張
 const idxOf = k => ORD[k];
@@ -785,7 +784,7 @@ function greedDecline(g, seat, ev, tile, tsumo) {
 function proSelf(g, seat, opts) {
   PRO_G = proGoal(g, seat);
   if (opts.win) {
-    if (opts.noGreed || (!tooSmall(g, seat, opts.win) && !greedDecline(g, seat, opts.win, g.lastDraw, true))) return { win: true };
+    if (opts.noGreed || !greedDecline(g, seat, opts.win, g.lastDraw, true)) return { win: true };
     return { discard: proDiscard(g, seat).id };   // 放掉這次自摸，繼續做大
   }
   if (opts.kongs.length) return { kong: opts.kongs[0] };

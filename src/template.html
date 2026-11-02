@@ -659,7 +659,7 @@ const $ = s => document.querySelector(s);
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
 const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-recv') !== '2') { PREF.recOn = 'on'; localStorage.setItem('yjl-recOn', 'on'); localStorage.setItem('yjl-recv', '2'); } if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
-const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' || PREF.botLvl === 'pro2' ? PREF.botLvl : 'easy'; };
+const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' || PREF.botLvl === 'pro2' ? PREF.botLvl : 'easy'; RULES.MIN_TOTAL = PREF.botLvl === 'pro2' ? 2 : 0; };
 applyBotLvl();
 const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-hc', PREF.hc === 'on' ? 'on' : 'off'); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
@@ -2703,7 +2703,7 @@ function renderSettings() {
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
     <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
     <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro' && PREF.botLvl !== 'pro2')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}${chip('bot', 'pro2', '高手・兩番起胡', 'Expert · 2 fan min', PREF.botLvl === 'pro2')}</div>
-    <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。「兩番起胡」的電腦只胡 2 番以上（碎番也計）。', 'Expert bots plan their hands, track what has been played, read the table and play defensively. "2 fan min" bots only win with 2 fan or more (half fans count).')}</p>
+    <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。', 'Expert bots plan their hands, track what has been played, read the table and play defensively. "2 fan min" makes the whole table, you included, need 2 fan or more to win (half fans count).')}</p>
     <h3>${L('打出按鈕位置（手機）', 'Discard button side (phone)')}</h3><div class="chips">${chip('dock', 'right', '右', 'Right', PREF.dockSide !== 'left')}${chip('dock', 'left', '左', 'Left', PREF.dockSide === 'left')}</div>
     <h3>${L('牌局記錄（分析用）', 'Hand history (for analysis)')}</h3><div class="chips">${chip('rec', 'on', '開', 'On', PREF.recOn === 'on')}${chip('rec', 'off', '關', 'Off', PREF.recOn !== 'on')}</div>
     <p class="note" style="margin:6px 0 0">${L('只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。', 'Records solo games against bots (deal, wall, every move and your thinking time). Stored only in this browser, never uploaded.')}</p>
