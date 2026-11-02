@@ -184,6 +184,20 @@ body.dragging-now{cursor:grabbing;-webkit-user-select:none;user-select:none}
 .status b{color:var(--gold)}
 details.log{margin-top:12px;color:var(--pgm);font-size:calc(13px*var(--fs,1))}
 details.log summary{cursor:pointer}
+#stats{margin:8px 0 6px;padding:10px 12px;border-radius:12px;background:var(--table);color:var(--text);border:1px solid var(--line)}
+#stats h4{margin:0 0 8px;font-size:1em}
+#stats .sn{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+#stats .sn button{font:500 1em var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:4px 12px;cursor:pointer}
+#stats .sn button.on{background:var(--gold);color:#1b1608;border-color:var(--gold);font-weight:700}
+#stats .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(7.2em,1fr));gap:6px}
+#stats .sg div{background:rgba(0,0,0,.18);border-radius:8px;padding:6px 8px}
+#stats .sg b{display:block;font-size:1.25em;color:var(--gold)}
+#stats .sg span{font-size:.85em;color:var(--muted)}
+#stats h5{margin:10px 0 4px;font-size:.95em;color:var(--muted);font-weight:500}
+#stats .yr{display:grid;grid-template-columns:7em 1fr 4.5em;align-items:center;gap:8px;margin:3px 0;font-size:.95em}
+#stats .yr i{display:block;height:8px;border-radius:4px;background:var(--gold);opacity:.85}
+#stats .yr em{font-style:normal;color:var(--muted);text-align:right}
+#stats .none{color:var(--muted);margin:0}
 details.log ol{margin:6px 0 0;padding-left:1.4em;max-height:220px;overflow:auto}
 
 dialog{background:var(--table);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:min(720px,94vw);width:100%;max-height:88vh;overflow:auto}
@@ -644,7 +658,7 @@ button.btn.hot:hover{background:var(--gold-hov)}
       <div class="actrow"><button class="btn primary" id="discardBtn" type="button" disabled>先選一張牌</button><div class="actions" id="actions"></div></div>
     </section>
   </div>
-  <details class="log"><summary id="logSum">牌局記錄</summary><ol id="log"></ol></details>
+  <details class="log" id="logBox"><summary id="logSum">牌局記錄</summary><div id="stats"></div><ol id="log"></ol></details>
   </div>
   <div id="cheatGrip" role="separator" aria-orientation="vertical" title="拖曳調整寬度 / drag to resize · double-click to reset"></div>
   <aside id="cheat" aria-label="cheat sheet"></aside>
@@ -1593,7 +1607,7 @@ const YAKU_JA = {
 const JA_EXACT = {
   '摸牌山最後一張自摸（連自摸共 +1）': '牌山の最後の1枚でツモ（ツモと合わせて +1）',
   /* table */
-  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '高手・兩番起胡': '上級・2翻縛り', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。「2翻縛り」を選ぶと、あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色': '清一色（三元牌なし）で彩の部分がちょうど1つ（彩雀頭または彩ポン1組）、主色が1枚以上', '落葉': '落ち葉', '燈籠': '灯籠', '經典': 'クラシック', '配色': '配色', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
+  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '高手・兩番起胡': '上級・2翻縛り', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。「2翻縛り」を選ぶと、あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色': '清一色（三元牌なし）で彩の部分がちょうど1つ（彩雀頭または彩ポン1組）、主色が1枚以上', '落葉': '落ち葉', '燈籠': '灯籠', '經典': 'クラシック', '配色': '配色', '我的戰績': '自分の成績', '勝率': '和了率', '勝局平均番數': '和了時の平均翻数', '勝局平均得分': '和了時の平均得点', '每手平均輸贏': '1局あたり平均収支', '自摸 / 食胡': 'ツモ / ロン', '放銃': '放銃', '流局': '流局', '最高一手': '最高の一手', '常胡的牌型': 'よく和了る役', '還沒有記錄。玩幾手之後這裡會顯示你的戰績（需要在設定開啟牌局記錄）。': '記録がまだありません。何局か遊ぶとここに成績が出ます（設定で牌局記録をオンにしてください）。', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
   '手牌＋鳴牌的點值總和（未乘番數；彩碰被要的那張不計）': '手牌＋副露の点の合計（翻数を掛ける前。彩ポンで鳴いた1枚は数えません）',
   '整理': '理牌', '彩組': '彩まとめ', '把手上的彩眼／彩刻湊在一起並鎖定': '手牌の彩雀頭／彩刻子をまとめてロックします',
   '目前沒有可組的彩眼／彩刻': 'まとめられる彩雀頭／彩刻子はありません', '解鎖': 'ロック解除', '鎖定': 'ロック',
@@ -1668,6 +1682,10 @@ const JA_EXACT = {
   '牌面示例：番種': '牌の例：役', ' 番：': ' 翻：',
 };
 const JA_PATTERNS = [
+  [/^最近 (\d+) 手$/, (m) => `直近${m[1]}局`],
+  [/^只有 (\d+) 手記錄$/, (m) => `記録は${m[1]}局のみ`],
+  [/^勝率 \((.+)\)$/, (m) => `和了率 (${m[1]})`],
+  [/^放銃 \((\d+)\)$/, (m) => `放銃 (${m[1]})`],
   [/^彩：還剩 <b>(\d+) 張<\/b>（(.+)）$/, (m) => `彩：残り<b>${m[1]}枚</b>（${m[2]}）`],
   [/^第 (\d+) 次摸牌$/, (m) => `${m[1]}回目のツモ`],
   [/^共 (\d+) 張，已見 (\d+)，<b>還剩 (\d+) 張<\/b>$/, (m) => `全${m[1]}枚・見えている${m[2]}枚・<b>残り${m[3]}枚</b>`],
@@ -2273,6 +2291,31 @@ function meldEl(m, size, reveal) {
   return w;
 }
 const LOGS = [];
+/* 我的戰績：用牌局記錄（只含單人對電腦、你是座位 0）算最近 10／20／50 手 */
+UI.statN = 20;
+function renderStats() {
+  const box = $('#stats'); if (!box) return;
+  const hs = recLoad().filter(h => h.result), n = UI.statN, h = hs.slice(-n), N = h.length;
+  const chips = [10, 20, 50].map(v => `<button type="button" data-sn="${v}" class="${v === n ? 'on' : ''}">${L(`最近 ${v} 手`, `Last ${v}`)}</button>`).join('');
+  let body;
+  if (!N) body = `<p class="none">${L('還沒有記錄。玩幾手之後這裡會顯示你的戰績（需要在設定開啟牌局記錄）。', 'Nothing recorded yet. Play a few hands and your stats show up here (hand history must be on in Settings).')}</p>`;
+  else {
+    const wins = h.filter(x => x.result.winner === 0), tz = wins.filter(x => x.result.tsumo).length, draws = h.filter(x => x.result.draw).length;
+    const dealIn = h.filter(x => x.result.winner != null && x.result.winner !== 0 && !x.result.tsumo && x.result.from === 0).length;
+    const net = h.reduce((a, x) => a + ((x.result.delta || [])[0] || 0), 0), W = wins.length;
+    const avg = f => W ? (wins.reduce((a, x) => a + f(x.result), 0) / W) : 0, pc = v => Math.round(100 * v / N) + '%';
+    const best = W ? Math.max(...wins.map(x => x.result.points)) : 0;
+    const cnt = {}; wins.forEach(x => (x.result.items || []).forEach(nm => { const k = nm.replace(/×\d+/, ''); cnt[k] = (cnt[k] || 0) + 1; }));
+    const rows = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 8), top = rows.length ? rows[0][1] : 1;
+    const cell = (v, lb) => `<div><b>${v}</b><span>${lb}</span></div>`;
+    body = `<div class="sg">${cell(pc(W), L('勝率', 'Win rate') + ` (${W}/${N})`)}${cell(W ? avg(r => r.fan).toFixed(1) : '–', L('勝局平均番數', 'Avg fan per win'))}${cell(W ? Math.round(avg(r => r.points)) : '–', L('勝局平均得分', 'Avg points per win'))}${cell((net >= 0 ? '+' : '') + Math.round(net / N), L('每手平均輸贏', 'Avg net / hand'))}${cell(`${tz} / ${W - tz}`, L('自摸 / 食胡', 'Zimo / Ron'))}${cell(pc(dealIn), L('放銃', 'Dealt in') + ` (${dealIn})`)}${cell(draws, L('流局', 'Draws'))}${cell(best || '–', L('最高一手', 'Best hand'))}</div>`
+      + (rows.length ? `<h5>${L('常胡的牌型', 'Hands you win with')}</h5>` + rows.map(([nm, c]) => `<div class="yr"><span>${yn(nm)}</span><i style="width:${Math.max(4, Math.round(100 * c / top))}%"></i><em>${c} · ${Math.round(100 * c / W)}%</em></div>`).join('') : '')
+      + (N < n ? `<h5>${L(`只有 ${N} 手記錄`, `Only ${N} hand(s) recorded so far`)}</h5>` : '');
+  }
+  box.innerHTML = `<h4>${L('我的戰績', 'My stats')}</h4><div class="sn">${chips}</div>${body}`;
+}
+$('#stats').addEventListener('click', e => { const b = e.target.closest('button[data-sn]'); if (b) { UI.statN = +b.dataset.sn; renderStats(); } });
+$('#logBox').addEventListener('toggle', () => { if ($('#logBox').open) renderStats(); });
 function renderLog() { const ol = $('#log'); ol.innerHTML = ''; LOGS.forEach(f => { const li = document.createElement('li'); li.textContent = f(); ol.appendChild(li); }); ol.scrollTop = ol.scrollHeight; }
 function log(fn) {
   const f = typeof fn === 'function' ? fn : () => fn; LOGS.push(f); renderLog();
@@ -2944,7 +2987,7 @@ function showResult(win) {
   setTimeout(() => { go(); el.remove(); }, 1700);
 }
 function finish(res) {
-  recEnd(res);
+  recEnd(res); if ($('#logBox').open) renderStats();
   res.delta.forEach((v, i) => scores[i] += v); saveSoloScores();
   HIST.forEach((a, i) => { const v = handPts(i); if (a[a.length - 1] !== v) a.push(v); });   // 最後一點＝結算頁顯示的手牌點值
   res.hist = HIST.map(a => a.slice());
@@ -3086,7 +3129,7 @@ function applyLang() {
   $('#newBtn').textContent = L('重新開局', 'New game');
   $('.handbar .hint').textContent = L('按住牌拖曳來排序', 'Hold and drag to reorder');
   $('#leftBtn').setAttribute('aria-label', L('向左移', 'Move left')); $('#rightBtn').setAttribute('aria-label', L('向右移', 'Move right'));
-  $('#logSum').textContent = L('牌局記錄', 'Game log');
+  $('#logSum').textContent = L('牌局記錄', 'Game log'); if ($('#logBox').open) renderStats();
   $('#meName').textContent = NAMES[0];
   $('#rules').innerHTML = XBTN() + (LANG === 'ja' ? jaRuby(RULES_HTML.ja) : RULES_HTML[LANG]).replace('</p>', '</p>' + (BASICS[LANG] || BASICS.zh)) + (LANG === 'zh' ? `<details class="eg basics"><summary>📖 用語對照（各地叫法）</summary>${termsTable()}</details>` : '');
   if (G) {
