@@ -30,7 +30,8 @@ Hand 13, win 14: 4 sets + pair.
 - FINAL RULE SET (Wilson, 2026-10-23): cap 6 fan, multiplier = fan (x1..x6). Score = (hand tile points + instant bonus) x multiplier.
 - Fan = floor(total incl. halves) so 1+0.5+0.5 = 2; need >=1 full fan from real conditions (halves alone can't win).
 - 1番: 三元刻 (each, stackable; open pung or concealed triplet), 平胡 (all chows, no dragons), 對對胡 (彩碰 ok), 彩一色 (merged from 彩眼混一色 + 彩碰混一色: half OR full flush with exactly ONE mixed part, either the pair is a 彩眼 or one set is a 彩碰/彩刻; at least one tile of that part must be the main suit (engine 2p 2p 2m = shown 8筒8筒8萬 in a 筒 hand); pair + set together or 2+ sets not allowed; first 三元刻 not counted; English Mixed Flush, ja 彩一色)
-- 2番: 混一色 (no 彩碰/彩刻/彩眼; no 斷一門; first 三元刻 not counted — the 1st dragon triplet is absorbed, 2nd/3rd still count), 不求人 (concealed + tsumo; replaces 門清/自摸), 斷小字 (no 7-9), 三暗刻, 七對子 (7 pairs, shown 2222 = two pairs, may stack 混一色/清一色, NO mixed pair, fully concealed, no 門清 half)
+- 2番: 混一色 (no 彩碰/彩刻/彩眼; no 斷一門; first 三元刻 not counted — the 1st dragon triplet is absorbed, 2nd/3rd still count), 斷小字 (no 7-9), 七對子 (7 pairs, shown 2222 = two pairs, may stack 混一色/清一色, NO mixed pair, fully concealed, no 門清 half)
+- 1番 added 2026-11-01 (Wilson; from bot-sim balance tests): 不求人 (concealed + tsumo; replaces 門清/自摸; was 2番) and 三暗刻 (was 2番) are now 1番 (`RULES.BQ_FAN`/`SAN_FAN`, default 1). 四暗刻 (4番) no longer stacks with 不求人: a concealed tsumo 四暗刻 = 4番 + 自摸 half (ron = 4番 + 門清 half). Test switches `RULES.BQ_FAN/SAN_FAN/SAN_NOSTACK` and `scripts/rl/rules.js` (style-vs-style rule balance runs).
 - 3番: 小三元 (+30 hand pts), 全小字 (all 7-9; no 門清 half), 幺九順 (same suit 123+456+789; remaining set chow or pung any suit; pair any; open hand)
 - 4番: 清一色 (no mixed; no 斷一門無三元), 四暗刻, 大三元 (+60), 門清幺九順 (concealed 幺九順, +30, no 門清 half)
 - 6番 (cap): 幺九龍 (+30; claimed 123/456 chows of that suit allowed), 門清幺九龍 (+90, no open melds), 槓三元 (kongs of all 3 dragons, +90), 天胡 (dealer wins on starting 14), 地胡 (non-dealer wins on the dealer's first discard), 人胡 (non-dealer wins by tsumo on their first draw, no calls before). 天胡/地胡/人胡 need only a complete shape (no other fan), flat 6 fan, +30 hand pts (Wilson 2026-10-26), pts x6. Engine tracks g.drawN / g.discardN / g.calls for these.
@@ -41,7 +42,7 @@ Hand 13, win 14: 4 sets + pair.
 
 ## Implementation assumptions (NOT yet decided by Wilson; change in engine.js `RULES` / `evaluateHand`)
 - 幺九龍: 12 distinct tiles + two more copies of a same-suit number or dragon (3 copies of it; 一/二 impossible) - confirmed by Wilson's wording.
-- 自摸 half-fan not given on top of 不求人 (assumed; given only to open hands).
+- 自摸 half-fan not given on top of 不求人 (assumed; given to open hands and to a concealed-tsumo 四暗刻).
 - 平胡 pair cannot be honor. 斷一門無三元 does not stack with 清一色 (混一色 has honors so already excluded).
 - 全小字 + 不求人 still stack (3+2). 斷一門 and 無三元 are ONE combined half fan (斷一門無三元) - not split (balance test: splitting inflated scores ~20%).
 - 吃 only from player on your left; no mixed 槓; no robbing the kong.

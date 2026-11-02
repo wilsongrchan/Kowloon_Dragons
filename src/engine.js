@@ -3,7 +3,10 @@
 const RULES = {
   ALLOW_789_ANKAN: false,      // 7-9 可否暗槓（字面解讀：不可）
   PAIR_HONOR_BREAKS_PINGHU: true, // 平胡的將不可以是中發白
-  RON_MULT: 2,                 // 出銃者付 2x，自摸每家付 1x
+  RON_MULT: 2,
+  BQ_FAN: 1,                   // 不求人番數（2026-11-01 由 2 改為 1；測試用開關）
+  SAN_FAN: 1,                  // 三暗刻番數（2026-11-01 由 2 改為 1；0 = 取消）
+  SAN_NOSTACK: false,          // 三暗刻不與對對胡疊加（像四暗刻）                 // 出銃者付 2x，自摸每家付 1x
 };
 const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
 const SUITN = { p: '筒', s: '索', m: '萬' };
@@ -122,6 +125,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
       const noMen = has('不求人') || has('全小字') || has('門清幺九順') || has('七對子');
       if (isConcealed) { if (!tsumo && !noMen) halves.push({ name: '門清', fan: 0.5 }); }
       else if (tsumo) halves.push({ name: '自摸', fan: 0.5 });
+      if (isConcealed && tsumo && !has('不求人')) halves.push({ name: '自摸', fan: 0.5 });   // 四暗刻自摸：4 番 + 自摸半番
       // 斷一門無三元：缺筒索萬其中一門，且沒有中發白；清一色／混一色不重複
       const suits = new Set(allTiles.filter(t => t.s !== 'z').map(t => t.s));
       if (suits.size < 3 && suits.size !== 1 && !allTiles.some(t => t.s === 'z')) halves.push({ name: '斷一門無三元', fan: 0.5 });
@@ -152,7 +156,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
       shapeOk = true;
       const items = [{ name: '七對子', fan: 2 }];
       const fl = flushOf(sp.pairs.flatMap(k => [k, k]), 0, 0); if (fl) items.push(fl);
-      if (isConcealed && tsumo) items.push({ name: '不求人', fan: 2 });
+      if (isConcealed && tsumo) items.push({ name: '不求人', fan: RULES.BQ_FAN });
       if (concealed.every(t => t.s !== 'z' && t.n >= 7)) items.push({ name: '全小字', fan: 3 });
       if (concealed.every(t => t.s === 'z' || t.n <= 6)) items.push({ name: '斷小字', fan: 2 });
       cands.push(finish(items, 0, null, { pair: 'seven' }));
@@ -184,7 +188,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     const altPlace = winK && (d.pair.split('/').includes(winK) || d.sets.some(s => s.type === 'chow' && inChow(s.k, winK)));
     for (const s of d.sets) if (s.type === 'pong' && !(winK && (s.keys ? s.keys.includes(winK) : s.k === winK) && !altPlace)) anko++;
     if (anko >= 4) { add('四暗刻', 4); const ai = items.findIndex(x => x.name === '對對胡'); if (ai >= 0) items.splice(ai, 1); } // 四暗刻不重複算對對胡
-    else if (anko === 3) add('三暗刻', 2);
+    else if (anko === 3 && RULES.SAN_FAN > 0 && !(RULES.SAN_NOSTACK && items.some(x => x.name === '對對胡'))) add('三暗刻', RULES.SAN_FAN);
     // 幺九順：同花 123+456+789，剩下一組可順可碰（可不同花色），眼任意；門清的話是門清幺九順（+30，不重複算門清）
     for (const su of ['p', 's', 'm']) {
       const a = sets.find(s => s.kind === 'chow' && s.k === su + 1), b = sets.find(s => s.kind === 'chow' && s.k === su + 4), c3 = sets.find(s => s.kind === 'chow' && s.k === su + 7);
@@ -207,7 +211,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     if (fl && fl.name !== '清一色') { const di = items.findIndex(x => x.name === '三元刻'); if (di >= 0) items.splice(di, 1); }
     if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全小字', 3);
     if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷小字', 2);
-    if (isConcealed && tsumo) add('不求人', 2);
+    if (isConcealed && tsumo && !items.some(x => x.name === '四暗刻')) add('不求人', RULES.BQ_FAN);   // 四暗刻已經是門清，自摸只加自摸半番
     cands.push(finish(items, bonus, bonusName, { pair: d.pair, sets: d.sets }));
   }
   // 天胡／地胡／人胡：手牌成形即可（不需另有番種），固定 6 番
@@ -708,22 +712,24 @@ function proDiscard(g, seat) {
     a[c.i]--;
     if (c.sh === minSh) {
       const act = new Set(c.plans.filter(p => p.sh === c.sh).map(p => p.n));
-      sc += PRO_P.uw * ukeire(a, melds, u, act, c.sh);
+      c.uke = ukeire(a, melds, u, act, c.sh); sc += PRO_P.uw * c.uke;
     }
     a[c.i]++;
     let bonus = 0; for (const p of c.plans) if (p.sh <= c.sh + 1) bonus = Math.max(bonus, p.b - 10 * (p.sh - c.sh));
     sc += bonus * (RULES.PRO_BONUS == null ? PRO_P.bon : RULES.PRO_BONUS * PRO_P.bon / 0.4);
-    sc -= PRO_P.dw * mult * PRO_P.def * (PRO_P.ml && RULES.DEF_W ? RULES.DEF_ML * dangerML(g, seat, c.t, u) : dangerOf(g, seat, c.t, u, th));
+    c.dg = PRO_P.ml && RULES.DEF_W ? RULES.DEF_ML * dangerML(g, seat, c.t, u) : dangerOf(g, seat, c.t, u, th);
+    sc -= PRO_P.dw * mult * PRO_P.def * c.dg;
     sc -= PRO_P.vw * val(c.t) + Math.random() * 0.3;
-    c.sc = sc; c.bonus = bonus; pool.push(c);
+    c.sc = sc; c.bonus = bonus; if (c.uke == null) c.uke = 0; pool.push(c);
     if (sc > bs) { bs = sc; best = c.t; }
   }
+  if (g.rollHook && pool.length > 1) { const pk = g.rollHook(g, seat, pool, { a, melds, u, th, minSh, g, seat }); if (pk) return pk; }
   const useQ = RULES.Q && g.useQ && g.useQ[seat], rec = g.qrec && g.qrec[seat];
   if ((useQ || rec) && pool.length > 1) {   // 學習式選牌：算每個候選的特徵，用 Q 模型挑；收資料時偶爾隨機探索
     const ctx = { a, melds, u, th, minSh, g, seat };
     for (const c of pool) { a[c.i]--; c.f = qFeat(c, ctx); a[c.i]++; }
     let pick = null;
-    if (useQ) { let qb = -1e18; for (const c of pool) { c.q = qEval(c.f); if (c.q > qb) { qb = c.q; pick = c; } } }
+    if (useQ) { const lam = RULES.Q_LAMBDA == null ? null : RULES.Q_LAMBDA; let qb = -1e18; for (const c of pool) { c.q = qEval(c.f); const v = lam == null ? c.q : c.sc + lam * 100 * c.q; if (v > qb) { qb = v; pick = c; } } }   // Q_LAMBDA：只拿 Q 當小幅修正
     else pick = pool.reduce((x, y) => y.sc > x.sc ? y : x);
     if (rec && Math.random() < (RULES.Q_EPS == null ? 0.3 : RULES.Q_EPS)) { const top = pool.slice().sort((x, y) => y.sc - x.sc).slice(0, 4); pick = top[Math.floor(Math.random() * top.length)]; }
     if (rec) g.qrows.push({ s: seat, f: pick.f });
@@ -845,7 +851,10 @@ function botSelf(g, seat, opts) { return proLevel(g, seat) ? proSelf(g, seat, op
 function simGame(levels, personas, extra) {
   const g = newGame(0); if (levels) g.botLv = levels; if (extra) Object.assign(g, extra);
   if (personas) { g.persona = personas.map((k, i) => k ? (typeof k === 'string' ? PERSONA_BAL : mkPersona(k)) : g.persona[i]); g.persona0 = g.persona.slice(); }
-  let seat = 0, rep = false, needDraw = true, guard = 0;
+  return runLoop(g, 0, false, true);
+}
+function runLoop(g, seat, rep, needDraw) {
+  let guard = 0;
   while (guard++ < 2000) {
     if (needDraw) { if (!drawTile(g, seat, rep)) return { draw: true, g }; }
     const drew = needDraw; needDraw = true; rep = false;
@@ -865,4 +874,30 @@ function simGame(levels, personas, extra) {
   }
   return { draw: true, g };
 }
-if (typeof module !== 'undefined') module.exports = { defFeatT, defFeatW, dangerML, mkPersona, pickPersona, greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
+/* ---- 模擬用（訓練／分析）：複製局面、把看不到的牌（牌山＋對手手牌）重新洗過，再用電腦打完 ---- */
+function cloneWorld(g, seat, resample) {
+  const c = Object.assign({}, g);
+  c.hands = g.hands.map(h => h.slice()); c.discards = g.discards.map(d => d.slice());
+  c.melds = g.melds.map(ms => ms.map(m => Object.assign({}, m, { tiles: m.tiles.slice() })));
+  c.drawN = g.drawN.slice(); c.persona = g.persona ? g.persona.slice() : g.persona; c.goal = g.goal ? g.goal.slice() : g.goal; c.pivots = g.pivots ? g.pivots.slice() : g.pivots;
+  c.botLv = g.botLv; c.useQ = null; c.qrec = null; c.rollHook = null; c.wall = g.wall.slice();
+  if (resample) {
+    const pool = c.wall.slice(); const sizes = [];
+    for (let o = 0; o < 4; o++) if (o !== seat) { sizes.push([o, c.hands[o].length]); pool.push(...c.hands[o]); }
+    shuffle(pool);
+    for (const [o, n] of sizes) c.hands[o] = pool.splice(0, n);
+    c.wall = pool;
+  }
+  return c;
+}
+// seat 剛打出 tile（已從手牌拿掉並進棄牌）之後，由所有電腦接手打完；回傳 simGame 的結果
+function continueAfterDiscard(g, seat, t) {
+  const c = botClaims(g, seat, t, []);
+  if (c) {
+    if (c.kind === 'ron') return { res: winResult(g, c.seat, false, seat, c.ev), g };
+    applyClaim(g, c.seat, c.kind, c.opt, t, seat);
+    return runLoop(g, c.seat, c.kind === 'kong', c.kind === 'kong');
+  }
+  return runLoop(g, (seat + 1) % 4, false, true);
+}
+if (typeof module !== 'undefined') module.exports = { qFeat, cloneWorld, continueAfterDiscard, discardTile, defFeatT, defFeatW, dangerML, mkPersona, pickPersona, greedDecline, proDiscard, proSelf, selfOptions, RULES, shanten, planList, arrOf, makeDeck, evaluateHand, simGame, newGame, counts, decomps, tname, val, sevenPairsShape };
