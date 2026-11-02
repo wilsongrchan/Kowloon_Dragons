@@ -34,7 +34,7 @@ if (/[?&]soundtest\b/.test(location.search)) (function () {
   --ivory:#f3ecd6; --ivory-edge:#d2c6a4; --jade:#2a7a56; --jade-d:#1d5a3f;
   --blue:#245c9c; --green:#27744a; --red:#b3352b; --gold:#e0b04e; --gold-hov:#ecc064; --gold-rgb:224,176,78; --gold-d:#8a6a1f;
   --text:#ebe6d6; --muted:#9fb0bd;
-  --badge-bg:rgba(14,21,28,.9); --badge-fg:var(--gold); --gold-t:var(--gold); --ivt:var(--ivory); --fieldA:rgba(10,18,25,.55); --field:#16222c; --vig1:#2f4658; --vig2:#161f27; --hov:#38505f; --hov2:rgba(255,255,255,.08); --pos:#8fd19e; --neg:#f0928b; --cn:#5fbf86; --shade:rgba(0,0,0,.18);
+  --badge-bg:rgba(14,21,28,.9); --badge-fg:var(--gold); --gold-t:var(--gold); --ivt:var(--ivory); --fieldA:rgba(10,18,25,.55); --field:#16222c; --vig1:#2f4658; --vig2:#161f27; --hov:#38505f; --hov2:rgba(255,255,255,.08); --pos:#6fe897; --neg:#ff8478; --cn:#5fbf86; --shade:rgba(0,0,0,.18);
   --ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   --face:"Noto Serif TC","PMingLiU","Songti TC",serif;
 }
@@ -60,10 +60,9 @@ h1{font:900 calc(30px*var(--fs,1))/1 var(--face);margin:0;letter-spacing:.08em;c
 .tbar .mf{order:1;font-size:calc(12px*var(--fs,1));font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 10px;white-space:nowrap}
 .tbar .mf.two{color:var(--gold-t);border-color:var(--gold)}
 @keyframes wallshake{0%,100%{transform:translateX(0) rotate(0)}15%{transform:translateX(-4px) rotate(-2deg)}35%{transform:translateX(4px) rotate(2deg)}55%{transform:translateX(-3px) rotate(-1.5deg)}75%{transform:translateX(3px) rotate(1.5deg)}}
-@keyframes wallflash{0%,100%{box-shadow:0 0 0 0 rgba(var(--gold-rgb),0);background-color:var(--pillbg,rgba(0,0,0,.28))}50%{box-shadow:0 0 0 3px rgba(var(--gold-rgb),.75);background-color:rgba(var(--gold-rgb),.35)}}
-.tbar .pill.low{animation:wallshake .5s ease-in-out 6,wallflash .5s ease-in-out 6}
-.tbar .pill.lowstay b{color:#ff8a65}
-@media (prefers-reduced-motion:reduce){.tbar .pill.low{animation:wallflash .8s ease-in-out 4}}
+@keyframes wallflash{0%,100%{background-color:var(--pillbg,rgba(0,0,0,.28))}50%{background-color:rgba(255,92,64,.62)}}
+.tbar .pill.low{animation:wallshake .5s ease-in-out 3,wallflash .5s ease-in-out 3}
+@media (prefers-reduced-motion:reduce){.tbar .pill.low{animation:wallflash .8s ease-in-out 2}}
 .tbar .pill{display:flex;align-items:center;gap:8px;background:var(--pillbg,rgba(0,0,0,.28));color:var(--muted);padding:5px 14px 5px 10px;border-radius:99px;font-size:calc(14px*var(--fs,1))}
 .tbar .pill svg{width:56px;height:38px;display:block}
 .tbar .pill b{color:var(--gold-t);font-size:calc(22px*var(--fs,1));line-height:1;font-variant-numeric:tabular-nums}
@@ -283,7 +282,7 @@ details.basics{margin:10px 0}details.basics ol{margin:6px 0 4px;padding-left:1.3
 .tile.wintile{position:relative;z-index:1;box-shadow:0 0 0 2px var(--gold),0 0 9px 1px rgba(var(--gold-rgb),.85);transform:translateY(-3px)}
 .tile.wintile::after{content:attr(data-w);position:absolute;left:50%;top:-1.55em;transform:translateX(-50%);background:var(--gold);color:#2a1f08;font:700 10px/1.35 var(--ui);padding:0 6px;border-radius:99px;white-space:nowrap}
 .pay{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-variant-numeric:tabular-nums}
-.pos{color:var(--pos)}.neg{color:var(--neg)}
+.pos{color:var(--pos);font-weight:700}.neg{color:var(--neg);font-weight:700}
 .paytab{width:100%;max-width:360px;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .paytab th{font-weight:500;color:var(--muted);font-size:calc(12px*var(--fs,1));text-align:right;padding:2px 8px 4px}
 .paytab td{text-align:right;padding:4px 8px;border-top:1px solid var(--line)}
@@ -548,12 +547,12 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 :root[data-hc="on"] .tile .ic.k{width:.56em}
 :root[data-theme="dark"]{--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}
 /* 配色（classic 為預設）× 淺色／深色：落葉 harvest、燈籠 lantern；自動模式跟著系統 */
-:root[data-palette="harvest"][data-theme="dark"]{--bg:#1d140e;--h:#f3e3c7;--pg:#eadfca;--pgm:#b39b7d;--table:#3a2416;--table2:#4a2f1c;--line:#6a4528;--gold:#e8923a;--gold-hov:#f3a54f;--gold-rgb:232,146,58;--gold-d:#8a4f14;--text:#f1e3cc;--muted:#c1a688;--badge-bg:rgba(28,15,8,.9);--fieldA:rgba(30,16,8,.55);--field:#2a1a10;--vig1:#5a3b22;--vig2:#24150c;--hov:#6a4429;--pos:#b8d98a;--neg:#f0907a;--cn:#d9b24a;--jade:#a65a1e;--jade2:#c27228;--jade-d:#7a3f12}
-@media (prefers-color-scheme: dark){:root[data-palette="harvest"]:not([data-theme]){--bg:#1d140e;--h:#f3e3c7;--pg:#eadfca;--pgm:#b39b7d;--table:#3a2416;--table2:#4a2f1c;--line:#6a4528;--gold:#e8923a;--gold-hov:#f3a54f;--gold-rgb:232,146,58;--gold-d:#8a4f14;--text:#f1e3cc;--muted:#c1a688;--badge-bg:rgba(28,15,8,.9);--fieldA:rgba(30,16,8,.55);--field:#2a1a10;--vig1:#5a3b22;--vig2:#24150c;--hov:#6a4429;--pos:#b8d98a;--neg:#f0907a;--cn:#d9b24a;--jade:#a65a1e;--jade2:#c27228;--jade-d:#7a3f12}}
+:root[data-palette="harvest"][data-theme="dark"]{--bg:#1d140e;--h:#f3e3c7;--pg:#eadfca;--pgm:#b39b7d;--table:#3a2416;--table2:#4a2f1c;--line:#6a4528;--gold:#e8923a;--gold-hov:#f3a54f;--gold-rgb:232,146,58;--gold-d:#8a4f14;--text:#f1e3cc;--muted:#c1a688;--badge-bg:rgba(28,15,8,.9);--fieldA:rgba(30,16,8,.55);--field:#2a1a10;--vig1:#5a3b22;--vig2:#24150c;--hov:#6a4429;--pos:#a6ee66;--neg:#ff936c;--cn:#d9b24a;--jade:#a65a1e;--jade2:#c27228;--jade-d:#7a3f12}
+@media (prefers-color-scheme: dark){:root[data-palette="harvest"]:not([data-theme]){--bg:#1d140e;--h:#f3e3c7;--pg:#eadfca;--pgm:#b39b7d;--table:#3a2416;--table2:#4a2f1c;--line:#6a4528;--gold:#e8923a;--gold-hov:#f3a54f;--gold-rgb:232,146,58;--gold-d:#8a4f14;--text:#f1e3cc;--muted:#c1a688;--badge-bg:rgba(28,15,8,.9);--fieldA:rgba(30,16,8,.55);--field:#2a1a10;--vig1:#5a3b22;--vig2:#24150c;--hov:#6a4429;--pos:#a6ee66;--neg:#ff936c;--cn:#d9b24a;--jade:#a65a1e;--jade2:#c27228;--jade-d:#7a3f12}}
 :root[data-palette="harvest"][data-theme="light"]{--bg:#efe3cf;--h:#4a2c14;--pg:#3a2a1e;--pgm:#7a634b;--table:#ecd9bb;--table2:#f5e9d2;--pillbg:#f5e9d2;--lbar:rgba(74,44,20,.16);--lbarh:rgba(74,44,20,.3);--gold:#c9741a;--gold-hov:#dc8630;--gold-rgb:201,116,26;--totalbg:#f8efd9;--line:#cdb48f;--text:#3a2414;--muted:#7a634b;--badge-bg:#b86418;--ivt:#4a2c14;--vig1:#f6ecd8;--vig2:#d8c3a0;--hov:#e6d2b0;--pos:#4f7a1f;--cn:#b07a1a;--jade:#a65a1e;--jade2:#c27228;--jade-d:#7a3f12}
 @media (prefers-color-scheme: light){:root[data-palette="harvest"]:not([data-theme]){--bg:#efe3cf;--h:#4a2c14;--pg:#3a2a1e;--pgm:#7a634b;--table:#ecd9bb;--table2:#f5e9d2;--pillbg:#f5e9d2;--lbar:rgba(74,44,20,.16);--lbarh:rgba(74,44,20,.3);--gold:#c9741a;--gold-hov:#dc8630;--gold-rgb:201,116,26;--totalbg:#f8efd9;--line:#cdb48f;--text:#3a2414;--muted:#7a634b;--badge-bg:#b86418;--ivt:#4a2c14;--vig1:#f6ecd8;--vig2:#d8c3a0;--hov:#e6d2b0;--pos:#4f7a1f;--cn:#b07a1a;--jade:#a65a1e;--jade2:#c27228;--jade-d:#7a3f12}}
-:root[data-palette="lantern"][data-theme="dark"]{--bg:#230709;--h:#ffe6a8;--pg:#f6e3c8;--pgm:#d8a98f;--table:#5c141b;--table2:#711f27;--line:#8f2d36;--gold:#ffcf4a;--gold-hov:#ffdb73;--gold-rgb:255,207,74;--gold-d:#a67c10;--text:#fff0d4;--muted:#f0b9a6;--badge-bg:rgba(60,6,10,.9);--fieldA:rgba(60,6,10,.55);--field:#3f0a0f;--vig1:#7e1f28;--vig2:#2d0609;--hov:#85252e;--pos:#c8f0a0;--neg:#ffb4a4;--cn:#ffd96b;--jade:#d4a017;--jade2:#e8bb3a;--jade-d:#9a7210}
-@media (prefers-color-scheme: dark){:root[data-palette="lantern"]:not([data-theme]){--bg:#230709;--h:#ffe6a8;--pg:#f6e3c8;--pgm:#d8a98f;--table:#5c141b;--table2:#711f27;--line:#8f2d36;--gold:#ffcf4a;--gold-hov:#ffdb73;--gold-rgb:255,207,74;--gold-d:#a67c10;--text:#fff0d4;--muted:#f0b9a6;--badge-bg:rgba(60,6,10,.9);--fieldA:rgba(60,6,10,.55);--field:#3f0a0f;--vig1:#7e1f28;--vig2:#2d0609;--hov:#85252e;--pos:#c8f0a0;--neg:#ffb4a4;--cn:#ffd96b;--jade:#d4a017;--jade2:#e8bb3a;--jade-d:#9a7210}}
+:root[data-palette="lantern"][data-theme="dark"]{--bg:#230709;--h:#ffe6a8;--pg:#f6e3c8;--pgm:#d8a98f;--table:#5c141b;--table2:#711f27;--line:#8f2d36;--gold:#ffcf4a;--gold-hov:#ffdb73;--gold-rgb:255,207,74;--gold-d:#a67c10;--text:#fff0d4;--muted:#f0b9a6;--badge-bg:rgba(60,6,10,.9);--fieldA:rgba(60,6,10,.55);--field:#3f0a0f;--vig1:#7e1f28;--vig2:#2d0609;--hov:#85252e;--pos:#8dffa8;--neg:#ffd2c2;--cn:#ffd96b;--jade:#d4a017;--jade2:#e8bb3a;--jade-d:#9a7210}
+@media (prefers-color-scheme: dark){:root[data-palette="lantern"]:not([data-theme]){--bg:#230709;--h:#ffe6a8;--pg:#f6e3c8;--pgm:#d8a98f;--table:#5c141b;--table2:#711f27;--line:#8f2d36;--gold:#ffcf4a;--gold-hov:#ffdb73;--gold-rgb:255,207,74;--gold-d:#a67c10;--text:#fff0d4;--muted:#f0b9a6;--badge-bg:rgba(60,6,10,.9);--fieldA:rgba(60,6,10,.55);--field:#3f0a0f;--vig1:#7e1f28;--vig2:#2d0609;--hov:#85252e;--pos:#8dffa8;--neg:#ffd2c2;--cn:#ffd96b;--jade:#d4a017;--jade2:#e8bb3a;--jade-d:#9a7210}}
 :root[data-palette="lantern"][data-theme="light"]{--bg:#f6e4de;--h:#7a1018;--pg:#3b1a1a;--pgm:#8a5a55;--table:#f2cfc6;--table2:#fae6e0;--pillbg:#fae6e0;--lbar:rgba(122,16,24,.16);--lbarh:rgba(122,16,24,.3);--gold:#b8860b;--gold-hov:#cf9a1c;--gold-rgb:184,134,11;--totalbg:#fdf0dc;--line:#e0a99f;--text:#3b1414;--muted:#8a5a55;--badge-bg:#a5121c;--ivt:#7a1018;--vig1:#fbeae5;--vig2:#e8b9af;--hov:#f0c4bb;--pos:#2f7a3d;--cn:#a8740c;--jade:#c8242b;--jade2:#dd4a4f;--jade-d:#8f161c}
 @media (prefers-color-scheme: light){:root[data-palette="lantern"]:not([data-theme]){--bg:#f6e4de;--h:#7a1018;--pg:#3b1a1a;--pgm:#8a5a55;--table:#f2cfc6;--table2:#fae6e0;--pillbg:#fae6e0;--lbar:rgba(122,16,24,.16);--lbarh:rgba(122,16,24,.3);--gold:#b8860b;--gold-hov:#cf9a1c;--gold-rgb:184,134,11;--totalbg:#fdf0dc;--line:#e0a99f;--text:#3b1414;--muted:#8a5a55;--badge-bg:#a5121c;--ivt:#7a1018;--vig1:#fbeae5;--vig2:#e8b9af;--hov:#f0c4bb;--pos:#2f7a3d;--cn:#a8740c;--jade:#c8242b;--jade2:#dd4a4f;--jade-d:#8f161c}}
 @media (prefers-color-scheme: dark){:root:not([data-theme]){--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}}
@@ -1296,12 +1295,9 @@ function render() {
   const rb = $('#resBack'); rb.hidden = !UI.viewTable; rb.textContent = L('回到結算', 'Back to results');
   $('#wall').innerHTML = WALL_SVG + `<span>${L('牌山', 'Wall')}</span><b>${G.wall.length}</b>`;
   const mf = $('#minFan'), two = RULES.MIN_TOTAL === 2; mf.textContent = two ? L('兩番起胡', '2 fan min') : L('一番起胡', '1 fan min'); mf.classList.toggle('two', two);
-  const wl = $('#wall'), LOW = 20;   // 牌山剩 20 張：抖動＋閃爍一下提醒快沒牌了（每手一次），之後數字維持橘紅
-  if (G.wall.length > LOW + 4) { UI.lowShown = false; wl.classList.remove('low', 'lowstay'); }
-  else if (G.wall.length <= LOW) {
-    wl.classList.add('lowstay');
-    if (!UI.lowShown) { UI.lowShown = true; wl.classList.add('low'); setTimeout(() => wl.classList.remove('low'), 3200); }
-  }
+  const wl = $('#wall'), LOW = 20;   // 牌山剩 20 張：抖動 3 下、底色閃紅提醒快沒牌了（每手一次）
+  if (G.wall.length > LOW + 4) { UI.lowShown = false; wl.classList.remove('low'); }
+  else if (G.wall.length <= LOW && !UI.lowShown) { UI.lowShown = true; wl.classList.add('low'); setTimeout(() => wl.classList.remove('low'), 1700); }
   refreshCheat();
   const opps = $('#opps'); opps.innerHTML = '';
   for (const seat of [2, 3, 1]) {
