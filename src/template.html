@@ -659,7 +659,7 @@ const $ = s => document.querySelector(s);
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
 const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-recv') !== '2') { PREF.recOn = 'on'; localStorage.setItem('yjl-recOn', 'on'); localStorage.setItem('yjl-recv', '2'); } if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
-const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' ? 'pro' : 'easy'; };
+const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' || PREF.botLvl === 'pro2' ? PREF.botLvl : 'easy'; };
 applyBotLvl();
 const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-hc', PREF.hc === 'on' ? 'on' : 'off'); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
@@ -2702,8 +2702,8 @@ function renderSettings() {
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
     <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
-    <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}</div>
-    <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。', 'Expert bots plan their hands, track what has been played, read the table and play defensively.')}</p>
+    <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro' && PREF.botLvl !== 'pro2')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}${chip('bot', 'pro2', '高手・兩番起胡', 'Expert · 2 fan min', PREF.botLvl === 'pro2')}</div>
+    <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。「兩番起胡」的電腦只胡 2 番以上（碎番也計）。', 'Expert bots plan their hands, track what has been played, read the table and play defensively. "2 fan min" bots only win with 2 fan or more (half fans count).')}</p>
     <h3>${L('打出按鈕位置（手機）', 'Discard button side (phone)')}</h3><div class="chips">${chip('dock', 'right', '右', 'Right', PREF.dockSide !== 'left')}${chip('dock', 'left', '左', 'Left', PREF.dockSide === 'left')}</div>
     <h3>${L('牌局記錄（分析用）', 'Hand history (for analysis)')}</h3><div class="chips">${chip('rec', 'on', '開', 'On', PREF.recOn === 'on')}${chip('rec', 'off', '關', 'Off', PREF.recOn !== 'on')}</div>
     <p class="note" style="margin:6px 0 0">${L('只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。', 'Records solo games against bots (deal, wall, every move and your thinking time). Stored only in this browser, never uploaded.')}</p>
@@ -2719,7 +2719,7 @@ $('#setDlg').addEventListener('click', e => {
   else if (g === 'music') { PREF.music = v; musicApply(); renderSettings(); }
   else if (g === 'dock') { PREF.dockSide = v === 'left' ? 'left' : 'right'; savePref(); renderSettings(); if (G) render(); return; }
   else if (g === 'rec') { PREF.recOn = v === 'on' ? 'on' : 'off'; savePref(); renderSettings(); return; }
-  else if (g === 'bot') { PREF.botLvl = v === 'pro' ? 'pro' : 'easy'; applyBotLvl(); savePref(); renderSettings(); return; }
+  else if (g === 'bot') { PREF.botLvl = v === 'pro' || v === 'pro2' ? v : 'easy'; applyBotLvl(); savePref(); renderSettings(); return; }
   else { LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't'; }
   savePref(); applyLang();
 });
@@ -2792,7 +2792,7 @@ function renderLanding() {
         <button class="btn primary big" id="lnCreate" type="button">${L('創建房間', 'Create room')}<small>${L('把代碼傳給朋友，空位可用電腦補', 'Share the code with friends; bots fill empty seats')}</small></button>
         <div class="joinrow"><input class="cd" id="lnCode" maxlength="4" value="${cd}" placeholder="${L('房間代碼', 'ROOM CODE')}" aria-label="${L('房間代碼', 'Room code')}" autocomplete="off"><button class="btn big2" id="lnGo" type="button">${L('加入房間', 'Join room')}</button></div>
         <button class="btn big" id="lnBots" type="button">${L('電腦對戰', 'Play with bots')}<small>${L('一人對三個電腦，即刻開局', 'You vs 3 bots, start right away')}</small></button>
-        <div class="botlv"><span>${L('電腦強度', 'Bot level')}</span><button type="button" class="chip ${PREF.botLvl !== 'pro' ? 'on' : ''}" data-bot="easy">${L('新手', 'Easy')}</button><button type="button" class="chip ${PREF.botLvl === 'pro' ? 'on' : ''}" data-bot="pro">${L('高手', 'Expert')}</button></div>
+        <div class="botlv"><span>${L('電腦強度', 'Bot level')}</span><button type="button" class="chip ${PREF.botLvl !== 'pro' && PREF.botLvl !== 'pro2' ? 'on' : ''}" data-bot="easy">${L('新手', 'Easy')}</button><button type="button" class="chip ${PREF.botLvl === 'pro' ? 'on' : ''}" data-bot="pro">${L('高手', 'Expert')}</button><button type="button" class="chip ${PREF.botLvl === 'pro2' ? 'on' : ''}" data-bot="pro2">${L('高手・兩番起胡', 'Expert · 2 fan min')}</button></div>
         <p class="err" id="lnMsg" aria-live="polite">${ROOM.msg || ''}</p>
       </div>
       <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed Pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragons · 6 fan cap')}</span></div>
@@ -2802,7 +2802,7 @@ function renderLanding() {
 }
 $('#landing').addEventListener('click', e => {
   const lv = e.target.closest('button[data-bot]');
-  if (lv) { PREF.botLvl = lv.dataset.bot === 'pro' ? 'pro' : 'easy'; applyBotLvl(); savePref(); $('#landing').querySelectorAll('button[data-bot]').forEach(b => b.classList.toggle('on', b === lv)); return; }
+  if (lv) { PREF.botLvl = ['pro', 'pro2'].includes(lv.dataset.bot) ? lv.dataset.bot : 'easy'; applyBotLvl(); savePref(); $('#landing').querySelectorAll('button[data-bot]').forEach(b => b.classList.toggle('on', b === lv)); return; }
   const t = e.target.closest('button'); if (!t) return;
   if (t.id === 'lnBots') { try { const n = cleanName(($('#lnName') || {}).value); if (n) localStorage.setItem('yjl-name', n); } catch (x) {} if (ROOM.zooming) return; dragonZoom(() => { if (online()) toSolo(); play(); hideLanding(); }); }
   else if (t.id === 'lnCreate') createRoom();

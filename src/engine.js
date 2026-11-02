@@ -355,7 +355,7 @@ function botClaims(g, from, t, skip = []) {
   for (let i = 1; i < 4; i++) {
     const s = (from + i) % 4; if (skip.includes(s)) continue;
     const o = claimOptions(g, s, t, from);
-    if (o.ron && !(proLevel(g, s) && greedDecline(g, s, o.ron, t, false))) return { seat: s, kind: 'ron', ev: o.ron };
+    if (o.ron && !tooSmall(g, s, o.ron) && !(proLevel(g, s) && greedDecline(g, s, o.ron, t, false))) return { seat: s, kind: 'ron', ev: o.ron };
   }
   for (let i = 1; i < 4; i++) {
     const s = (from + i) % 4; if (skip.includes(s)) continue;
@@ -373,7 +373,7 @@ function botClaims(g, from, t, skip = []) {
 }
 
 /* ---- 高手電腦：算向聽數、看牌效率與場上形勢（鳴牌、已見牌），不亂打 ---- */
-RULES.BOT_LEVEL = 'easy';   // 'easy' | 'pro'；模擬時可用 g.botLv[seat] 逐家指定
+RULES.BOT_LEVEL = 'easy';   // 'easy' | 'pro' | 'pro2'（高手＋兩番起胡）；模擬時可用 g.botLv[seat] 逐家指定
 // 貪番（像真人一樣：牌山還長、手上已能胡時，放掉小胡，改做更大的牌）
 RULES.PRO_GREED = true;
 RULES.GREED_WALL = 56;   // 牌山至少剩這麼多張才肯放棄胡牌
@@ -451,7 +451,10 @@ function proGoal(g, seat) {
   if (G && g.wall.length < RULES.GREED_KEEP) { g.goal[seat] = null; return null; }
   return G || null;
 }
-function proLevel(g, seat) { return ((g.botLv && g.botLv[seat]) || RULES.BOT_LEVEL) === 'pro'; }
+const levelOf = (g, seat) => (g.botLv && g.botLv[seat]) || RULES.BOT_LEVEL;
+function proLevel(g, seat) { const l = levelOf(g, seat); return l === 'pro' || l === 'pro2'; }
+// 高手（兩番起胡）：自己只胡總番數（含碎番）>= 2 的牌
+const tooSmall = (g, seat, ev) => levelOf(g, seat) === 'pro2' && ev.total < 2;
 const NK = ORDER.length;                                    // 30 種牌，順序同 ORDER：p1-9 s1-9 m1-9 z1-3
 const copiesIdx = i => i >= 27 ? 5 : (i % 9) + 1;           // 引擎編號 n 有 n 張
 const idxOf = k => ORD[k];
@@ -782,7 +785,7 @@ function greedDecline(g, seat, ev, tile, tsumo) {
 function proSelf(g, seat, opts) {
   PRO_G = proGoal(g, seat);
   if (opts.win) {
-    if (opts.noGreed || !greedDecline(g, seat, opts.win, g.lastDraw, true)) return { win: true };
+    if (opts.noGreed || (!tooSmall(g, seat, opts.win) && !greedDecline(g, seat, opts.win, g.lastDraw, true))) return { win: true };
     return { discard: proDiscard(g, seat).id };   // 放掉這次自摸，繼續做大
   }
   if (opts.kongs.length) return { kong: opts.kongs[0] };
