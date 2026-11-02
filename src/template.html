@@ -661,7 +661,8 @@ const $ = s => document.querySelector(s);
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
 const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-recv') !== '2') { PREF.recOn = 'on'; localStorage.setItem('yjl-recOn', 'on'); localStorage.setItem('yjl-recv', '2'); } if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
-const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' || PREF.botLvl === 'pro2' ? PREF.botLvl : 'easy'; RULES.MIN_TOTAL = PREF.botLvl === 'pro2' ? 2 : 0; };
+const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' || PREF.botLvl === 'pro2' ? PREF.botLvl : 'easy'; applyMinFan(); };
+function applyMinFan() { RULES.MIN_TOTAL = online() ? (ROOM.minFan === 2 ? 2 : 0) : (PREF.botLvl === 'pro2' ? 2 : 0); }   // 兩番起胡：單人看電腦強度設定，房間由房主決定
 applyBotLvl();
 const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-hc', PREF.hc === 'on' ? 'on' : 'off'); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
@@ -895,6 +896,7 @@ zh: `  <h2>規則</h2>
   <h3>半番（碎番，每項 +0.5 番）</h3>
   <ul>
     <li>必須已有至少 1 番才能追加；只有碎番、沒有全番不能胡，兩個半番不能起胡。</li>
+    <li>一般是<b>一番起胡</b>（至少 1 番）。也可以改玩<b>兩番起胡</b>：總番數（碎番也計，例如 1 番＋半番＋半番）要有 2 番才能胡。對電腦在設定裡選，開房間時由房主選。</li>
     <li><b>槓</b>：每次槓。</li>
     <li><b>三元大補槓</b></li>
     <li><b>門清</b>：無鳴牌。不求人、全小字、七對子、門清幺九順不再加。</li>
@@ -927,7 +929,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
   <h3>Goal</h3>
   <ul>
     <li>Hand of 13 tiles; you win on the 14th with <b>4 melds + 1 pair</b> (a meld is a sequence, a triplet or a kong).</li>
-    <li>You need at least <b>1 full fan</b> to win. Minor fans (½) alone don't count.</li>
+    <li>You need at least <b>1 full fan</b> to win (<b>1 fan min</b>, the default). Minor fans (½) alone don't count. Optionally play <b>2 fan min</b>: a win needs 2 fan in total (half fans count, e.g. 1 + ½ + ½); choose it in Settings (vs bots) or when creating a room.</li>
   </ul>
   <h3>Tiles and points</h3>
   <ul>
@@ -1145,6 +1147,7 @@ RULES_HTML.ja = `  <h2>ルール</h2>
   <h3>無役翻（各 +0.5翻）</h3>
   <ul>
     <li>先に1翻が必要です。無役翻だけでは和了できず（役にならない翻）、0.5翻が2つでも起こしになりません。</li>
+    <li>通常は<b>1翻縛り</b>（最低1翻）。<b>2翻縛り</b>にすると、半翻を含む合計が2翻以上（例：1＋0.5＋0.5）で和了できます。COM戦は設定で、ルームは部屋を作る人が選びます。</li>
     <li><b>カン</b>：1回ごと。</li>
     <li><b>三元大カン</b></li>
     <li><b>門前</b>：副露なし。不求人・全小字・七対子・門前幺九順には付きません。</li>
@@ -2178,6 +2181,7 @@ function toSolo(keepMsg) {
   try { ROOM.peer && ROOM.peer.destroy(); } catch (e) {}
   clearInterval(ROOM.wd); clearInterval(ROOM.ping);
   Object.assign(ROOM, { afk: {}, seen: {}, mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, started: false, conn: null, vote: null, ready: [true, false, false, false], tc: null, zooming: false });
+  ROOM.minFan = 1; applyMinFan();
   CLK.act = {};
   if (!keepMsg) ROOM.msg = '';
   mySeat = 0; scores = loadSoloScores(); dealer = 0; UI.mode = null; UI.cancelClaim = null;
@@ -2240,11 +2244,11 @@ function hostConn(conn) {
   conn.gone = gone; conn.on('close', gone); conn.on('error', gone);
 }
 function sendLobby() {
-  for (const k in ROOM.conns) { const c = ROOM.conns[k]; if (c && c.open) c.send({ t: 'lobby', code: ROOM.code, kind: ROOM.kind, names: ROOM.names, you: +k, started: ROOM.started, ready: ROOM.ready, tc: ROOM.tc }); }
+  for (const k in ROOM.conns) { const c = ROOM.conns[k]; if (c && c.open) c.send({ t: 'lobby', code: ROOM.code, kind: ROOM.kind, names: ROOM.names, you: +k, started: ROOM.started, ready: ROOM.ready, tc: ROOM.tc, mf: ROOM.minFan }); }
 }
 function startGame() {
   if (!isHost() || !allReady()) return;
-  ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0; BOTP = [0, 1, 2, 3].map(() => pickPersona());   // 電腦的性格：一場不變，離開再進來才重抽
+  applyMinFan(); ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0; BOTP = [0, 1, 2, 3].map(() => pickPersona());   // 電腦的性格：一場不變，離開再進來才重抽
   dragonZoom(() => { $('#lobby').close(); updateOnlineBtn(); play(); }); sendLobby();
 }
 const allReady = () => ROOM.kind.slice(1).every((k, i) => k === 'bot' || (k === 'human' && ROOM.ready[i + 1]));
@@ -2279,7 +2283,7 @@ function guestMsg(m, conn, peer, markJoined, code) {
     markJoined();
     if (ROOM.mode !== 'guest') { runId++; ROOM.mode = 'guest'; ROOM.peer = peer; ROOM.conn = conn; G = null; clearActions(); }
     const was = ROOM.started;
-    Object.assign(ROOM, { code, kind: m.kind, names: m.names, started: m.started, msg: '', ready: m.ready || ROOM.ready, tc: m.tc || null }); mySeat = m.you; updateOnlineBtn(); hideLanding();
+    Object.assign(ROOM, { code, kind: m.kind, names: m.names, started: m.started, msg: '', ready: m.ready || ROOM.ready, tc: m.tc || null, minFan: m.mf === 2 ? 2 : 1 }); applyMinFan(); mySeat = m.you; updateOnlineBtn(); hideLanding();
     if (!was && m.started) dragonZoom(() => { if ($('#lobby').open) $('#lobby').close(); });
     renderLobby(); if (!m.started && !$('#lobby').open) $('#lobby').showModal(); return;
   }
@@ -2352,9 +2356,11 @@ function renderLobby() {
   const settings = hostMode && pre
     ? `<h3>${L('設定', 'Settings')} · ${L('思考時間', 'Time control')} (A + B)</h3>
       <div class="chips">${TC_PRESETS.map((p, n) => `<button type="button" class="chip ${(p && tc && p.a === tc.a && p.b === tc.b) || (!p && !tc) ? 'on' : ''}" data-tc="${n}">${p ? p.a + '+' + p.b : L('不限時', 'No limit')}</button>`).join('')}</div>
+      <h3>${L('起胡番數', 'Minimum to win')}</h3>
+      <div class="chips"><button type="button" class="chip ${ROOM.minFan === 2 ? '' : 'on'}" data-mf="1">${L('一番起胡', '1 fan min')}</button><button type="button" class="chip ${ROOM.minFan === 2 ? 'on' : ''}" data-mf="2">${L('兩番起胡', '2 fan min')}</button></div>
       <div class="tcrow">A ${L('時間庫', 'bank')} ${sel('tcA', [0, 10, 15, 20, 30, 45, 60, 90, 120], tc ? tc.a : 30)} ${L('秒', 's')} <span>+</span> B ${L('每手', 'per turn')} ${sel('tcB', [3, 5, 8, 10, 15, 20, 30], tc ? tc.b : 10)} ${L('秒', 's')}</div>
       <p class="note" title="${L('每次出牌或鳴牌有 B 秒；B 用完才動用 A（每局重設，所有人共用同一設定）。時間到自動由電腦代打。', 'Each turn or claim gets B seconds; once B runs out your A bank drains (reset every hand, same for everyone). At zero a bot plays for you.')}">${L('B 秒用完才動用 A（每局重設）；時間到由電腦代打。', 'B runs out first, then A drains (reset each hand). At 0 a bot plays.')}</p>`
-    : `<h3>${L('思考時間', 'Time control')}</h3><p class="note" style="margin-top:0">${tcTxt(tc)}${tc ? ' · A ' + L('時間庫', 'bank') + ' + B ' + L('每手', 'per turn') : ''}</p>`;
+    : `<h3>${L('起胡番數', 'Minimum to win')}</h3><p class="note" style="margin-top:0">${ROOM.minFan === 2 ? L('兩番起胡', '2 fan min') : L('一番起胡', '1 fan min')}</p><h3>${L('思考時間', 'Time control')}</h3><p class="note" style="margin-top:0">${tcTxt(tc)}${tc ? ' · A ' + L('時間庫', 'bank') + ' + B ' + L('每手', 'per turn') : ''}</p>`;
   const acts = !pre ? '' : hostMode
     ? `<div class="acts"><button class="btn big" id="lbFill" type="button" ${open ? '' : 'disabled'}>${L('空位全部用電腦補', 'Fill empty seats with bots')}</button>
         <button class="btn primary big" id="lbStart" type="button" ${allReady() ? '' : 'disabled'}>${L('開始遊戲', 'Start game')}</button></div>
@@ -2381,6 +2387,7 @@ $('#lobby').addEventListener('click', e => {
   else if (t.id === 'lbStart') startGame();
   else if (t.id === 'lbClose') $('#lobby').close();
   else if (t.id === 'lbReady') { const v = !ROOM.ready[mySeat]; ROOM.ready[mySeat] = v; try { ROOM.conn.send({ t: 'ready', v }); } catch (x) {} renderLobby(); }
+  else if (t.dataset.mf != null && isHost()) { ROOM.minFan = +t.dataset.mf === 2 ? 2 : 1; applyMinFan(); sendLobby(); renderLobby(); }
   else if (t.dataset.tc != null && isHost()) { ROOM.tc = TC_PRESETS[+t.dataset.tc] ? Object.assign({}, TC_PRESETS[+t.dataset.tc]) : null; sendLobby(); renderLobby(); }
   else if (t.id === 'lbLeave') { toSolo(); $('#lobby').close(); showLanding(); }
   else if (t.id === 'lbFill') { for (let i = 1; i < 4; i++) if (ROOM.kind[i] === 'open') ROOM.kind[i] = 'bot'; sendLobby(); renderLobby(); }
