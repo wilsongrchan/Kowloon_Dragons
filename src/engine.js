@@ -96,8 +96,9 @@ function flushOf(normalKeys, mixedSets, mixedPairs, mixSuits) {
   if (mixedSets === 0 && mixedPairs === 0) return hon ? { name: '混一色', fan: 2 } : { name: '清一色', fan: 4 };
   // 彩眼／彩碰中必須有一張是主色（其餘由另一花色補）
   const main = [...suits][0], hasMain = mixSuits && mixSuits.includes(main);
-  if (mixedSets === 0 && mixedPairs === 1) return hasMain ? { name: '彩一色', fan: 1 } : null;
-  if (mixedSets === 1 && mixedPairs === 0) return hasMain ? { name: '彩一色', fan: 1 } : null;
+  if (RULES.CAI_PURE && hon) return null;   // 彩一色只限清一色（無三元）
+  if (mixedSets === 0 && mixedPairs === 1) return hasMain ? { name: '彩一色', fan: RULES.CAI_FAN } : null;
+  if (mixedSets === 1 && mixedPairs === 0) return hasMain ? { name: '彩一色', fan: RULES.CAI_FAN } : null;
   return null;
 }
 // special: null | '天胡'（莊家起手即胡）| '地胡'（閒家胡莊家第一隻打出的牌）| '人胡'（閒家第一次摸牌自摸，之前無人吃碰槓）
@@ -373,6 +374,7 @@ function botClaims(g, from, t, skip = []) {
 }
 
 /* ---- 高手電腦：算向聽數、看牌效率與場上形勢（鳴牌、已見牌），不亂打 ---- */
+RULES.CAI_FAN = 2; RULES.CAI_PURE = true;   // 彩一色的番數；只限清一色
 RULES.BOT_LEVEL = 'easy';   // 'easy' | 'pro' | 'pro2'（高手＋兩番起胡）；模擬時可用 g.botLv[seat] 逐家指定
 // 貪番（像真人一樣：牌山還長、手上已能胡時，放掉小胡，改做更大的牌）
 RULES.PRO_GREED = true;

@@ -753,8 +753,9 @@ function flushOf(normalKeys, mixedSets, mixedPairs, mixSuits) {
   if (mixedSets === 0 && mixedPairs === 0) return hon ? { name: '混一色', fan: 2 } : { name: '清一色', fan: 4 };
   // 彩眼／彩碰中必須有一張是主色（其餘由另一花色補）
   const main = [...suits][0], hasMain = mixSuits && mixSuits.includes(main);
-  if (mixedSets === 0 && mixedPairs === 1) return hasMain ? { name: '彩一色', fan: 1 } : null;
-  if (mixedSets === 1 && mixedPairs === 0) return hasMain ? { name: '彩一色', fan: 1 } : null;
+  if (RULES.CAI_PURE && hon) return null;   // 彩一色只限清一色（無三元）
+  if (mixedSets === 0 && mixedPairs === 1) return hasMain ? { name: '彩一色', fan: RULES.CAI_FAN } : null;
+  if (mixedSets === 1 && mixedPairs === 0) return hasMain ? { name: '彩一色', fan: RULES.CAI_FAN } : null;
   return null;
 }
 // special: null | '天胡'（莊家起手即胡）| '地胡'（閒家胡莊家第一隻打出的牌）| '人胡'（閒家第一次摸牌自摸，之前無人吃碰槓）
@@ -1030,6 +1031,7 @@ function botClaims(g, from, t, skip = []) {
 }
 
 /* ---- 高手電腦：算向聽數、看牌效率與場上形勢（鳴牌、已見牌），不亂打 ---- */
+RULES.CAI_FAN = 2; RULES.CAI_PURE = true;   // 彩一色的番數；只限清一色
 RULES.BOT_LEVEL = 'easy';   // 'easy' | 'pro' | 'pro2'（高手＋兩番起胡）；模擬時可用 g.botLv[seat] 逐家指定
 // 貪番（像真人一樣：牌山還長、手上已能胡時，放掉小胡，改做更大的牌）
 RULES.PRO_GREED = true;
@@ -1579,7 +1581,7 @@ const YAKU_JA = {
 const JA_EXACT = {
   '摸牌山最後一張自摸（連自摸共 +1）': '牌山の最後の1枚でツモ（ツモと合わせて +1）',
   /* table */
-  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '高手・兩番起胡': '上級・2翻縛り', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。「2翻縛り」を選ぶと、あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
+  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '高手・兩番起胡': '上級・2翻縛り', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。「2翻縛り」を選ぶと、あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色': '清一色（三元牌なし）で彩の部分がちょうど1つ（彩雀頭または彩ポン1組）、主色が1枚以上', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
   '手牌＋鳴牌的點值總和（未乘番數；彩碰被要的那張不計）': '手牌＋副露の点の合計（翻数を掛ける前。彩ポンで鳴いた1枚は数えません）',
   '整理': '理牌', '彩組': '彩まとめ', '把手上的彩眼／彩刻湊在一起並鎖定': '手牌の彩雀頭／彩刻子をまとめてロックします',
   '目前沒有可組的彩眼／彩刻': 'まとめられる彩雀頭／彩刻子はありません', '解鎖': 'ロック解除', '鎖定': 'ロック',
@@ -1761,8 +1763,8 @@ const HAND_EX = [
   [1, '三元刻', 'Dragon triplet', 'z1 z1 z1|p2 p3 p4|s4 s5 s6|m4 m5 m6|s5 s5'],
   [1, '平胡', 'All Sequences', 'p1 p2 p3|p4 p5 p6|s2 s3 s4|m3 m4 m5|s5 s5'],
   [1, '對對胡', 'All Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|z1 z1 z1|s6 s6'],
-  [1, '彩一色', 'Mixed Flush', 'p1 s1|p2 p3 p4|p4 p5 p6|p5 p6 p7|z1 z1 z1'],
-  [1, '彩一色', 'Mixed Flush', 'p1 s1 m1|p2 p3 p4|p4 p5 p6|p5 p6 p7|p8 p8'],
+  [2, '彩一色', 'Mixed Flush', 'p1 s1|p2 p3 p4|p4 p5 p6|p5 p6 p7|p7 p8 p9'],
+  [2, '彩一色', 'Mixed Flush', 'p1 s1 m1|p2 p3 p4|p4 p5 p6|p5 p6 p7|p8 p8'],
   [2, '混一色', 'Half Flush', 'p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'],
   [2, '斷小字', 'No Small', 'p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'],
   [1, '三暗刻', 'Three Concealed Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'],
@@ -1789,7 +1791,7 @@ const EXGEN = {
   '三元刻': () => [exDpg(), exRch(), exRch(), exRch(), exRpr()],
   '平胡': () => [exRch(), exRch(), exRch(), exRch(), exRpr()],
   '對對胡': () => [exRpg(), exRpg(), exRpg(), exRpg(), exRpr()],
-  '彩一色': () => (exR(2) ? (() => { const x = exPick(EXS), o = exPick(EXS.filter(q => q !== x)), n = 1 + exR(3); return [`${x}${n} ${o}${n}`, exRch(x), exRch(x), exR(2) ? exDpg() : exSet(x), exSet(x)]; })() : (() => { const x = exPick(EXS), n = 1 + exR(3), o = EXS.filter(q => q !== x); return [exR(2) ? `${x}${n} ${o[0]}${n} ${o[1]}${n}` : `${x}${n} ${x}${n} ${exPick(o)}${n}`, exRch(x), exRch(x), exR(2) ? exDpg() : exRch(x), exR(3) ? exRpr(x) : exPick(['z1 z1', 'z2 z2', 'z3 z3'])]; })()),
+  '彩一色': () => (exR(2) ? (() => { const x = exPick(EXS), o = exPick(EXS.filter(q => q !== x)), n = 1 + exR(3); return [`${x}${n} ${o}${n}`, exRch(x), exRch(x), exSet(x), exSet(x)]; })() : (() => { const x = exPick(EXS), n = 1 + exR(3), o = EXS.filter(q => q !== x); return [exR(2) ? `${x}${n} ${o[0]}${n} ${o[1]}${n}` : `${x}${n} ${x}${n} ${exPick(o)}${n}`, exRch(x), exRch(x), exRch(x), exRpr(x)]; })()),
   '混一色': () => { const x = exPick(EXS); return [exSet(x), exSet(x), exR(2) ? exDpg() : exSet(x), exDpg(), exR(2) ? exRpr(x) : 'z' + (1 + exR(3)) + ' z' + (1 + exR(3))]; },
   '斷小字': () => [exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRpg(undefined, 3, 6), exRpr(undefined, 2, 6)],
   '三暗刻': () => [exRpg(), exRpg(), exRpg(), exRch(), exRpr()],
@@ -1907,12 +1909,12 @@ zh: `  <h2>規則</h2>
         <li><b>對對胡</b>：4 刻 + 眼，彩碰可。</li>
         <li><b>不求人</b>：無鳴牌、自摸。門清加自摸，不重複算門清或自摸。</li>
         <li><b>三暗刻</b>：有 3 組暗刻（自己手牌湊成、不是碰別人的牌；暗槓也算）。第四組面子可鳴、可順子、可刻子、可碰。</li>
-        <li><b>彩一色</b>：混一色或清一色，但其中恰有一處是「彩」：眼是彩眼，或其中一刻是彩碰／彩刻；該彩眼／彩碰／彩刻必須至少有一張是主色（例如 8筒8筒8萬 在筒子手牌）；彩眼和彩碰不可同時有，多於一刻彩碰也不可；第一副三元刻不另計。</li>
       </ul>
     </li>
     <li><b>2 番</b>
       <ul>
-        <li><b>混一色</b>：一門 + 三元。不可彩碰、彩刻、彩眼，否則只視為彩一色；第一副三元刻不另計。</li>
+        <li><b>混一色</b>：一門 + 三元。不可彩碰、彩刻、彩眼；第一副三元刻不另計。</li>
+        <li><b>彩一色</b>：清一色（無三元），但其中恰有一處是「彩」：眼是彩眼，或其中一刻是彩碰／彩刻；該彩眼／彩碰／彩刻必須至少有一張是主色（例如 8筒8筒8萬 在筒子手牌）；彩眼和彩碰不可同時有，多於一刻彩碰也不可；有三元的混一色不算。</li>
         <li><b>斷小字</b>：整副手牌沒有 1–3。</li>
         <li><b>七對子</b>：門清狀態下組成 7 對。四張相同算兩對（如 2222）；可疊混一色、清一色；不可彩眼；不重複算門清。</li>
       </ul>
@@ -2054,12 +2056,12 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
         <li><b>All Triplets (對對胡)</b>: 4 triplets + pair. Mixed Pungs are allowed.</li>
         <li><b>Concealed Self-Draw (不求人)</b>: no calls and you win by drawing. Replaces Concealed and Self-draw.</li>
         <li><b>Three Concealed Triplets (三暗刻)</b>: three triplets you formed yourself in your hand (not Pung'd from someone else's discard; a concealed Kong counts). The fourth meld can be anything: open or concealed, a sequence or a triplet, even a Pung or Chow.</li>
-        <li><b>Mixed Flush (彩一色)</b>: a Half Flush or Full Flush with exactly one mixed part: either the pair is a mixed pair, or one of the triplets is a mixed Pung / mixed triplet. That mixed pair, Pung or triplet must contain at least one tile of the main suit (e.g. 8-Circle 8-Circle 8-Character in a Circles hand). A mixed pair and a mixed Pung together, or more than one mixed Pung, don't count. The first dragon triplet isn't counted separately.</li>
       </ul>
     </li>
     <li><b>2 fan</b>
       <ul>
-        <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed Pung, mixed triplet or mixed pair (otherwise it counts only as a Mixed Flush). The first dragon triplet isn't counted separately.</li>
+        <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed Pung, mixed triplet or mixed pair The first dragon triplet isn't counted separately.</li>
+        <li><b>Mixed Flush (彩一色)</b>: a Full Flush (no dragons) with exactly one mixed part: either the pair is a mixed pair, or one of the triplets is a mixed Pung / mixed triplet. That mixed pair, Pung or triplet must contain at least one tile of the main suit (e.g. 8-Circle 8-Circle 8-Character in a Circles hand). A mixed pair and a mixed Pung together, or more than one mixed Pung, don't count. A Half Flush with a mixed part doesn't count.</li>
         <li><b>No Small (斷小字)</b>: no 1–3 anywhere in the hand.</li>
         <li><b>Seven Pairs (七對子)</b>: seven pairs, all concealed. Four of a kind counts as two pairs (2222). No mixed pair. Can stack with Half Flush and Full Flush. No Concealed bonus on top.</li>
       </ul>
@@ -2161,12 +2163,12 @@ RULES_HTML.ja = `  <h2>ルール</h2>
         <li><b>対々和</b>：刻子4組＋雀頭。彩ポン可。</li>
         <li><b>不求人（門前ツモ）</b>：副露なし・ツモ。門前・ツモは別計算しない。</li>
         <li><b>三暗刻</b>：自分の手牌で作った暗刻が3組（他家から鳴いた刻子は不可。暗槓も可）。4つ目の面子は、鳴いていても、順子でも刻子でも（ポン・チーでも）かまいません。</li>
-        <li><b>彩一色</b>：混一色または清一色で、「彩」の部分がちょうど1つだけあるもの（雀頭が彩雀頭、または刻子の1つが彩ポン／彩刻子）。該当の彩雀頭・彩ポン・彩刻子に主色が1枚以上あること（例：八筒八筒八萬 を筒子の手で）。彩雀頭と彩ポンの併用、彩ポン2組以上は不可。最初の三元刻は別計算しない。</li>
       </ul>
     </li>
     <li><b>2翻</b>
       <ul>
-        <li><b>混一色</b>：1色＋三元牌。彩ポン・彩刻子・彩雀頭は不可（あれば彩一色のみ）。最初の三元刻は別計算しない。</li>
+        <li><b>混一色</b>：1色＋三元牌。彩ポン・彩刻子・彩雀頭は不可。最初の三元刻は別計算しない。</li>
+        <li><b>彩一色</b>：清一色（三元牌なし）で、「彩」の部分がちょうど1つだけあるもの（雀頭が彩雀頭、または刻子の1つが彩ポン／彩刻子）。該当の彩雀頭・彩ポン・彩刻子に主色が1枚以上あること（例：八筒八筒八萬 を筒子の手で）。彩雀頭と彩ポンの併用、彩ポン2組以上は不可。三元牌のある混一色は対象外です。</li>
         <li><b>断小字</b>：手牌に1〜3が1枚もない。</li>
         <li><b>七対子</b>：門前（鳴きなし）で7対をそろえる。同じ牌4枚＝2対も可（2222）。混一色・清一色と複合可。彩雀頭は不可。門前は別計算しない。</li>
       </ul>
@@ -2981,8 +2983,8 @@ function renderResult() {
 }
 $('#resBack').onclick = () => { UI.viewTable = false; renderResult(); const d = $('#result'); d.showModal(); d.scrollTop = 0; render(); };
 const CHEAT_TIERS = [
-  [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all sequences, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed Pung ok)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ['彩一色', '混一色或清一色，恰有一處彩（彩眼或一刻彩碰），至少一張為主色（首副三元刻不另計）', 'half/full flush with exactly one mixed part (mixed pair or one mixed Pung), at least one tile in the main suit (1st dragon triplet not counted)']]],
-  [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['斷小字', '沒有 1–3', 'no 1–3'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 2222 ok, no mixed pair']]],
+  [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all sequences, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed Pung ok)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ]],
+  [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['彩一色', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色', 'full flush (no dragons) with exactly one mixed part (mixed pair or one mixed Pung), at least one tile in the main suit'], ['斷小字', '沒有 1–3', 'no 1–3'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 2222 ok, no mixed pair']]],
   [3, [['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['全小字', '全部 1–3', 'only 1–3'], ['幺九順', '同花 123·456·789 · 其餘任一面子', 'same-suit 123·456·789 + any set']]],
   [4, [['清一色', '一門、無三元（不含彩碰／彩眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻（不另計對對胡、不求人）', '4 concealed triplets (no All Triplets or Concealed Self-Draw on top)'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
   [6, [['幺九龍', '同花 123·456·789 + 紅中、發財、白板 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White Dragon + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '紅中、發財、白板全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer\'s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]
@@ -3014,7 +3016,7 @@ function cheatStates() {
   if (suitsNM.size >= 2) { out('混一色', '鳴牌不只一門', 'melds in 2+ suits'); out('清一色', '鳴牌不只一門', 'melds in 2+ suits'); out('彩一色', '鳴牌不只一門', 'melds in 2+ suits'); }
   if (mixedM.length) { out('混一色', '已有彩碰', 'you have a mixed Pung'); out('清一色', '已有彩碰', 'you have a mixed Pung'); }
   if (mixedM.length >= 2) out('彩一色', '彩碰多於一刻', 'more than one mixed pung');
-  if (drag.length) { out('清一色', '已有三元牌鳴牌', 'you have a dragon meld'); out('斷一門無三元', '已有三元牌鳴牌', 'you have a dragon meld'); }
+  if (drag.length) { out('清一色', '已有三元牌鳴牌', 'you have a dragon meld'); out('彩一色', '已有三元牌鳴牌', 'you have a dragon meld'); out('斷一門無三元', '已有三元牌鳴牌', 'you have a dragon meld'); }
   if (suits.size >= 3) out('斷一門無三元', '鳴牌三門齊', 'melds in all 3 suits');
   const nonDrag = melds.length - drag.length;
   if (nonDrag >= 2) out('大三元', '非三元鳴牌太多', 'too many non-dragon melds');
