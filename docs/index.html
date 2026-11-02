@@ -495,6 +495,8 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 #lobby .chip{font:500 calc(13px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;cursor:pointer}
 #lobby .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
 #lobby select{font:500 calc(14px*var(--fs,1)) var(--ui);padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--text)}
+#lobby .tcrow.off{opacity:.4}
+#lobby .tcrow select:disabled{cursor:not-allowed}
 #lobby .tcrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:calc(13px*var(--fs,1));color:var(--muted)}
 #lobby button.big{width:100%;padding:9px 10px;font-size:calc(16px*var(--fs,1))}
 #lobby .acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
@@ -3399,13 +3401,13 @@ function renderLobby() {
   const open = ROOM.kind.slice(1).filter(x => x === 'open').length;
   const waiting = ROOM.kind.slice(1).filter((k, i) => k === 'human' && !ROOM.ready[i + 1]).length;
   const link = location.origin + location.pathname + '?room=' + ROOM.code;
-  const tc = ROOM.tc, sel = (id, vals, cur) => `<select id="${id}">${vals.map(v => `<option value="${v}" ${v === cur ? 'selected' : ''}>${v}</option>`).join('')}</select>`;
+  const tc = ROOM.tc, sel = (id, vals, cur) => `<select id="${id}" ${tc ? '' : 'disabled'}>${vals.map(v => `<option value="${v}" ${v === cur ? 'selected' : ''}>${v}</option>`).join('')}</select>`;
   const settings = hostMode && pre
     ? `<h3>${L('設定', 'Settings')} · ${L('思考時間', 'Time control')} (A + B)</h3>
       <div class="chips">${TC_PRESETS.map((p, n) => `<button type="button" class="chip ${(p && tc && p.a === tc.a && p.b === tc.b) || (!p && !tc) ? 'on' : ''}" data-tc="${n}">${p ? p.a + '+' + p.b : L('不限時', 'No limit')}</button>`).join('')}</div>
       <h3>${L('起胡番數', 'Minimum to win')}</h3>
       <div class="chips"><button type="button" class="chip ${ROOM.minFan === 2 ? '' : 'on'}" data-mf="1">${L('一番起胡', '1 fan min')}</button><button type="button" class="chip ${ROOM.minFan === 2 ? 'on' : ''}" data-mf="2">${L('兩番起胡', '2 fan min')}</button></div>
-      <div class="tcrow">A ${L('時間庫', 'bank')} ${sel('tcA', [0, 10, 15, 20, 30, 45, 60, 90, 120], tc ? tc.a : 30)} ${L('秒', 's')} <span>+</span> B ${L('每手', 'per turn')} ${sel('tcB', [3, 5, 8, 10, 15, 20, 30], tc ? tc.b : 10)} ${L('秒', 's')}</div>
+      <div class="tcrow${tc ? '' : ' off'}">A ${L('時間庫', 'bank')} ${sel('tcA', [0, 10, 15, 20, 30, 45, 60, 90, 120], tc ? tc.a : 30)} ${L('秒', 's')} <span>+</span> B ${L('每手', 'per turn')} ${sel('tcB', [3, 5, 8, 10, 15, 20, 30], tc ? tc.b : 10)} ${L('秒', 's')}</div>
       <p class="note" title="${L('每次出牌或鳴牌有 B 秒；B 用完才動用 A（每局重設，所有人共用同一設定）。時間到自動由電腦代打。', 'Each turn or claim gets B seconds; once B runs out your A bank drains (reset every hand, same for everyone). At zero a bot plays for you.')}">${L('B 秒用完才動用 A（每局重設）；時間到由電腦代打。', 'B runs out first, then A drains (reset each hand). At 0 a bot plays.')}</p>`
     : `<h3>${L('起胡番數', 'Minimum to win')}</h3><p class="note" style="margin-top:0">${ROOM.minFan === 2 ? L('兩番起胡', '2 fan min') : L('一番起胡', '1 fan min')}</p><h3>${L('思考時間', 'Time control')}</h3><p class="note" style="margin-top:0">${tcTxt(tc)}${tc ? ' · A ' + L('時間庫', 'bank') + ' + B ' + L('每手', 'per turn') : ''}</p>`;
   const acts = !pre ? '' : hostMode
