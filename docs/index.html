@@ -1711,7 +1711,8 @@ let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 
 const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-recv') !== '2') { PREF.recOn = 'on'; localStorage.setItem('yjl-recOn', 'on'); localStorage.setItem('yjl-recv', '2'); } if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
 const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' || PREF.botLvl === 'pro2' ? PREF.botLvl : 'easy'; applyMinFan(); };
-function applyMinFan() { RULES.MIN_TOTAL = online() ? (ROOM.minFan === 2 ? 2 : 0) : (PREF.botLvl === 'pro2' ? 2 : 0); }   // 兩番起胡：單人看電腦強度設定，房間由房主決定
+function applyMinFan() { let on = false; try { on = online(); } catch (e) {}   // 啟動時 ROOM 還沒建立
+  RULES.MIN_TOTAL = on ? (ROOM.minFan === 2 ? 2 : 0) : (PREF.botLvl === 'pro2' ? 2 : 0); }   // 兩番起胡：單人看電腦強度設定，房間由房主決定
 applyBotLvl();
 const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'auto' ? r.removeAttribute('data-theme') : r.setAttribute('data-theme', PREF.theme); r.setAttribute('data-hc', PREF.hc === 'on' ? 'on' : 'off'); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
