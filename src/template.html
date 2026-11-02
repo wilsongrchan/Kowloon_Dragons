@@ -558,6 +558,8 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 @media (prefers-color-scheme: light){:root[data-palette="lantern"]:not([data-theme]){--bg:#f6e4de;--h:#7a1018;--pg:#3b1a1a;--pgm:#8a5a55;--table:#f2cfc6;--table2:#fae6e0;--pillbg:#fae6e0;--lbar:rgba(122,16,24,.16);--lbarh:rgba(122,16,24,.3);--gold:#b8860b;--gold-hov:#cf9a1c;--gold-rgb:184,134,11;--totalbg:#fdf0dc;--line:#e0a99f;--text:#3b1414;--muted:#8a5a55;--badge-bg:#a5121c;--ivt:#7a1018;--vig1:#fbeae5;--vig2:#e8b9af;--hov:#f0c4bb;--pos:#2f7a3d;--cn:#a8740c;--jade:#c8242b;--jade2:#dd4a4f;--jade-d:#8f161c}}
 @media (prefers-color-scheme: dark){:root:not([data-theme]){--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}}
 #setDlg h3{margin:14px 0 6px}
+#setDlg .phoneonly{display:none}
+@media (max-width:520px){#setDlg .phoneonly{display:block}}
 #setDlg .chips{display:flex;flex-wrap:wrap;gap:6px}
 #setDlg .chip{font:500 calc(14px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
 #landing .botlv{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:2px;color:var(--muted);font-size:calc(13px*var(--fs,1))}
@@ -2786,7 +2788,7 @@ function renderSettings() {
     <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
     <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro' && PREF.botLvl !== 'pro2')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}${chip('bot', 'pro2', '高手・兩番起胡', 'Expert · 2 fan min', PREF.botLvl === 'pro2')}</div>
     <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。', 'Expert bots plan their hands, track what has been played, read the table and play defensively. "2 fan min" makes the whole table, you included, need 2 fan or more to win (half fans count).')}</p>
-    <h3>${L('打出按鈕位置（手機）', 'Discard button side (phone)')}</h3><div class="chips">${chip('dock', 'right', '右', 'Right', PREF.dockSide !== 'left')}${chip('dock', 'left', '左', 'Left', PREF.dockSide === 'left')}</div>
+    <div class="phoneonly"><h3>${L('打出按鈕位置', 'Discard button side')}</h3><div class="chips">${chip('dock', 'right', '右', 'Right', PREF.dockSide !== 'left')}${chip('dock', 'left', '左', 'Left', PREF.dockSide === 'left')}</div></div>
     <h3>${L('牌局記錄（分析用）', 'Hand history (for analysis)')}</h3><div class="chips">${chip('rec', 'on', '開', 'On', PREF.recOn === 'on')}${chip('rec', 'off', '關', 'Off', PREF.recOn !== 'on')}</div>
     <p class="note" style="margin:6px 0 0">${L('只記錄你和電腦的單機牌局（發牌、牌山、每一步與你的思考時間），只存在這個瀏覽器裡，不會上傳。', 'Records solo games against bots (deal, wall, every move and your thinking time). Stored only in this browser, never uploaded.')}</p>
     <div class="chips" style="margin-top:6px"><button type="button" class="btn sm" id="recExp">${L('匯出新的', 'Export new')} (${recNew().length})</button><button type="button" class="btn sm" id="recExpAll">${L('全部匯出', 'Export all')} (${recLoad().length})</button><button type="button" class="btn sm" id="recClr">${L('清除', 'Clear')}</button></div>
