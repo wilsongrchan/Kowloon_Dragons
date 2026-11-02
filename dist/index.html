@@ -2579,7 +2579,7 @@ $('#mixBtn').onclick = () => {
   const gi = new Set(groups.flat());
   const free = hand.filter(t => !gi.has(t.id) && !lk.has(t.id));
   UI.locks.push(...groups);
-  UI.order = [...UI.locks.flat(), ...(UI.sortSeq ? seqTiles(free) : sortTiles(free)).map(t => t.id)]; UI.manual = true; UI.sel = null; render();
+  UI.manual = false; UI.order = []; UI.sel = null; render();   // 回到自動排序：彩組在最左，其餘照目前的整理方式（11·22·33 或 123·234）排，之後摸打也一直維持
 };
 /* 兩種整理：1·2·2·3（按數字）／123·234（先拉出順子，其餘排後面） */
 function seqTiles(a) {
