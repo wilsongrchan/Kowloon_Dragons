@@ -363,7 +363,9 @@ header .meta{order:2}
   #myDiscards .tile,#me .melds .tile{margin-bottom:.3em}
   #myDiscards{gap:0 2px}
   #hand{padding:4px 0 20px}
-  .handbar{margin-top:3px}
+  .handbar{margin-top:3px;flex-wrap:nowrap;justify-content:flex-end}   /* 提示、◀ ▶、整理、彩組 同一行 */
+  .handbar .hint{flex:1 1 0;min-width:0;margin-right:0;font-size:calc(11px*var(--fs,1));line-height:1.25}
+  .handbar .btn.sm{flex:none;padding:6px 9px;min-height:34px}
   .infoarea{min-height:3.35em;margin-top:3px;align-items:start}   /* 3 行：彩牌（7–9）的說明會到 3 行，不留空間的話選到它時下面整個會往下跳 */
   #selinfo{font-size:calc(12px*var(--fs,1));line-height:1.35}
   .actrow{margin-top:4px}
@@ -1405,6 +1407,8 @@ function fitBacks() {
 }
 function dockDiscard() {
   fitBacks();
+  const hint = document.querySelector('.handbar .hint');   // 手機：按鈕擠不下時就把提示藏起來，讓 彩組 留在同一行
+  if (hint) { hint.style.display = ''; if (matchMedia('(max-width:520px)').matches && hint.getBoundingClientRect().width < 62) hint.style.display = 'none'; }
   const me = $('#me'), hand = $('#hand'); if (!me || !hand) return;
   let on = false; me.classList.remove('dock', 'dl');
   hand.querySelectorAll('[data-dm]').forEach(e => { e.style.marginLeft = ''; e.style.order = ''; delete e.dataset.dm; });
@@ -2089,7 +2093,7 @@ function applyLang() {
   if (typeof renderLanding === 'function') renderLanding();
   if (typeof updateOnlineBtn === 'function') { updateOnlineBtn(); renderLobby(); }
   $('#newBtn').textContent = L('重新開局', 'New game');
-  $('.handbar .hint').textContent = L('按住牌拖曳來排序', 'Hold and drag to reorder');
+  $('.handbar .hint').textContent = L('按住牌拖曳來排序', 'Hold & drag to sort');
   $('#leftBtn').setAttribute('aria-label', L('向左移', 'Move left')); $('#rightBtn').setAttribute('aria-label', L('向右移', 'Move right'));
   $('#logSum').textContent = L('牌局記錄', 'Game log');
   $('#meName').textContent = NAMES[0];
