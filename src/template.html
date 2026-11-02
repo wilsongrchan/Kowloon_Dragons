@@ -349,6 +349,8 @@ header .meta{order:2}
   #me.dock #discardBtn{flex:0 0 calc(50% - 3px);pointer-events:auto;min-height:0;height:calc(9.6px * 4);padding-top:0;padding-bottom:0}   /* 和手牌一樣高（#hand .tile 的 --u:9.6px，高 4em） */
   #me.dock.dl .actrow{justify-content:flex-start}
   .actions .btn{padding:6px 9px;min-height:42px;font-size:calc(13px*var(--fs,1))}
+  #me.claiming .actions .btn.pass{margin-left:auto;padding-left:22px;padding-right:22px;min-width:30%;min-height:48px;flex:0 0 auto}
+  #me.claiming .actions{gap:8px}
   .status{font-size:calc(13px*var(--fs,1));line-height:1.35}
   button.btn.sm{min-height:32px;padding:5px 10px}
   #hand .tile{--u:9.6px}
@@ -1590,7 +1592,7 @@ function humanClaim(ho, t) {
       ho.kong.forEach(o => claimBtn('kong', { tiles: [...o.tiles, t] }, done({ kind: 'kong', opt: o })));
       ho.pong.forEach(o => claimBtn('pong', { tiles: [...o.tiles, t], mixed: o.mixed, claimed: o.mixed ? t.id : null }, done({ kind: 'pong', opt: o })));
       ho.chow.forEach(o => claimBtn('chow', { tiles: [...o.tiles, t].sort((a, b) => b.n - a.n), mixed: o.mixed, claimed: t.id }, done({ kind: 'chow', opt: o })));
-      addAction(L('過', 'Pass'), done(null));
+      addAction(L('過', 'Pass'), done(null)).classList.add('pass');
       setStatus(() => L(`${WHO[from]}打出 <b>${tn(t)}</b>，要不要？`, `${WHO[from]} discarded <b>${tn(t)}</b>. Claim it?`));
     };
     UI.cancelClaim = done(null); UI.rebuild = build; build(); render();
