@@ -602,6 +602,17 @@ table.ttbl td,table.ttbl th{padding:6px 8px;border-bottom:1px solid var(--line);
 table.ttbl th{color:var(--gold-t);font-weight:700}
 table.ttbl td:first-child{white-space:nowrap;font-weight:700;color:var(--ivt)}
 #termDlg .tnote{color:var(--muted);margin:4px 0 0;font-size:calc(13px*var(--fs,1))}
+#mixDlg{max-width:min(420px,94vw)}
+#mixDlg .mxnote{color:var(--muted);margin:0 0 10px;font-size:calc(13px*var(--fs,1))}
+#mixDlg .mxlist{display:flex;flex-direction:column;gap:8px}
+#mixDlg .mxo{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:rgba(0,0,0,.18);color:var(--text);font:600 calc(14px*var(--fs,1)) var(--ui);cursor:pointer;text-align:left}
+#mixDlg .mxo .mxt{display:flex;gap:2px}
+#mixDlg .mxo .tile{--u:7.6px;margin-bottom:.3em;pointer-events:none}
+#mixDlg .mxo .mxl{margin-left:auto;color:var(--muted);font-weight:500}
+#mixDlg .mxo[aria-pressed=true]{border-color:var(--gold);background:rgba(var(--gold-rgb),.16)}
+#mixDlg .mxo[aria-pressed=true] .mxl{color:var(--gold-t)}
+#mixDlg .mxo:disabled{opacity:.4;cursor:not-allowed}
+#mixDlg .mxact{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
 #fbDlg{max-width:min(460px,94vw)}
 #fbDlg textarea,#fbDlg input,#fbDlg select{width:100%;box-sizing:border-box;font:500 calc(15px*var(--fs,1)) var(--ui);padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--text);margin:0 0 8px}
 #fbDlg textarea{resize:vertical;min-height:110px}
@@ -687,6 +698,7 @@ button.btn.hot:hover{background:var(--gold-hov)}
 <dialog id="rules"></dialog>
 <dialog id="setDlg"></dialog>
 <dialog id="fbDlg"></dialog>
+<dialog id="mixDlg"></dialog>
 <dialog id="termDlg"></dialog>
 <dialog id="voteDlg"></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -1519,14 +1531,56 @@ function mixGroups() {
   }
   return groups;
 }
+// 彩組可能不只一種湊法（例如有三張 7、或兩張 7 加兩張 8）：列出每一種可湊的組合讓玩家選要鎖哪些，只有一種時直接鎖
+function mixCands() {
+  const hand = G.hands[0].filter(t => t.id !== UI.drawnId), lk = new Set(UI.locks.flat()), out = [];
+  for (let n = 1; n <= 3; n++) {
+    const av = ['p', 's', 'm'].map(sx => hand.filter(t => t.k === sx + n && !lk.has(t.id))).map(a => a.length >= 3 ? [] : a);   // 同花色已有 3 張的真刻子不拆
+    for (let a = 0; a <= Math.min(2, av[0].length); a++) for (let b = 0; b <= Math.min(2, av[1].length); b++) for (let c = 0; c <= Math.min(2, av[2].length); c++) {
+      const v = [a, b, c], sum = a + b + c, used = v.filter(x => x > 0).length;
+      if (used >= 2 && (sum === 3 || (sum === 2 && v.every(x => x <= 1)))) out.push({ n, v, av, size: sum });
+    }
+  }
+  return out.sort((x, y) => x.n - y.n || y.size - x.size);
+}
+function mixLock(cands) {   // cands：選定的組合；依序從手牌裡挑出實際的牌
+  const pool = {}, groups = [];
+  cands.forEach(c => {
+    const p = pool[c.n] = pool[c.n] || c.av.map(a => a.slice()), g = [];
+    c.v.forEach((k, i) => { for (let m = 0; m < k; m++) g.push(p[i].shift().id); });
+    groups.push(g);
+  });
+  UI.locks.push(...groups); UI.manual = false; UI.order = []; UI.sel = null; render();   // 回到自動排序：彩組在最左，其餘照目前的整理方式（11·22·33 或 123·234）排，之後摸打也一直維持
+}
+function mixFits(sel, c) {
+  const used = [0, 0, 0]; sel.concat(c).filter(x => x.n === c.n).forEach(x => x.v.forEach((k, i) => used[i] += k));
+  return used.every((k, i) => k <= c.av[i].length);
+}
 $('#mixBtn').onclick = () => {
   if (!G) return;
-  const hand = G.hands[0].filter(t => t.id !== UI.drawnId), lk = new Set(UI.locks.flat());
-  const groups = mixGroups(); if (!groups.length) return;
-  const gi = new Set(groups.flat());
-  const free = hand.filter(t => !gi.has(t.id) && !lk.has(t.id));
-  UI.locks.push(...groups);
-  UI.manual = false; UI.order = []; UI.sel = null; render();   // 回到自動排序：彩組在最左，其餘照目前的整理方式（11·22·33 或 123·234）排，之後摸打也一直維持
+  const cands = mixCands(); if (!cands.length) return;
+  if (cands.length === 1) { mixLock(cands); return; }
+  const sel = [];
+  cands.forEach(c => { if (mixFits(sel, c)) sel.push(c); });   // 預設＝自動湊法，玩家可以取消不想鎖的
+  const d = $('#mixDlg');
+  const draw = () => {
+    d.innerHTML = `${XBTN()}<h2>${L('彩組', 'Mixed groups')}</h2><p class="mxnote">${L('點一下選取／取消要鎖定的組合；沒選的牌留給順子或其他用途。', 'Tap to select or unselect the groups to lock. Tiles you leave out stay free, e.g. for a sequence.')}</p><div class="mxlist"></div><div class="mxact"><button type="button" class="btn" id="mxNo">${L('取消', 'Cancel')}</button><button type="button" class="btn primary" id="mxOk">${L('鎖定所選', 'Lock selected')}</button></div>`;
+    const list = d.querySelector('.mxlist');
+    cands.forEach(c => {
+      const on = sel.includes(c), b = document.createElement('button'); b.type = 'button'; b.className = 'mxo'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.disabled = !on && !mixFits(sel, c);
+      const row = document.createElement('span'); row.className = 'mxt';
+      c.v.forEach((k, i) => { for (let m = 0; m < k; m++) { const e = tileEl(c.av[i][m], { sm: true }); delete e.dataset.id; delete e.dataset.k; row.appendChild(e); } });
+      const lb = document.createElement('span'); lb.className = 'mxl'; lb.textContent = c.size === 3 ? L('彩刻', 'Mixed triplet') : L('彩眼', 'Mixed pair');
+      b.append(row, lb);
+      b.onclick = () => { const k = sel.indexOf(c); if (k >= 0) sel.splice(k, 1); else sel.push(c); draw(); };
+      list.appendChild(b);
+    });
+    d.querySelector('#mxOk').disabled = !sel.length;
+    d.querySelector('#mxNo').onclick = () => d.close();
+    d.querySelector('#mxOk').onclick = () => { d.close(); mixLock(sel); };
+  };
+  draw(); d.showModal();
 };
 /* 兩種整理：1·2·2·3（按數字）／123·234（先拉出順子，其餘排後面） */
 function seqTiles(a) {
