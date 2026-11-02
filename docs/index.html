@@ -302,6 +302,7 @@ details.basics{margin:10px 0}details.basics ol{margin:6px 0 4px;padding-left:1.3
   .opp .seat-head>span:not(.score):not(.nm):not(.tclk):not(.dealer){display:none}
   .opp .seat-head{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 6px}
   .opp .seat-head .score{grid-column:2;grid-row:1;margin:0}
+  .opp .seat-head .tclk{justify-self:start;min-width:6em}
   .opp .seat-head .melds{grid-column:1/3;grid-row:2;justify-self:end;margin:0}
   #opps{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .opp,.opp .seat-head{min-width:0}
@@ -531,6 +532,8 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 #lobby .acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
 .tclk{font:600 calc(12px*var(--fs,1)) var(--ui);font-variant-numeric:tabular-nums;background:rgba(0,0,0,.28);color:var(--text);padding:2px 8px;border-radius:99px;white-space:nowrap}
 .tclk.warn{background:var(--red);color:#fff}
+.tclk{min-width:6.6em;text-align:center;box-sizing:border-box}
+.tclk:empty{display:none}
 #zoom{position:fixed;inset:0;z-index:30;overflow:hidden;opacity:0}
 #zoom[hidden]{display:none}
 #zoom .hole{position:absolute;left:50%;top:50%;width:0;height:0;border:0 solid var(--gold);border-radius:50%;transform:translate(-50%,-50%);box-sizing:content-box;box-shadow:0 0 0 200vmax var(--table)}
@@ -2445,6 +2448,7 @@ function render() {
   hideTip();
   const selT = hasSel ? G.hands[0].find(x => x.id === UI.sel) : null;
   { const si = $('#selinfo'); si.classList.remove('wrapm'); si.innerHTML = selT ? infoHTML(selT.k).replace('<br>', ' ｜ ') : ''; const ts = si.querySelector('.ts'), tm = si.querySelector('.tm'); if (ts && tm && tm.offsetTop > ts.offsetTop + 2) si.classList.add('wrapm'); } $('#status').style.visibility = selT ? 'hidden' : '';
+  tickClk();   // 計時膠囊一重畫就立刻填好字，不要等下一次計時器（空的膠囊沒有高度，填字後面板會往下跳）
   if (isHost()) bcastState();
 }
 function doDiscard() {
@@ -2832,18 +2836,24 @@ function tickClk() {
   document.querySelectorAll('.tclk').forEach(el => {
     if (!on) { el.textContent = ''; return; }
     const ab = (+el.dataset.v + mySeat) % 4, a = CLK.act[ab];
-    if (!a) { el.textContent = '⏱ ' + CLK.banks[ab] + ' + ' + ROOM.tc.b; el.classList.remove('warn'); return; }
+    if (!a) { el.textContent = '⏱ ' + Math.ceil(CLK.banks[ab] - 0.001) + ' + ' + ROOM.tc.b; el.classList.remove('warn'); return; }
     const el_ = (Date.now() - a.t0) / 1000, bl = Math.max(0, a.b - el_), kl = Math.max(0, a.bank - Math.max(0, el_ - a.b));
-    el.textContent = '⏱ ' + Math.ceil(kl) + ' + ' + Math.ceil(bl); el.classList.toggle('warn', bl + kl <= 5);
+    el.textContent = '⏱ ' + Math.ceil(kl - 0.001) + ' + ' + Math.ceil(bl - 0.001); el.classList.toggle('warn', bl + kl <= 5);
   });
 }
 setInterval(tickClk, 250);
+// 時間到代打：能胡就胡，否則優先打出剛摸的那張（沒有剛摸的牌，例如剛碰完，才交給電腦選）
+function timeoutSelf(seat, opts, drawn) {
+  if (opts.win) return { win: true };
+  if (drawn && G.hands[seat].some(t => t.id === drawn.id)) return { discard: drawn.id };
+  return botSelf(G, seat, Object.assign({ noGreed: true }, opts));
+}
 async function askSelf(seat, opts, drawn) {
   const kind = ROOM.kind[seat];
-  if (kind === 'host') { const c = clkBegin(seat); return c ? hostClocked(c, humanSelf(opts), () => botSelf(G, seat, Object.assign({ noGreed: true }, opts)), false) : humanSelf(opts); }
+  if (kind === 'host') { const c = clkBegin(seat); return c ? hostClocked(c, humanSelf(opts), () => timeoutSelf(seat, opts, drawn), false) : humanSelf(opts); }
   const sc = seat; setStatus(() => L(`${WHO[sc]}思考中…`, `${WHO[sc]} is thinking…`));
   if (kind === 'bot') { if (!fast()) await sleep(650); return botSelf(G, seat, opts); }
-  const fb = () => botSelf(G, seat, Object.assign({ noGreed: true }, opts));
+  const fb = () => timeoutSelf(seat, opts, drawn);
   const c = clkBegin(seat);
   const r = await askRemote(seat, { t: 'self', opts, drawnId: drawn ? drawn.id : null }, c ? c.allow + 1500 : 60000, a => {
     if (a && a.win && opts.win) return { win: true };
