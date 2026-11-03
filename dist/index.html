@@ -359,6 +359,12 @@ header .meta{order:2}
   .tbar .pill svg{width:40px;height:28px}
   .tbar .pill b{font-size:calc(17px*var(--fs,1))}
   #me .zone{min-height:0;margin-top:3px}
+  #me .seat-head .total,#me .seat-head .tclk{flex:none;white-space:nowrap}
+  #me .seat-head:has(.tclk:not(:empty)){flex-wrap:wrap;row-gap:4px}   /* 有計時：名字／莊／分數一行，計時和手牌點值另起一行，不再擠成一團 */
+  #me .seat-head:has(.tclk:not(:empty))::after{content:"";order:3;flex:0 0 100%;height:0}
+  #me .seat-head:has(.tclk:not(:empty)) .score{order:2}
+  #me .seat-head:has(.tclk:not(:empty)) .tclk{order:4}
+  #me .seat-head:has(.tclk:not(:empty)) .total{order:5}
   #myDiscards .tile,#me .melds .tile{--u:7.4px}
   #me .zone .melds{flex-direction:column;flex-wrap:nowrap;align-items:flex-end;gap:3px;max-width:none}   /* 亮出的牌一組一行疊成一欄，棄牌區才有位置 */
   #myDiscards .tile,#me .melds .tile{margin-bottom:.3em}
