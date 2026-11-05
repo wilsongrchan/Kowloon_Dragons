@@ -61,7 +61,7 @@ h1{font:900 calc(30px*var(--fs,1))/1 var(--face);margin:0;letter-spacing:.08em;c
 .tbar .mfw{order:1;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .tbar .rt .sh{display:none}
 .tbar .rt{color:var(--text)}
-@media (max-width:520px){.tbar{position:relative}.tbar .mfw{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);flex-direction:column;align-items:center;gap:2px}.tbar .rt .lg{display:none}.tbar .rt .sh{display:inline}.tbar .mfw .mf{font-size:calc(10px*var(--fs,1));padding:0 8px;line-height:1.5}}   /* 手機：正對上家／下家兩個面板中間的縫 */
+@media (max-width:520px){.tbar{position:relative}.tbar .mfw{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);flex-direction:row;align-items:center;gap:4px;white-space:nowrap}.tbar .rt .lg{display:none}.tbar .rt .sh{display:inline}.tbar .mfw .mf{font-size:calc(10px*var(--fs,1));padding:0 8px;line-height:1.5}}   /* 手機：正對上家／下家兩個面板中間的縫 */
 .tbar .mf.two{color:var(--gold-t);border-color:var(--gold)}
 @keyframes wallshake{0%,100%{transform:translateX(0) rotate(0)}15%{transform:translateX(-4px) rotate(-2deg)}35%{transform:translateX(4px) rotate(2deg)}55%{transform:translateX(-3px) rotate(-1.5deg)}75%{transform:translateX(3px) rotate(1.5deg)}}
 @keyframes wallflash{0%,100%{background-color:var(--pillbg,rgba(0,0,0,.28))}50%{background-color:rgba(255,92,64,.62)}}
@@ -1927,12 +1927,19 @@ function setLabel(short) {   // 例：紅中圈 2/4；手機縮成「中 2/4」�
 function setAdvance() { SETC.done++; if (SETC.len !== 'endless' && SETC.done >= SETLEN[SETC.len]) SETC.over = true; }
 $('#setEnd').addEventListener('close', () => { if (SETC.over) { UI.viewTable = true; render(); } });   // 關掉總結就回到牌桌，可從「回到結算」再打開
 function newSet() { SETC.fresh = true; dealer = 0; $('#setEnd').close?.(); play(); }
+function leaveRoomToMain() {
+  if (!online() || !confirm(L('離開目前的房間？', 'Leave the current room?'))) return;
+  toSolo(); UI.viewTable = false;
+  for (const x of ['#result', '#setEnd']) { const e = $(x); if (e && e.open) e.close(); }
+  showLanding();
+}
 function showSetEnd() {
   const d = $('#setEnd'), rows = [0, 1, 2, 3].map(sx => ({ sx, d: scores[sx] - (SETC.start[sx] || 0) })).sort((a, b) => b.d - a.d);
   const nm = sx => WHO[sx] + (online() && ROOM.names[(sx + mySeat) % 4] ? ` · ${ROOM.names[(sx + mySeat) % 4]}` : '');
   const title = SETC.len === 'round' ? L('紅中圈結束', 'Red Dragon round complete') : L('一局結束', 'Set complete');
-  d.innerHTML = `${XBTN()}<h2>${title}</h2><p class="mxnote">${L('這一局的得分變化與目前總分', 'Points gained this set, and your current totals')}</p><div class="selist">${rows.map((r, i) => `<div class="serow${i === 0 ? ' top' : ''}"><span class="serank">${i + 1}</span><span class="sename">${nm(r.sx)}</span><b class="${r.d >= 0 ? 'pos' : 'neg'}">${r.d >= 0 ? '+' : ''}${r.d}</b><span class="setot">${scores[r.sx]}</span></div>`).join('')}</div><div class="mxact">${ROOM.mode === 'guest' ? `<button type="button" class="btn" disabled>${L('等待房主開始新的一局…', 'Waiting for the host to start a new set…')}</button>` : `<button type="button" class="btn primary" id="seNew">${L('再玩一局', 'Play another set')}</button>`}</div>`;
+  d.innerHTML = `${XBTN()}<h2>${title}</h2><p class="mxnote">${L('這一局的得分變化與目前總分', 'Points gained this set, and your current totals')}</p><div class="selist">${rows.map((r, i) => `<div class="serow${i === 0 ? ' top' : ''}"><span class="serank">${i + 1}</span><span class="sename">${nm(r.sx)}</span><b class="${r.d >= 0 ? 'pos' : 'neg'}">${r.d >= 0 ? '+' : ''}${r.d}</b><span class="setot">${scores[r.sx]}</span></div>`).join('')}</div><div class="mxact">${ROOM.mode === 'guest' ? `<button type="button" class="btn" disabled>${L('等待房主開始新的一局…', 'Waiting for the host to start a new set…')}</button>` : `<button type="button" class="btn primary" id="seNew">${L('再玩一局', 'Play another set')}</button>`}${online() ? `<button type="button" class="btn ghost" id="seLeave">${L('離開房間', 'Leave room')}</button>` : ''}</div>`;
   const nb = d.querySelector('#seNew'); if (nb) nb.onclick = () => setTimeout(newSet, 0);
+  const sl = d.querySelector('#seLeave'); if (sl) sl.onclick = leaveRoomToMain;
   d.showModal();
 }
 async function play() {
@@ -2084,7 +2091,7 @@ function endDraw() {
 }
 function renderResult() {
   const res = UI.result, d = $('#result'); if (!res) return;
-  const next = `<form method="dialog" style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="nextBtn">${SETC.over ? L('查看總結', 'Final standings') : L('下一手', 'Next hand')}</button><button class="btn" id="viewTable" type="button">${L('看牌桌', 'View table')}</button></form>`;
+  const next = `<form method="dialog" style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="nextBtn">${SETC.over ? L('查看總結', 'Final standings') : L('下一手', 'Next hand')}</button><button class="btn" id="viewTable" type="button">${L('看牌桌', 'View table')}</button>${online() ? `<button class="btn ghost" id="resLeave" type="button">${L('離開房間', 'Leave room')}</button>` : ''}</form>`;
   if (res.draw) {
     d.innerHTML = `<h2>${L('流局', 'Draw')}</h2><p>${L('牌山摸完，沒有人胡牌。', 'The wall ran out and nobody won.')}</p><div class="reveal" id="rv"></div>${next}`;
     const rv = d.querySelector('#rv'); for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, WHO[s]));
@@ -2111,6 +2118,7 @@ function renderResult() {
   if (ROOM.mode === 'guest' && !SETC.over) { const nb = d.querySelector('#nextBtn'); nb.disabled = true; nb.textContent = L('等待房主開始下一手…', 'Waiting for the host…'); d.querySelector('form').addEventListener('submit', e => e.preventDefault()); }
   else d.querySelector('#nextBtn').onclick = () => setTimeout(SETC.over ? showSetEnd : play, 0);
   d.querySelector('#viewTable').onclick = () => { UI.viewTable = true; d.close(); render(); };
+  const lr = d.querySelector('#resLeave'); if (lr) lr.onclick = leaveRoomToMain;
 }
 $('#resBack').onclick = () => { UI.viewTable = false; renderResult(); const d = $('#result'); d.showModal(); d.scrollTop = 0; render(); };
 const CHEAT_TIERS = [
@@ -2147,7 +2155,7 @@ function cheatStates() {
   if (suitsNM.size >= 2) { out('混一色', '鳴牌不只一門', 'melds in 2+ suits'); out('清一色', '鳴牌不只一門', 'melds in 2+ suits'); out('彩一色', '鳴牌不只一門', 'melds in 2+ suits'); }
   if (mixedM.length) { out('混一色', '已有彩碰', 'you have a mixed Pung'); out('清一色', '已有彩碰', 'you have a mixed Pung'); }
   if (mixedM.length >= 2) out('彩一色', '彩碰多於一刻', 'more than one mixed pung');
-  if (drag.length) { out('清一色', '已有三元牌鳴牌', 'you have a dragon meld'); out('彩一色', '已有三元牌鳴牌', 'you have a dragon meld'); out('斷一門無三元', '已有三元牌鳴牌', 'you have a dragon meld'); }
+  if (drag.length) { out('清一色', '已有三元牌鳴牌', 'you have a dragon meld'); out('彩一色', '已有三元牌鳴牌', 'you have a dragon meld'); out('斷一門無三元', '已有三元牌鳴牌', 'you have a dragon meld'); if (RULES.NS_NODRAG) out('斷小字無三元', '已有三元牌鳴牌', 'you have a dragon meld'); }
   if (suits.size >= 3) out('斷一門無三元', '鳴牌三門齊', 'melds in all 3 suits');
   const nonDrag = melds.length - drag.length;
   if (nonDrag >= 2) out('大三元', '非三元鳴牌太多', 'too many non-dragon melds');
