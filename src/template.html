@@ -862,7 +862,7 @@ const BASICS = (() => {
       '<b>面子與眼</b>：<b>面子</b>是一組三張或四張的牌，共三種：<b>順子</b>＝同花色連續三張（如 四筒五筒六筒）；<b>刻子</b>＝三張一樣的牌（如 五萬×3）；<b>槓</b>＝四張一樣的牌。另外要有一對<b>眼</b>＝兩張一樣的牌。紅中、發財、白板只能湊刻子或眼。',
       '<b>一回合</b>：開局每人 13 張。輪到你時先<b>摸一張</b>（變 14 張），再<b>打出一張</b>回到 13 張。打出的牌放在桌面中間，叫「棄牌」。',
       '<b>吃、碰、槓</b>：別人打出的牌，若剛好能湊成你要的面子，可以拿來用。<b>吃</b>＝拿上家的牌湊順子；<b>碰</b>＝拿任何人的牌湊刻子；<b>槓</b>＝四張一樣，補摸一張。拿來的面子會攤開在桌上（不再是秘密），所以不是越多越好。',
-      '<b>胡牌</b>：湊齊 4 個面子＋1 對眼。自己摸到最後一張叫<b>自摸</b>；吃別人打的那張叫<b>食胡</b>（榮胡），由出銃的人付較多分。',
+      '<b>胡牌</b>：湊齊 4 個面子＋1 對眼。自己摸到最後一張叫<b>自摸</b>；吃別人打的那張叫<b>榮胡</b>，由出銃的人付較多分。',
       '<b>要有番才能胡</b>：只湊齊還不夠，至少要有 1 番的條件（例如三元刻、平胡、對對胡…，見下面的番種）。',
       '<b>小提示</b>：不確定時就先看畫面下方的提示：能吃、碰、胡的時候會自動出現按鈕，不想要就按「過」。打牌時點選一張牌，再按「打出」。'
     ]),
@@ -1893,8 +1893,8 @@ function flushGreedLog() {
     const e = G.greedLog[G.glSeen++], who = WHO[e.seat];
     recAct({ s: e.seat, a: 'greed', goal: e.goal, tsumo: e.tsumo });
     if (!BOTLOG) continue;
-    log(() => e.goal === 'pure' ? L(`【除錯】${who}放棄${e.tsumo ? '自摸' : '食胡'}，改做清一色`, `[debug] ${who} passed on a ${e.tsumo ? 'self-draw' : 'Ron'} win, going for a full flush`)
-      : L(`【除錯】${who}放棄${e.tsumo ? '自摸' : '食胡'}，改做對對胡`, `[debug] ${who} passed on a ${e.tsumo ? 'self-draw' : 'Ron'} win, going for all triplets`));
+    log(() => e.goal === 'pure' ? L(`【除錯】${who}放棄${e.tsumo ? '自摸' : '榮胡'}，改做清一色`, `[debug] ${who} passed on a ${e.tsumo ? 'self-draw' : 'Ron'} win, going for a full flush`)
+      : L(`【除錯】${who}放棄${e.tsumo ? '自摸' : '榮胡'}，改做對對胡`, `[debug] ${who} passed on a ${e.tsumo ? 'self-draw' : 'Ron'} win, going for all triplets`));
   }
 }
 async function play() {
@@ -2009,7 +2009,7 @@ function handRow(seat, who, res) {
   wrap.appendChild(r); return wrap;
 }
 const winTitle = res => { const who = WHO[res.winner], me = res.winner === 0, t = res.tsumo;
-  return L(me ? `恭喜${who}${t ? '自摸' : '食胡'}！` : `${who}${t ? '自摸' : '食胡'}`, me ? (t ? 'Nice self-draw!' : 'Nice win!') : `${who} won by ${t ? 'self-draw' : 'discard'}`); };
+  return L(me ? `恭喜${who}${t ? '自摸' : '榮胡'}！` : `${who}${t ? '自摸' : '榮胡'}`, me ? (t ? 'Nice self-draw!' : 'Nice win!') : `${who} won by ${t ? 'self-draw' : 'discard'}`); };
 // 有人胡牌：先大字宣告誰、怎樣胡，再金龍出現、圓形光圈展開，進入結算頁（流局直接顯示）
 function showResult(win) {
   const go = () => { renderResult(); const d = $('#result'); if (!d.open) d.showModal(); d.scrollTop = 0; d.classList.remove('rin'); void d.offsetWidth; if (win) { d.classList.add('rin'); setTimeout(() => d.classList.remove('rin'), 1600); } };
@@ -2017,9 +2017,9 @@ function showResult(win) {
   if (!win) { go(); return; }
   const res = UI.result, ev = res.ev, F = n => L(`${n} 番`, `${n} fan`);
   const el = document.createElement('div'); el.id = 'winCall';
-  el.innerHTML = `<div><div class="wcw">${WHO[res.winner]}</div><div class="wct">${res.tsumo ? L('自摸！', 'Zimo!') : L('食胡！', 'Ron!')}</div><div class="wcs">${ev.items.map(i => yn(i.name)).join(L('・', ' · '))}</div><div class="wcf">${F(ev.fan)} ×${ev.mult}　${ev.points}</div></div>`;
+  el.innerHTML = `<div><div class="wcw">${WHO[res.winner]}</div><div class="wct">${res.tsumo ? L('自摸！', 'Zimo!') : L('榮胡！', 'Ron!')}</div><div class="wcs">${ev.items.map(i => yn(i.name)).join(L('・', ' · '))}</div><div class="wcf">${F(ev.fan)} ×${ev.mult}　${ev.points}</div></div>`;
   document.body.appendChild(el);
-  if (PREF.sfx !== 'off') MUSIC.sting();   // 和「自摸／食胡」大字同一刻響起
+  if (PREF.sfx !== 'off') MUSIC.sting();   // 和「自摸／榮胡」大字同一刻響起
   setTimeout(() => { go(); el.remove(); }, 1700);
 }
 function finish(res) {
@@ -2752,7 +2752,7 @@ const MUSIC = (() => {
       if (!on) return; on = false; clearInterval(timer);
       try { wet.m.gain.setTargetAtTime(0, ctx.currentTime, .25); setTimeout(() => { if (!on) ctx.suspend(); }, 1200); } catch (e) {}
     },
-    // 先把胡牌音效用到的弦音算好、音訊引擎叫醒，之後一出現「自摸／食胡」就能立刻響
+    // 先把胡牌音效用到的弦音算好、音訊引擎叫醒，之後一出現「自摸／榮胡」就能立刻響
     warm() {
       try {
         if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); wet = build(ctx, ctx.destination); }
