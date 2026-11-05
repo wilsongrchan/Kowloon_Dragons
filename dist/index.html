@@ -581,6 +581,8 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 #setDlg .chip{font:500 calc(14px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
 #landing .botlv{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:2px;color:var(--muted);font-size:calc(13px*var(--fs,1))}
 #landing .botlv .chip{font:500 calc(13px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:4px 12px;cursor:pointer}
+#landing .botnote{margin:2px 0 0;text-align:center;color:var(--muted);font-size:calc(12px*var(--fs,1))}
+#landing .botnote[hidden]{display:none}
 #landing .botlv .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
 #setDlg .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
 #hand .lgrp{position:relative;display:inline-flex}
@@ -1181,7 +1183,7 @@ function applyPersona(plans, a, melds) {
     if (fav) p.b *= 2.5; else if (p.sh >= 2) p.sh += 1;
   }
 }
-function personaOf(g, seat) { return (g.persona && g.persona[seat]) || PERSONA_BAL; }
+function personaOf(g, seat) { if (levelOf(g, seat) === 'master') return PERSONA_BAL; return (g.persona && g.persona[seat]) || PERSONA_BAL; }   // 大師不用隨機性格（測過會輸約 9 點／手）
 let PRO_G = null;        // 目前這位高手的目標 {t:'pure'|'dui', su, fan, dv}，planList 會多算一條 'goal' 路線
 function proGoal(g, seat) {
   const G = g.goal && g.goal[seat];
@@ -1189,7 +1191,12 @@ function proGoal(g, seat) {
   return G || null;
 }
 const levelOf = (g, seat) => (g.botLv && g.botLv[seat]) || RULES.BOT_LEVEL;
-function proLevel(g, seat) { const l = levelOf(g, seat); return l === 'pro' || l === 'pro2'; }
+function proLevel(g, seat) { const l = levelOf(g, seat); return l === 'pro' || l === 'pro2' || l === 'master' || l === 'masterB'; }
+// 大師電腦（兩番起胡專用）：planList 依「兩番」重算每條路線還缺什麼；其他高手照舊
+let PLAN2 = false, P2C = null;
+RULES.P2 = { cl: 1, pfo: 0, pfc: 1, duc: 0, duo: 2, dr: 2, as: 1, asb: 26, tp: 1, tpc: 0, tr: 1, tt: 0.6, tf: 0 };   // tp：聽牌時逐張驗證是否真的夠番；tr／tt：榮胡／自摸的權重
+RULES.P2B = { tp: 0, tpc: 0, pfo: 1, duc: 1, dr: 1 };   // 'masterB' = 第一版（對照組，不改）   // 大師路線補番的步數（調參用）
+function setPlan2(g, seat) { const l = levelOf(g, seat); PLAN2 = RULES.MIN_TOTAL >= 2 && (l === 'master' || l === 'masterB') && !RULES.NO_PLAN2; P2C = l === 'masterB' ? Object.assign({}, RULES.P2, RULES.P2B) : RULES.P2; }
 // 「兩番起胡」是整桌規則（RULES.MIN_TOTAL = 2，含碎番），由牌桌的電腦強度決定；evaluateHand 直接擋掉不夠的胡牌
 const NK = ORDER.length;                                    // 30 種牌，順序同 ORDER：p1-9 s1-9 m1-9 z1-3
 const copiesIdx = i => i >= 27 ? 5 : (i % 9) + 1;           // 引擎編號 n 有 n 張
@@ -1246,14 +1253,24 @@ function planList(a, melds) {
   const allChow = melds.every(m => m.type === 'chow'), allPung = melds.every(m => m.type !== 'chow');
   const dragonMeld = melds.some(m => m.tiles[0].s === 'z');
   const mask = f => a.map((v, i) => f(i) ? v : 0);
-  if (!open) plans.push({ n: 'closed', sh: shanten(a, need, 'normal') + 1, b: 8 });          // 門清自摸（不求人）：只能靠自摸
-  if (allChow && !dragonMeld) plans.push({ n: 'pinfu', sh: shanten(mask(i => i < 27), need, 'pinfu'), b: 12 });
-  if (allPung) plans.push({ n: 'duidui', sh: shanten(a, need, 'duidui'), b: 14 });
-  if (dragonMeld) plans.push({ n: 'dragon', sh: shanten(a, need, 'normal'), b: 24 });
-  else for (let z = 27; z < 30; z++) {
-    if (a[z] >= 3) { const c = a.slice(); c[z] -= 3; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 1, p: 0 }), b: 24 }); }
-    else if (a[z] === 2) { const c = a.slice(); c[z] -= 2; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 0, p: 1 }) + 0, b: 24 }); }
+  const P2 = PLAN2 ? 1 : 0;   // 兩番起胡：只有一番的路線要另外補一番（碎番、不求人、三元……），多算步數
+  if (!open) plans.push({ n: 'closed', sh: shanten(a, need, 'normal') + 1 + (P2 ? P2C.cl : 0), b: 8 });          // 門清自摸（不求人）：只能靠自摸
+  if (allChow && !dragonMeld) {
+    const base = shanten(mask(i => i < 27), need, 'pinfu');
+    if (!P2) plans.push({ n: 'pinfu', sh: base, b: 12 });
+    else {   // 平胡 1 番：要缺一門（碎番）再加門清／自摸，或門清自摸（不求人）
+      let two = 99; const used = new Set(mTiles.filter(t => t.s !== 'z').map(t => ORD[t.s + 1] / 9));
+      for (let out = 0; out < 3; out++) if (!used.has(out)) two = Math.min(two, shanten(mask(i => i < 27 && Math.floor(i / 9) !== out), need, 'pinfu'));
+      plans.push({ n: 'pinfu', sh: open ? two + P2C.pfo : Math.min(base + P2C.pfc, two), b: 12 });
+    }
   }
+  if (allPung) { const hasDr = dragonMeld || a[27] >= 3 || a[28] >= 3 || a[29] >= 3; plans.push({ n: 'duidui', sh: shanten(a, need, 'duidui') + (P2 ? (hasDr ? 0 : open ? P2C.duo : P2C.duc) : 0), b: 14 }); }
+  if (dragonMeld) plans.push({ n: 'dragon', sh: shanten(a, need, 'normal') + (P2 ? P2C.dr : 0), b: 24 });
+  else for (let z = 27; z < 30; z++) {
+    if (a[z] >= 3) { const c = a.slice(); c[z] -= 3; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 1, p: 0 }) + (P2 ? P2C.dr : 0), b: 24 }); }
+    else if (a[z] === 2) { const c = a.slice(); c[z] -= 2; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 0, p: 1 }) + (P2 ? P2C.dr : 0), b: 24 }); }
+  }
+  if (P2 && P2C.as && !melds.length) plans.push({ n: 'allsmall', sh: shanten(mask(i => i < 27 && i % 9 >= 6), need, 'normal'), b: P2C.asb });   // 全小字（只有顯示 1–3）：3 番，不能鳴，只能門清
   if (!mTiles.some(t => t.s !== 'z' && t.n >= 7)) plans.push({ n: 'nosmall', sh: shanten(mask(i => i < 27 ? i % 9 <= 5 : !RULES.NS_NODRAG), need, 'normal'), b: 30 });
   for (let su = 0; su < 3; su++) {
     if (mTiles.some(t => t.s !== 'z' && ORD[t.s + 1] !== su * 9)) continue;
@@ -1404,8 +1421,22 @@ function qEval(f) {
   let y = Q.b3; for (let i = 0; i < h2.length; i++) y += Q.w3[i] * h2[i];
   return y;
 }
+// 聽牌時逐張驗證：摸到／別人打出這張，真的夠番（≥ MIN_TOTAL）才算進張；榮胡與自摸分開算權重
+let TILEK = null;
+function tenpaiVal(handAfter, melds, a, u) {
+  if (!TILEK) { TILEK = {}; for (const t of makeDeck()) if (!TILEK[t.k]) TILEK[t.k] = t; }
+  let tot = 0;
+  for (const i of relevantKeys(a)) {
+    if (!u[i]) continue;
+    const w = Object.assign({}, TILEK[ORDER[i]], { id: -1 }), con = handAfter.concat([w]);
+    const r = evaluateHand(melds, con, false, w, false, null), z = evaluateHand(melds, con, true, w, false, null);
+    const fw = ev => P2C.tf ? Math.pow(Math.max(1, ev.fan) / 2, P2C.tf) : 1;   // 番數越高越值錢
+    tot += u[i] * ((r.ok ? P2C.tr * fw(r) : 0) + (z.ok ? P2C.tt * fw(z) : 0));
+  }
+  return tot;
+}
 function proDiscard(g, seat) {
-  PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
+  setPlan2(g, seat); PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   const h = g.hands[seat], melds = g.melds[seat];
   if (PRO_P.routes.length) {   // 轉向：偏好的路線比最近的路線慢 3 步以上，就改走手牌現在最順的路線，並換掉會衝突的習慣
     PRO_P = null; const pl = planList(arrOf(h), melds); PRO_P = personaOf(g, seat);
@@ -1424,8 +1455,12 @@ function proDiscard(g, seat) {
   for (const t of h) {
     if (seenKey.has(t.k)) continue; seenKey.add(t.k);
     const i = ORD[t.k]; a[i]--;
-    const plans = planList(a, melds), sh = bestSh(plans);
-    cands.push({ t, i, plans, sh });
+    const plans = planList(a, melds); let sh = bestSh(plans), tpv = null;
+    if (PLAN2 && P2C.tp && shanten(a, 4 - melds.length, 'normal') <= 0) {   // 形狀聽牌了：真的胡得了才算聽，否則當作還差一步
+      tpv = tenpaiVal(h.filter(x => x.id !== t.id), melds, a, u);
+      sh = tpv > 0 ? 0 : Math.max(sh, 1);
+    }
+    cands.push({ t, i, plans, sh, tpv });
     a[i]++;
   }
   if (PRO_G && !cands.some(c => c.plans.some(p => p.n === 'goal'))) { g.goal[seat] = null; PRO_G = null; return proDiscard(g, seat); }
@@ -1451,7 +1486,7 @@ function proDiscard(g, seat) {
     a[c.i]--;
     if (c.sh === minSh) {
       const act = new Set(c.plans.filter(p => p.sh === c.sh).map(p => p.n));
-      c.uke = ukeire(a, melds, u, act, c.sh); sc += PRO_P.uw * c.uke;
+      c.uke = c.tpv != null && c.sh === 0 ? c.tpv : ukeire(a, melds, u, act, c.sh); sc += PRO_P.uw * c.uke;
     }
     a[c.i]++;
     let bonus = 0; for (const p of c.plans) if (p.sh <= c.sh + 1) bonus = Math.max(bonus, p.b - 10 * (p.sh - c.sh));
@@ -1479,7 +1514,7 @@ function proDiscard(g, seat) {
 // 要不要放掉這次胡牌？只在牌山還長、現在只是小胡、而且保得住聽牌時才考慮
 function greedDecline(g, seat, ev, tile, tsumo) {
   if (!RULES.PRO_GREED || ev.fan > 4 || g.wall.length < RULES.GREED_WALL) return false;
-  PRO_P = personaOf(g, seat); if (PRO_P.fast) return false;
+  setPlan2(g, seat); PRO_P = personaOf(g, seat); if (PRO_P.fast) return false;
   const names = ev.items.map(i => i.name), has = n => names.includes(n);
   if (has('天胡') || has('地胡') || has('人胡')) return false;
   const melds = g.melds[seat], hand = tsumo ? g.hands[seat] : g.hands[seat].concat([tile]);
@@ -1519,7 +1554,7 @@ function greedDecline(g, seat, ev, tile, tsumo) {
   return true;
 }
 function proSelf(g, seat, opts) {
-  PRO_G = proGoal(g, seat);
+  setPlan2(g, seat); PRO_G = proGoal(g, seat);
   if (opts.win) {
     if (opts.noGreed || !greedDecline(g, seat, opts.win, g.lastDraw, true)) return { win: true };
     return { discard: proDiscard(g, seat).id };   // 放掉這次自摸，繼續做大
@@ -1532,12 +1567,18 @@ function afterClaimSh(g, seat, opt, t, kind) {
   const h = g.hands[seat].filter(x => !opt.tiles.some(y => y.id === x.id));
   const meld = { type: kind === 'chow' ? 'chow' : kind === 'pong' ? 'pong' : 'kong', tiles: [...opt.tiles, t], open: true, mixed: !!opt.mixed, claimed: opt.mixed ? t.id : null };
   const ms = [...g.melds[seat], meld], a = arrOf(h);
-  if (kind === 'kong') return bestSh(planList(a, ms));
+  const u = PLAN2 && P2C.tpc ? unseenArr(g, seat) : null;
+  const adj = (tiles, sh) => u && shanten(a, 4 - ms.length, 'normal') <= 0 ? (tenpaiVal(tiles, ms, a, u) > 0 ? 0 : Math.max(sh, 1)) : sh;
+  if (kind === 'kong') return adj(h, bestSh(planList(a, ms)));
   let best = 99; const seen = new Set();
-  for (const x of h) { if (seen.has(x.k)) continue; seen.add(x.k); a[ORD[x.k]]--; best = Math.min(best, bestSh(planList(a, ms))); a[ORD[x.k]]++; }
+  for (const x of h) { if (seen.has(x.k)) continue; seen.add(x.k); a[ORD[x.k]]--; best = Math.min(best, adj(h.filter(y => y.id !== x.id), bestSh(planList(a, ms)))); a[ORD[x.k]]++; }
   return best;
 }
-function curSh(g, seat) { return bestSh(planList(arrOf(g.hands[seat]), g.melds[seat])); }
+function curSh(g, seat) {
+  const a = arrOf(g.hands[seat]), ms = g.melds[seat], sh = bestSh(planList(a, ms));
+  if (PLAN2 && P2C.tpc && shanten(a, 4 - ms.length, 'normal') <= 0) return tenpaiVal(g.hands[seat], ms, a, unseenArr(g, seat)) > 0 ? 0 : Math.max(sh, 1);
+  return sh;
+}
 function goalAllows(kind, tiles) {
   if (!PRO_G) return true;
   const su = PRO_G.su, pure = PRO_G.t === 'pure';
@@ -1545,7 +1586,7 @@ function goalAllows(kind, tiles) {
   return tiles.every(x => x.s === 'z' ? !pure : ORD[x.s + 1] === su * 9);
 }
 function proClaimKind(g, seat, t, list, kind) {
-  PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
+  setPlan2(g, seat); PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   if (!list.length) return null;
   const cur = curSh(g, seat); if (cur <= 0) return null;       // 已聽牌：保住門清，不鳴
   let P = PRO_P; const closed = P.routes.includes('closed');
@@ -1659,7 +1700,7 @@ const YAKU_JA = {
 const JA_EXACT = {
   '摸牌山最後一張自摸（連自摸共 +1）': '牌山の最後の1枚でツモ（ツモと合わせて +1）',
   /* table */
-  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '高手・兩番起胡': '上級・2翻縛り', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。「2翻縛り」を選ぶと、あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色': '清一色（三元牌なし）で彩の部分がちょうど1つ（彩雀頭または彩ポン1組）、主色が1枚以上', '落葉': '秋色', '燈籠': '提灯', '經典': '定番', '配色': '配色', '我的戰績': '自分の成績', '勝率': '和了率', '勝局平均番數': '和了時の平均翻数', '勝局平均得分': '和了時の平均得点', '每手平均輸贏': '1局あたり平均収支', '自摸 / 榮胡': 'ツモ / ロン', '放銃': '放銃', '流局': '流局', '最高一手': '最高の一手', '常胡的牌型': 'よく和了る役', '還沒有記錄。玩幾手之後這裡會顯示你的戰績（需要在設定開啟牌局記錄）。': '記録がまだありません。何局か遊ぶとここに成績が出ます（設定で牌局記録をオンにしてください）。', '點一下選取／取消要鎖定的組合；沒選的牌留給順子或其他用途。': 'ロックする組み合わせをタップで選択／解除します。選ばなかった牌は順子などに使えます。', '取消': 'キャンセル', '鎖定所選': '選択をロック', '彩刻': '彩刻子', '對局長度': '対局の長さ', '一圈（4 手）': '1ラウンド（4局）', '一局（12 手）': '1セット（12局）', '無限': 'エンドレス', '一圈': '1ラウンド', '一局': '1セット', '每手輪流換莊。一圈 4 手；紅中圈、發財圈、白板圈三圈合稱一局，共 12 手。': '毎局、親が順番に回ります。3ラウンド＝中場・發場・白場、各4局です。', '查看總結': '最終順位を見る', '一局結束': 'セット終了', '紅中圈結束': '中場終了', '這一局的得分變化與目前總分': 'このセットの得点の増減と現在の合計', '再玩一局': 'もう1セット遊ぶ', '等待房主開始新的一局…': 'ホストが次のセットを始めるのを待っています…', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '打出按鈕位置': '打牌ボタンの位置', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
+  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点',  '大師': '達人', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。', '大師固定採「兩番起胡」：全桌（包括你）都要 2 番以上才能胡（碎番也計）。大師會按手牌選路線，並算清楚每張牌是否真的夠番。': '達人は常に「2翻縛り」です。あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。手牌から狙う役を選び、和了牌が本当に2翻に届くかを一枚ずつ確かめます。', '大師固定採「兩番起胡」：全桌都要 2 番以上才能胡。': '達人は「2翻縛り」：全員が2翻以上でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色': '清一色（三元牌なし）で彩の部分がちょうど1つ（彩雀頭または彩ポン1組）、主色が1枚以上', '落葉': '秋色', '燈籠': '提灯', '經典': '定番', '配色': '配色', '我的戰績': '自分の成績', '勝率': '和了率', '勝局平均番數': '和了時の平均翻数', '勝局平均得分': '和了時の平均得点', '每手平均輸贏': '1局あたり平均収支', '自摸 / 榮胡': 'ツモ / ロン', '放銃': '放銃', '流局': '流局', '最高一手': '最高の一手', '常胡的牌型': 'よく和了る役', '還沒有記錄。玩幾手之後這裡會顯示你的戰績（需要在設定開啟牌局記錄）。': '記録がまだありません。何局か遊ぶとここに成績が出ます（設定で牌局記録をオンにしてください）。', '點一下選取／取消要鎖定的組合；沒選的牌留給順子或其他用途。': 'ロックする組み合わせをタップで選択／解除します。選ばなかった牌は順子などに使えます。', '取消': 'キャンセル', '鎖定所選': '選択をロック', '彩刻': '彩刻子', '對局長度': '対局の長さ', '一圈（4 手）': '1ラウンド（4局）', '一局（12 手）': '1セット（12局）', '無限': 'エンドレス', '一圈': '1ラウンド', '一局': '1セット', '每手輪流換莊。一圈 4 手；紅中圈、發財圈、白板圈三圈合稱一局，共 12 手。': '毎局、親が順番に回ります。3ラウンド＝中場・發場・白場、各4局です。', '查看總結': '最終順位を見る', '一局結束': 'セット終了', '紅中圈結束': '中場終了', '這一局的得分變化與目前總分': 'このセットの得点の増減と現在の合計', '再玩一局': 'もう1セット遊ぶ', '等待房主開始新的一局…': 'ホストが次のセットを始めるのを待っています…', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '打出按鈕位置': '打牌ボタンの位置', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
   '手牌＋鳴牌的點值總和（未乘番數；彩碰被要的那張不計）': '手牌＋副露の点の合計（翻数を掛ける前。彩ポンで鳴いた1枚は数えません）',
   '整理': '理牌', '彩組': '彩まとめ', '把手上的彩眼／彩刻湊在一起並鎖定': '手牌の彩雀頭／彩刻子をまとめてロックします',
   '目前沒有可組的彩眼／彩刻': 'まとめられる彩雀頭／彩刻子はありません', '解鎖': 'ロック解除', '鎖定': 'ロック',
@@ -1798,9 +1839,10 @@ function jaRuby(html) {
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
 const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off', palette: 'classic', setLen: 'endless' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-recv') !== '2') { PREF.recOn = 'on'; localStorage.setItem('yjl-recOn', 'on'); localStorage.setItem('yjl-recv', '2'); } if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
-const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' || PREF.botLvl === 'pro2' ? PREF.botLvl : 'easy'; applyMinFan(); };
+if (PREF.botLvl === 'pro2') PREF.botLvl = 'master';   // 舊的「高手・兩番起胡」改成大師
+const applyBotLvl = () => { RULES.BOT_LEVEL = ['pro', 'master'].includes(PREF.botLvl) ? PREF.botLvl : 'easy'; applyMinFan(); };
 function applyMinFan() { let on = false; try { on = online(); } catch (e) {}   // 啟動時 ROOM 還沒建立
-  RULES.MIN_TOTAL = on ? (ROOM.minFan === 2 ? 2 : 0) : (PREF.botLvl === 'pro2' ? 2 : 0); }   // 兩番起胡：單人看電腦強度設定，房間由房主決定
+  RULES.MIN_TOTAL = on ? (ROOM.minFan === 2 ? 2 : 0) : (PREF.botLvl === 'master' ? 2 : 0); }   // 兩番起胡：單人看電腦強度設定，房間由房主決定
 applyBotLvl();
 const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'light' || PREF.theme === 'dark' ? r.setAttribute('data-theme', PREF.theme) : r.removeAttribute('data-theme'); PREF.palette === 'harvest' || PREF.palette === 'lantern' ? r.setAttribute('data-palette', PREF.palette) : r.removeAttribute('data-palette'); r.setAttribute('data-hc', PREF.hc === 'on' ? 'on' : 'off'); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
@@ -3962,8 +4004,9 @@ function renderSettings() {
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
     <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
-    <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro' && PREF.botLvl !== 'pro2')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}${chip('bot', 'pro2', '高手・兩番起胡', 'Expert · 2 fan min', PREF.botLvl === 'pro2')}</div>
-    <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。', 'Expert bots plan their hands, track what has been played, read the table and play defensively. "2 fan min" makes the whole table, you included, need 2 fan or more to win (half fans count).')}</p>
+    <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', !['pro', 'master'].includes(PREF.botLvl))}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}${chip('bot', 'master', '大師', 'Master', PREF.botLvl === 'master')}</div>
+    <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。', 'Expert bots plan their hands, track what has been played, read the table and play defensively.')}</p>
+    ${PREF.botLvl === 'master' ? `<p class="note" style="margin:6px 0 0">${L('大師固定採「兩番起胡」：全桌（包括你）都要 2 番以上才能胡（碎番也計）。大師會按手牌選路線，並算清楚每張牌是否真的夠番。', 'Master always plays with a 2 fan minimum: the whole table, you included, needs 2 fan or more to win (half fans count). It picks a route from its hand and checks that each winning tile really reaches 2 fan.')}</p>` : ''}
     <h3>${L('對局長度', 'Game length')}</h3><div class="chips">${chip('sl', 'round', '一圈（4 手）', 'One round (4 hands)', PREF.setLen === 'round')}${chip('sl', 'set', '一局（12 手）', 'Full set (12 hands)', PREF.setLen === 'set')}${chip('sl', 'endless', '無限', 'Endless', PREF.setLen !== 'round' && PREF.setLen !== 'set')}</div>
     <p class="note" style="margin:6px 0 0">${L('每手輪流換莊。一圈 4 手；紅中圈、發財圈、白板圈三圈合稱一局，共 12 手。', 'The deal passes on every hand. A full set is three rounds of 4 hands: Red, Green and White Dragon.')}</p>
     <div class="phoneonly"><h3>${L('打出按鈕位置', 'Discard button side')}</h3><div class="chips">${chip('dock', 'right', '右', 'Right', PREF.dockSide !== 'left')}${chip('dock', 'left', '左', 'Left', PREF.dockSide === 'left')}</div></div>
@@ -3984,7 +4027,7 @@ $('#setDlg').addEventListener('click', e => {
   else if (g === 'dock') { PREF.dockSide = v === 'left' ? 'left' : 'right'; savePref(); renderSettings(); if (G) render(); return; }
   else if (g === 'rec') { PREF.recOn = v === 'on' ? 'on' : 'off'; savePref(); renderSettings(); return; }
   else if (g === 'sl') { PREF.setLen = v === 'round' || v === 'set' ? v : 'endless'; savePref(); if (!online()) { setReset(); render(); } renderSettings(); return; }
-  else if (g === 'bot') { PREF.botLvl = v === 'pro' || v === 'pro2' ? v : 'easy'; applyBotLvl(); savePref(); renderSettings(); return; }
+  else if (g === 'bot') { PREF.botLvl = ['pro', 'master'].includes(v) ? v : 'easy'; applyBotLvl(); savePref(); renderSettings(); return; }
   else { LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't'; }
   savePref(); applyLang();
 });
@@ -4057,7 +4100,8 @@ function renderLanding() {
         <button class="btn primary big" id="lnCreate" type="button">${L('創建房間', 'Create room')}<small>${L('把代碼傳給朋友，空位可用電腦補', 'Share the code with friends; bots fill empty seats')}</small></button>
         <div class="joinrow"><input class="cd" id="lnCode" maxlength="4" value="${cd}" placeholder="${L('房間代碼', 'ROOM CODE')}" aria-label="${L('房間代碼', 'Room code')}" autocomplete="off"><button class="btn big2" id="lnGo" type="button">${L('加入房間', 'Join room')}</button></div>
         <button class="btn big" id="lnBots" type="button">${L('電腦對戰', 'Play with bots')}<small>${L('一人對三個電腦，即刻開局', 'You vs 3 bots, start right away')}</small></button>
-        <div class="botlv"><span>${L('電腦強度', 'Bot level')}</span><button type="button" class="chip ${PREF.botLvl !== 'pro' && PREF.botLvl !== 'pro2' ? 'on' : ''}" data-bot="easy">${L('新手', 'Easy')}</button><button type="button" class="chip ${PREF.botLvl === 'pro' ? 'on' : ''}" data-bot="pro">${L('高手', 'Expert')}</button><button type="button" class="chip ${PREF.botLvl === 'pro2' ? 'on' : ''}" data-bot="pro2">${L('高手・兩番起胡', 'Expert · 2 fan min')}</button></div>
+        <div class="botlv"><span>${L('電腦強度', 'Bot level')}</span><button type="button" class="chip ${!['pro', 'master'].includes(PREF.botLvl) ? 'on' : ''}" data-bot="easy">${L('新手', 'Easy')}</button><button type="button" class="chip ${PREF.botLvl === 'pro' ? 'on' : ''}" data-bot="pro">${L('高手', 'Expert')}</button><button type="button" class="chip ${PREF.botLvl === 'master' ? 'on' : ''}" data-bot="master">${L('大師', 'Master')}</button></div>
+        <p class="botnote" id="botNoteL"${PREF.botLvl === 'master' ? '' : ' hidden'}>${L('大師固定採「兩番起胡」：全桌都要 2 番以上才能胡。', 'Master plays with a 2 fan minimum: everyone needs 2 fan or more to win.')}</p>
         <div class="botlv"><span>${L('對局長度', 'Length')}</span><button type="button" class="chip ${PREF.setLen === 'round' ? 'on' : ''}" data-sl="round">${L('一圈', '1 round')}</button><button type="button" class="chip ${PREF.setLen === 'set' ? 'on' : ''}" data-sl="set">${L('一局', 'Full set')}</button><button type="button" class="chip ${PREF.setLen !== 'round' && PREF.setLen !== 'set' ? 'on' : ''}" data-sl="endless">${L('無限', 'Endless')}</button></div>
         <p class="err" id="lnMsg" aria-live="polite">${ROOM.msg || ''}</p>
       </div>
@@ -4070,7 +4114,7 @@ $('#landing').addEventListener('click', e => {
   const sl = e.target.closest('#landing button[data-sl]');
   if (sl) { PREF.setLen = sl.dataset.sl; savePref(); $('#landing').querySelectorAll('button[data-sl]').forEach(b => b.classList.toggle('on', b === sl)); return; }
   const lv = e.target.closest('button[data-bot]');
-  if (lv) { PREF.botLvl = ['pro', 'pro2'].includes(lv.dataset.bot) ? lv.dataset.bot : 'easy'; applyBotLvl(); savePref(); $('#landing').querySelectorAll('button[data-bot]').forEach(b => b.classList.toggle('on', b === lv)); return; }
+  if (lv) { PREF.botLvl = ['pro', 'master'].includes(lv.dataset.bot) ? lv.dataset.bot : 'easy'; applyBotLvl(); savePref(); $('#landing').querySelectorAll('button[data-bot]').forEach(b => b.classList.toggle('on', b === lv)); const bn = $('#botNoteL'); if (bn) bn.hidden = PREF.botLvl !== 'master'; return; }
   const t = e.target.closest('button'); if (!t) return;
   if (t.id === 'lnBots') { try { const n = cleanName(($('#lnName') || {}).value); if (n) localStorage.setItem('yjl-name', n); } catch (x) {} if (ROOM.zooming) return; dragonZoom(() => { if (online()) toSolo(); SETC.fresh = true; play(); hideLanding(); }); }
   else if (t.id === 'lnCreate') createRoom();

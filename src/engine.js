@@ -450,7 +450,7 @@ function applyPersona(plans, a, melds) {
     if (fav) p.b *= 2.5; else if (p.sh >= 2) p.sh += 1;
   }
 }
-function personaOf(g, seat) { return (g.persona && g.persona[seat]) || PERSONA_BAL; }
+function personaOf(g, seat) { if (levelOf(g, seat) === 'master') return PERSONA_BAL; return (g.persona && g.persona[seat]) || PERSONA_BAL; }   // 大師不用隨機性格（測過會輸約 9 點／手）
 let PRO_G = null;        // 目前這位高手的目標 {t:'pure'|'dui', su, fan, dv}，planList 會多算一條 'goal' 路線
 function proGoal(g, seat) {
   const G = g.goal && g.goal[seat];
@@ -458,7 +458,12 @@ function proGoal(g, seat) {
   return G || null;
 }
 const levelOf = (g, seat) => (g.botLv && g.botLv[seat]) || RULES.BOT_LEVEL;
-function proLevel(g, seat) { const l = levelOf(g, seat); return l === 'pro' || l === 'pro2'; }
+function proLevel(g, seat) { const l = levelOf(g, seat); return l === 'pro' || l === 'pro2' || l === 'master' || l === 'masterB'; }
+// 大師電腦（兩番起胡專用）：planList 依「兩番」重算每條路線還缺什麼；其他高手照舊
+let PLAN2 = false, P2C = null;
+RULES.P2 = { cl: 1, pfo: 0, pfc: 1, duc: 0, duo: 2, dr: 2, as: 1, asb: 26, tp: 1, tpc: 0, tr: 1, tt: 0.6, tf: 0 };   // tp：聽牌時逐張驗證是否真的夠番；tr／tt：榮胡／自摸的權重
+RULES.P2B = { tp: 0, tpc: 0, pfo: 1, duc: 1, dr: 1 };   // 'masterB' = 第一版（對照組，不改）   // 大師路線補番的步數（調參用）
+function setPlan2(g, seat) { const l = levelOf(g, seat); PLAN2 = RULES.MIN_TOTAL >= 2 && (l === 'master' || l === 'masterB') && !RULES.NO_PLAN2; P2C = l === 'masterB' ? Object.assign({}, RULES.P2, RULES.P2B) : RULES.P2; }
 // 「兩番起胡」是整桌規則（RULES.MIN_TOTAL = 2，含碎番），由牌桌的電腦強度決定；evaluateHand 直接擋掉不夠的胡牌
 const NK = ORDER.length;                                    // 30 種牌，順序同 ORDER：p1-9 s1-9 m1-9 z1-3
 const copiesIdx = i => i >= 27 ? 5 : (i % 9) + 1;           // 引擎編號 n 有 n 張
@@ -515,14 +520,24 @@ function planList(a, melds) {
   const allChow = melds.every(m => m.type === 'chow'), allPung = melds.every(m => m.type !== 'chow');
   const dragonMeld = melds.some(m => m.tiles[0].s === 'z');
   const mask = f => a.map((v, i) => f(i) ? v : 0);
-  if (!open) plans.push({ n: 'closed', sh: shanten(a, need, 'normal') + 1, b: 8 });          // 門清自摸（不求人）：只能靠自摸
-  if (allChow && !dragonMeld) plans.push({ n: 'pinfu', sh: shanten(mask(i => i < 27), need, 'pinfu'), b: 12 });
-  if (allPung) plans.push({ n: 'duidui', sh: shanten(a, need, 'duidui'), b: 14 });
-  if (dragonMeld) plans.push({ n: 'dragon', sh: shanten(a, need, 'normal'), b: 24 });
-  else for (let z = 27; z < 30; z++) {
-    if (a[z] >= 3) { const c = a.slice(); c[z] -= 3; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 1, p: 0 }), b: 24 }); }
-    else if (a[z] === 2) { const c = a.slice(); c[z] -= 2; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 0, p: 1 }) + 0, b: 24 }); }
+  const P2 = PLAN2 ? 1 : 0;   // 兩番起胡：只有一番的路線要另外補一番（碎番、不求人、三元……），多算步數
+  if (!open) plans.push({ n: 'closed', sh: shanten(a, need, 'normal') + 1 + (P2 ? P2C.cl : 0), b: 8 });          // 門清自摸（不求人）：只能靠自摸
+  if (allChow && !dragonMeld) {
+    const base = shanten(mask(i => i < 27), need, 'pinfu');
+    if (!P2) plans.push({ n: 'pinfu', sh: base, b: 12 });
+    else {   // 平胡 1 番：要缺一門（碎番）再加門清／自摸，或門清自摸（不求人）
+      let two = 99; const used = new Set(mTiles.filter(t => t.s !== 'z').map(t => ORD[t.s + 1] / 9));
+      for (let out = 0; out < 3; out++) if (!used.has(out)) two = Math.min(two, shanten(mask(i => i < 27 && Math.floor(i / 9) !== out), need, 'pinfu'));
+      plans.push({ n: 'pinfu', sh: open ? two + P2C.pfo : Math.min(base + P2C.pfc, two), b: 12 });
+    }
   }
+  if (allPung) { const hasDr = dragonMeld || a[27] >= 3 || a[28] >= 3 || a[29] >= 3; plans.push({ n: 'duidui', sh: shanten(a, need, 'duidui') + (P2 ? (hasDr ? 0 : open ? P2C.duo : P2C.duc) : 0), b: 14 }); }
+  if (dragonMeld) plans.push({ n: 'dragon', sh: shanten(a, need, 'normal') + (P2 ? P2C.dr : 0), b: 24 });
+  else for (let z = 27; z < 30; z++) {
+    if (a[z] >= 3) { const c = a.slice(); c[z] -= 3; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 1, p: 0 }) + (P2 ? P2C.dr : 0), b: 24 }); }
+    else if (a[z] === 2) { const c = a.slice(); c[z] -= 2; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 0, p: 1 }) + (P2 ? P2C.dr : 0), b: 24 }); }
+  }
+  if (P2 && P2C.as && !melds.length) plans.push({ n: 'allsmall', sh: shanten(mask(i => i < 27 && i % 9 >= 6), need, 'normal'), b: P2C.asb });   // 全小字（只有顯示 1–3）：3 番，不能鳴，只能門清
   if (!mTiles.some(t => t.s !== 'z' && t.n >= 7)) plans.push({ n: 'nosmall', sh: shanten(mask(i => i < 27 ? i % 9 <= 5 : !RULES.NS_NODRAG), need, 'normal'), b: 30 });
   for (let su = 0; su < 3; su++) {
     if (mTiles.some(t => t.s !== 'z' && ORD[t.s + 1] !== su * 9)) continue;
@@ -673,8 +688,22 @@ function qEval(f) {
   let y = Q.b3; for (let i = 0; i < h2.length; i++) y += Q.w3[i] * h2[i];
   return y;
 }
+// 聽牌時逐張驗證：摸到／別人打出這張，真的夠番（≥ MIN_TOTAL）才算進張；榮胡與自摸分開算權重
+let TILEK = null;
+function tenpaiVal(handAfter, melds, a, u) {
+  if (!TILEK) { TILEK = {}; for (const t of makeDeck()) if (!TILEK[t.k]) TILEK[t.k] = t; }
+  let tot = 0;
+  for (const i of relevantKeys(a)) {
+    if (!u[i]) continue;
+    const w = Object.assign({}, TILEK[ORDER[i]], { id: -1 }), con = handAfter.concat([w]);
+    const r = evaluateHand(melds, con, false, w, false, null), z = evaluateHand(melds, con, true, w, false, null);
+    const fw = ev => P2C.tf ? Math.pow(Math.max(1, ev.fan) / 2, P2C.tf) : 1;   // 番數越高越值錢
+    tot += u[i] * ((r.ok ? P2C.tr * fw(r) : 0) + (z.ok ? P2C.tt * fw(z) : 0));
+  }
+  return tot;
+}
 function proDiscard(g, seat) {
-  PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
+  setPlan2(g, seat); PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   const h = g.hands[seat], melds = g.melds[seat];
   if (PRO_P.routes.length) {   // 轉向：偏好的路線比最近的路線慢 3 步以上，就改走手牌現在最順的路線，並換掉會衝突的習慣
     PRO_P = null; const pl = planList(arrOf(h), melds); PRO_P = personaOf(g, seat);
@@ -693,8 +722,12 @@ function proDiscard(g, seat) {
   for (const t of h) {
     if (seenKey.has(t.k)) continue; seenKey.add(t.k);
     const i = ORD[t.k]; a[i]--;
-    const plans = planList(a, melds), sh = bestSh(plans);
-    cands.push({ t, i, plans, sh });
+    const plans = planList(a, melds); let sh = bestSh(plans), tpv = null;
+    if (PLAN2 && P2C.tp && shanten(a, 4 - melds.length, 'normal') <= 0) {   // 形狀聽牌了：真的胡得了才算聽，否則當作還差一步
+      tpv = tenpaiVal(h.filter(x => x.id !== t.id), melds, a, u);
+      sh = tpv > 0 ? 0 : Math.max(sh, 1);
+    }
+    cands.push({ t, i, plans, sh, tpv });
     a[i]++;
   }
   if (PRO_G && !cands.some(c => c.plans.some(p => p.n === 'goal'))) { g.goal[seat] = null; PRO_G = null; return proDiscard(g, seat); }
@@ -720,7 +753,7 @@ function proDiscard(g, seat) {
     a[c.i]--;
     if (c.sh === minSh) {
       const act = new Set(c.plans.filter(p => p.sh === c.sh).map(p => p.n));
-      c.uke = ukeire(a, melds, u, act, c.sh); sc += PRO_P.uw * c.uke;
+      c.uke = c.tpv != null && c.sh === 0 ? c.tpv : ukeire(a, melds, u, act, c.sh); sc += PRO_P.uw * c.uke;
     }
     a[c.i]++;
     let bonus = 0; for (const p of c.plans) if (p.sh <= c.sh + 1) bonus = Math.max(bonus, p.b - 10 * (p.sh - c.sh));
@@ -748,7 +781,7 @@ function proDiscard(g, seat) {
 // 要不要放掉這次胡牌？只在牌山還長、現在只是小胡、而且保得住聽牌時才考慮
 function greedDecline(g, seat, ev, tile, tsumo) {
   if (!RULES.PRO_GREED || ev.fan > 4 || g.wall.length < RULES.GREED_WALL) return false;
-  PRO_P = personaOf(g, seat); if (PRO_P.fast) return false;
+  setPlan2(g, seat); PRO_P = personaOf(g, seat); if (PRO_P.fast) return false;
   const names = ev.items.map(i => i.name), has = n => names.includes(n);
   if (has('天胡') || has('地胡') || has('人胡')) return false;
   const melds = g.melds[seat], hand = tsumo ? g.hands[seat] : g.hands[seat].concat([tile]);
@@ -788,7 +821,7 @@ function greedDecline(g, seat, ev, tile, tsumo) {
   return true;
 }
 function proSelf(g, seat, opts) {
-  PRO_G = proGoal(g, seat);
+  setPlan2(g, seat); PRO_G = proGoal(g, seat);
   if (opts.win) {
     if (opts.noGreed || !greedDecline(g, seat, opts.win, g.lastDraw, true)) return { win: true };
     return { discard: proDiscard(g, seat).id };   // 放掉這次自摸，繼續做大
@@ -801,12 +834,18 @@ function afterClaimSh(g, seat, opt, t, kind) {
   const h = g.hands[seat].filter(x => !opt.tiles.some(y => y.id === x.id));
   const meld = { type: kind === 'chow' ? 'chow' : kind === 'pong' ? 'pong' : 'kong', tiles: [...opt.tiles, t], open: true, mixed: !!opt.mixed, claimed: opt.mixed ? t.id : null };
   const ms = [...g.melds[seat], meld], a = arrOf(h);
-  if (kind === 'kong') return bestSh(planList(a, ms));
+  const u = PLAN2 && P2C.tpc ? unseenArr(g, seat) : null;
+  const adj = (tiles, sh) => u && shanten(a, 4 - ms.length, 'normal') <= 0 ? (tenpaiVal(tiles, ms, a, u) > 0 ? 0 : Math.max(sh, 1)) : sh;
+  if (kind === 'kong') return adj(h, bestSh(planList(a, ms)));
   let best = 99; const seen = new Set();
-  for (const x of h) { if (seen.has(x.k)) continue; seen.add(x.k); a[ORD[x.k]]--; best = Math.min(best, bestSh(planList(a, ms))); a[ORD[x.k]]++; }
+  for (const x of h) { if (seen.has(x.k)) continue; seen.add(x.k); a[ORD[x.k]]--; best = Math.min(best, adj(h.filter(y => y.id !== x.id), bestSh(planList(a, ms)))); a[ORD[x.k]]++; }
   return best;
 }
-function curSh(g, seat) { return bestSh(planList(arrOf(g.hands[seat]), g.melds[seat])); }
+function curSh(g, seat) {
+  const a = arrOf(g.hands[seat]), ms = g.melds[seat], sh = bestSh(planList(a, ms));
+  if (PLAN2 && P2C.tpc && shanten(a, 4 - ms.length, 'normal') <= 0) return tenpaiVal(g.hands[seat], ms, a, unseenArr(g, seat)) > 0 ? 0 : Math.max(sh, 1);
+  return sh;
+}
 function goalAllows(kind, tiles) {
   if (!PRO_G) return true;
   const su = PRO_G.su, pure = PRO_G.t === 'pure';
@@ -814,7 +853,7 @@ function goalAllows(kind, tiles) {
   return tiles.every(x => x.s === 'z' ? !pure : ORD[x.s + 1] === su * 9);
 }
 function proClaimKind(g, seat, t, list, kind) {
-  PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
+  setPlan2(g, seat); PRO_G = proGoal(g, seat); PRO_P = personaOf(g, seat);
   if (!list.length) return null;
   const cur = curSh(g, seat); if (cur <= 0) return null;       // 已聽牌：保住門清，不鳴
   let P = PRO_P; const closed = P.routes.includes('closed');
