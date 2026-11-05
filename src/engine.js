@@ -147,7 +147,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
       if (!keys.every(k => c0[k] >= 1) || !keys.some(k => c0[k] === 3)) continue;
       if (!melds.every(m => m.type === 'chow' && m.tiles[0].s === su && (m.tiles[0].n === 1 || m.tiles[0].n === 4))) continue;
       const nm = isConcealed ? '門清幺九龍' : '幺九龍';
-      cands.push(fixed([{ name: nm, fan: 6 }], isConcealed ? 90 : 30, nm)); shapeOk = true;
+      cands.push(fixed([{ name: nm, fan: 6 }], isConcealed ? RULES.KD_BONUS_C : RULES.KD_BONUS, nm)); shapeOk = true;
     }
   }
   // 七對子
@@ -194,7 +194,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     for (const su of ['p', 's', 'm']) {
       const a = sets.find(s => s.kind === 'chow' && s.k === su + 1), b = sets.find(s => s.kind === 'chow' && s.k === su + 4), c3 = sets.find(s => s.kind === 'chow' && s.k === su + 7);
       if (a && b && c3 && sets.filter(s => s !== a && s !== b && s !== c3).length === 1) {
-        if (isConcealed) { add('門清幺九順', 4); bonus = Math.max(bonus, 30); bonusName = bonusName || '門清幺九順'; } else add('幺九順', 3);
+        if (isConcealed) { add('門清幺九順', 4); bonus = Math.max(bonus, RULES.KS_BONUS_C); bonusName = bonusName || '門清幺九順'; } else { add('幺九順', 3); bonus = Math.max(bonus, RULES.KS_BONUS); bonusName = bonusName || '幺九順'; }
         break;
       }
     }
@@ -374,6 +374,7 @@ function botClaims(g, from, t, skip = []) {
 }
 
 /* ---- 高手電腦：算向聽數、看牌效率與場上形勢（鳴牌、已見牌），不亂打 ---- */
+RULES.KS_BONUS = 30; RULES.KS_BONUS_C = 60; RULES.KD_BONUS = 60; RULES.KD_BONUS_C = 120;   // 幺九順／門清幺九順／幺九龍／門清幺九龍 的手牌點值加成（Wilson 2026-11-04）
 RULES.NS_NODRAG = true;   // 斷小字無三元：不只沒有 1–3，也不能有三元牌
 function noSmallOk(t) { return t.s === 'z' ? !RULES.NS_NODRAG : t.n <= 6; }
 function noSmallName() { return RULES.NS_NODRAG ? '斷小字無三元' : '斷小字'; }
