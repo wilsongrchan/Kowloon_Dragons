@@ -502,6 +502,7 @@ body:has(#cheatDlg[open]) #cheatTab{right:min(340px,86vw);animation:none}
 #landing .chips span{font-size:calc(12px*var(--fs,1));color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
 #landing .btn.ghost{color:var(--text);border-color:var(--line)}
 #landing .btn.primary small{opacity:.85;color:#3a2a08}
+:root[data-palette="neon"] #landing .btn.primary small{color:#fff;opacity:.92}
 #landing .foot a{color:var(--gold-t);text-decoration:underline;text-underline-offset:3px}
 #landing .foot{position:relative;font-size:calc(12px*var(--fs,1));color:var(--muted);text-align:center}
 .brand h1{cursor:pointer}
@@ -591,6 +592,11 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 :root[data-palette="neon"] #minFan{box-shadow:var(--nglow)}
 :root[data-palette="neon"] .hero{box-shadow:var(--nglow),var(--nglow2)}
 :root[data-palette="neon"] .seat.active{box-shadow:var(--nglow)}
+/* 洋紅底一律反白（白字）：分數面板、主要按鈕、選中的選項、胡牌標籤、鎖定列 */
+:root[data-palette="neon"] .hero,:root[data-palette="neon"] .hero b{color:#fff}
+:root[data-palette="neon"] .hero small,:root[data-palette="neon"] .hero span{color:rgba(255,255,255,.88)}
+:root[data-palette="neon"] .hero b{text-shadow:0 2px 0 rgba(0,0,0,.18)}
+:root[data-palette="neon"] button.btn.primary,:root[data-palette="neon"] button.btn.hot,:root[data-palette="neon"] #lobby .chip.on,:root[data-palette="neon"] #landing .botlv .chip.on,:root[data-palette="neon"] #setDlg .chip.on,:root[data-palette="neon"] .tile.wintile::after,:root[data-palette="neon"] #hand .lgrp.locked .lbar{color:#fff}
 :root[data-palette="neon"] .tbar .rt{text-shadow:var(--nrt)}
 @media (prefers-color-scheme: dark){:root:not([data-theme]){--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}}
 #setDlg h3{margin:14px 0 6px}
@@ -3047,8 +3053,9 @@ function setAdvance() { SETC.done++; if (SETC.len !== 'endless' && SETC.done >= 
 $('#setEnd').addEventListener('close', () => { if (SETC.over) { UI.viewTable = true; render(); } });   // 關掉總結就回到牌桌，可從「回到結算」再打開
 function newSet() { SETC.fresh = true; dealer = 0; $('#setEnd').close?.(); play(); }
 function leaveRoomToMain() {
-  if (!online() || !confirm(L('離開目前的房間？', 'Leave the current room?'))) return;
-  toSolo(); UI.viewTable = false;
+  if (online() && !confirm(L('離開目前的房間？', 'Leave the current room?'))) return;
+  if (online()) toSolo();
+  UI.viewTable = false;
   for (const x of ['#result', '#setEnd']) { const e = $(x); if (e && e.open) e.close(); }
   showLanding();
 }
@@ -3056,7 +3063,7 @@ function showSetEnd() {
   const d = $('#setEnd'), rows = [0, 1, 2, 3].map(sx => ({ sx, d: scores[sx] - (SETC.start[sx] || 0) })).sort((a, b) => b.d - a.d);
   const nm = sx => WHO[sx] + (online() && ROOM.names[(sx + mySeat) % 4] ? ` · ${ROOM.names[(sx + mySeat) % 4]}` : '');
   const title = SETC.len === 'round' ? L('紅中圈結束', 'Red Dragon round complete') : L('一局結束', 'Set complete');
-  d.innerHTML = `${XBTN()}<h2>${title}</h2><p class="mxnote">${L('這一局的得分變化與目前總分', 'Points gained this set, and your current totals')}</p><div class="selist">${rows.map((r, i) => `<div class="serow${i === 0 ? ' top' : ''}"><span class="serank">${i + 1}</span><span class="sename">${nm(r.sx)}</span><b class="${r.d >= 0 ? 'pos' : 'neg'}">${r.d >= 0 ? '+' : ''}${r.d}</b><span class="setot">${scores[r.sx]}</span></div>`).join('')}</div><div class="mxact">${ROOM.mode === 'guest' ? `<button type="button" class="btn" disabled>${L('等待房主開始新的一局…', 'Waiting for the host to start a new set…')}</button>` : `<button type="button" class="btn primary" id="seNew">${L('再玩一局', 'Play another set')}</button>`}${online() ? `<button type="button" class="btn ghost" id="seLeave">${L('離開房間', 'Leave room')}</button>` : ''}</div>`;
+  d.innerHTML = `${XBTN()}<h2>${title}</h2><p class="mxnote">${L('這一局的得分變化與目前總分', 'Points gained this set, and your current totals')}</p><div class="selist">${rows.map((r, i) => `<div class="serow${i === 0 ? ' top' : ''}"><span class="serank">${i + 1}</span><span class="sename">${nm(r.sx)}</span><b class="${r.d >= 0 ? 'pos' : 'neg'}">${r.d >= 0 ? '+' : ''}${r.d}</b><span class="setot">${scores[r.sx]}</span></div>`).join('')}</div><div class="mxact">${ROOM.mode === 'guest' ? `<button type="button" class="btn" disabled>${L('等待房主開始新的一局…', 'Waiting for the host to start a new set…')}</button>` : `<button type="button" class="btn primary" id="seNew">${L('再玩一局', 'Play another set')}</button>`}<button type="button" class="btn ghost" id="seLeave">${online() ? L('離開房間', 'Leave room') : L('返回首頁', 'Back to home')}</button></div>`;
   const nb = d.querySelector('#seNew'); if (nb) nb.onclick = () => setTimeout(newSet, 0);
   const sl = d.querySelector('#seLeave'); if (sl) sl.onclick = leaveRoomToMain;
   d.showModal();
@@ -3210,7 +3217,7 @@ function endDraw() {
 }
 function renderResult() {
   const res = UI.result, d = $('#result'); if (!res) return;
-  const next = `<form method="dialog" style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="nextBtn">${SETC.over ? L('查看總結', 'Final standings') : L('下一手', 'Next hand')}</button><button class="btn" id="viewTable" type="button">${L('看牌桌', 'View table')}</button>${online() ? `<button class="btn ghost" id="resLeave" type="button">${L('離開房間', 'Leave room')}</button>` : ''}</form>`;
+  const next = `<form method="dialog" style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="nextBtn">${SETC.over ? L('查看總結', 'Final standings') : L('下一手', 'Next hand')}</button><button class="btn" id="viewTable" type="button">${L('看牌桌', 'View table')}</button><button class="btn ghost" id="resLeave" type="button">${online() ? L('離開房間', 'Leave room') : L('返回首頁', 'Back to home')}</button></form>`;
   if (res.draw) {
     d.innerHTML = `<h2>${L('流局', 'Draw')}</h2><p>${L('牌山摸完，沒有人胡牌。', 'The wall ran out and nobody won.')}</p><div class="reveal" id="rv"></div>${next}`;
     const rv = d.querySelector('#rv'); for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, WHO[s]));
