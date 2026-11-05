@@ -374,7 +374,7 @@ function botClaims(g, from, t, skip = []) {
 }
 
 /* ---- 高手電腦：算向聽數、看牌效率與場上形勢（鳴牌、已見牌），不亂打 ---- */
-RULES.KS_BONUS = 30; RULES.KS_BONUS_C = 60; RULES.KD_BONUS = 60; RULES.KD_BONUS_C = 120;   // 幺九順／門清幺九順／幺九龍／門清幺九龍 的手牌點值加成（Wilson 2026-11-04）
+RULES.KS_BONUS = 30; RULES.KS_BONUS_C = 60; RULES.KD_BONUS = 90; RULES.KD_BONUS_C = 120;   // 幺九順／門清幺九順／幺九龍／門清幺九龍 的手牌點值加成（Wilson 2026-11-04）
 RULES.NS_NODRAG = true;   // 斷小字無三元：不只沒有 1–3，也不能有三元牌
 function noSmallOk(t) { return t.s === 'z' ? !RULES.NS_NODRAG : t.n <= 6; }
 function noSmallName() { return RULES.NS_NODRAG ? '斷小字無三元' : '斷小字'; }
