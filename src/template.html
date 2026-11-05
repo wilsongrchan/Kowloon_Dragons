@@ -1290,7 +1290,7 @@ function renderStats() {
     const cnt = {}; wins.forEach(x => (x.result.items || []).forEach(nm => { const k = nm.replace(/×\d+/, ''); cnt[k] = (cnt[k] || 0) + 1; }));
     const rows = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 8), top = rows.length ? rows[0][1] : 1;
     const cell = (v, lb) => `<div><b>${v}</b><span>${lb}</span></div>`;
-    body = `<div class="sg">${cell(pc(W), L('勝率', 'Win rate') + ` (${W}/${N})`)}${cell(W ? avg(r => r.fan).toFixed(1) : '–', L('勝局平均番數', 'Avg fan per win'))}${cell(W ? Math.round(avg(r => r.points)) : '–', L('勝局平均得分', 'Avg points per win'))}${cell((net >= 0 ? '+' : '') + Math.round(net / N), L('每手平均輸贏', 'Avg net / hand'))}${cell(`${tz} / ${W - tz}`, L('自摸 / 食胡', 'Zimo / Ron'))}${cell(pc(dealIn), L('放銃', 'Dealt in') + ` (${dealIn})`)}${cell(draws, L('流局', 'Draws'))}${cell(best || '–', L('最高一手', 'Best hand'))}</div>`
+    body = `<div class="sg">${cell(pc(W), L('勝率', 'Win rate') + ` (${W}/${N})`)}${cell(W ? avg(r => r.fan).toFixed(1) : '–', L('勝局平均番數', 'Avg fan per win'))}${cell(W ? Math.round(avg(r => r.points)) : '–', L('勝局平均得分', 'Avg points per win'))}${cell((net >= 0 ? '+' : '') + Math.round(net / N), L('每手平均輸贏', 'Avg net / hand'))}${cell(`${tz} / ${W - tz}`, L('自摸 / 榮胡', 'Zimo / Ron'))}${cell(pc(dealIn), L('放銃', 'Dealt in') + ` (${dealIn})`)}${cell(draws, L('流局', 'Draws'))}${cell(best || '–', L('最高一手', 'Best hand'))}</div>`
       + (rows.length ? `<h5>${L('常胡的牌型', 'Hands you win with')}</h5>` + rows.map(([nm, c]) => `<div class="yr"><span>${yn(nm)}</span><i style="width:${Math.max(4, Math.round(100 * c / top))}%"></i><em>${c} · ${Math.round(100 * c / W)}%</em></div>`).join('') : '')
       + (N < n ? `<h5>${L(`只有 ${N} 手記錄`, `Only ${N} hand(s) recorded so far`)}</h5>` : '');
   }
