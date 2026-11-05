@@ -58,7 +58,10 @@ h1{font:900 calc(30px*var(--fs,1))/1 var(--face);margin:0;letter-spacing:.08em;c
 #cheatBar{display:none}
 @media (min-width:521px){.table{position:relative}.tbar{position:absolute;top:10px;right:12px;margin:0;z-index:2;flex-direction:column;align-items:flex-end;gap:6px}}
 .tbar .mf{order:1;font-size:calc(12px*var(--fs,1));font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 10px;white-space:nowrap}
-@media (max-width:520px){.tbar{position:relative}.tbar .mf{position:absolute;left:50%;transform:translateX(-50%)}}   /* 手機：正對上家／下家兩個面板中間的縫 */
+.tbar .mfw{order:1;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.tbar .rt .sh{display:none}
+.tbar .rt{color:var(--text)}
+@media (max-width:520px){.tbar{position:relative}.tbar .mfw{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);flex-direction:column;align-items:center;gap:2px}.tbar .rt .lg{display:none}.tbar .rt .sh{display:inline}.tbar .mfw .mf{font-size:calc(10px*var(--fs,1));padding:0 8px;line-height:1.5}}   /* 手機：正對上家／下家兩個面板中間的縫 */
 .tbar .mf.two{color:var(--gold-t);border-color:var(--gold)}
 @keyframes wallshake{0%,100%{transform:translateX(0) rotate(0)}15%{transform:translateX(-4px) rotate(-2deg)}35%{transform:translateX(4px) rotate(2deg)}55%{transform:translateX(-3px) rotate(-1.5deg)}75%{transform:translateX(3px) rotate(1.5deg)}}
 @keyframes wallflash{0%,100%{background-color:var(--pillbg,rgba(0,0,0,.28))}50%{background-color:rgba(255,92,64,.62)}}
@@ -611,6 +614,15 @@ table.ttbl td,table.ttbl th{padding:6px 8px;border-bottom:1px solid var(--line);
 table.ttbl th{color:var(--gold-t);font-weight:700}
 table.ttbl td:first-child{white-space:nowrap;font-weight:700;color:var(--ivt)}
 #termDlg .tnote{color:var(--muted);margin:4px 0 0;font-size:calc(13px*var(--fs,1))}
+#setEnd{max-width:min(420px,94vw)}
+#setEnd .selist{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+#setEnd .serow{display:grid;grid-template-columns:1.8em 1fr auto 3.6em;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;background:rgba(0,0,0,.18);font-size:calc(15px*var(--fs,1))}
+#setEnd .serow.top{outline:2px solid var(--gold);background:rgba(var(--gold-rgb),.16)}
+#setEnd .serank{font-weight:800;color:var(--gold-t)}
+#setEnd .serow b{font-variant-numeric:tabular-nums}
+#setEnd .setot{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+#setEnd .mxnote{color:var(--muted);margin:0 0 8px;font-size:calc(13px*var(--fs,1))}
+#setEnd .mxact{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
 #mixDlg{max-width:min(420px,94vw)}
 #mixDlg .mxnote{color:var(--muted);margin:0 0 10px;font-size:calc(13px*var(--fs,1))}
 #mixDlg .mxlist{display:flex;flex-direction:column;gap:8px}
@@ -673,7 +685,7 @@ button.btn.hot:hover{background:var(--gold-hov)}
   <div class="col">
   <div class="table">
     <div id="opps"></div>
-    <div class="tbar"><button type="button" class="btn" id="cheatBar"><b>◀</b><span id="cheatBarTxt">速查</span></button><span class="mf" id="minFan"></span><span class="pill" id="wall">牌山 —</span></div>
+    <div class="tbar"><button type="button" class="btn" id="cheatBar"><b>◀</b><span id="cheatBarTxt">速查</span></button><span class="mfw"><span class="mf rt" id="roundTag"></span><span class="mf" id="minFan"></span></span><span class="pill" id="wall">牌山 —</span></div>
     <section class="seat" id="me">
       <div class="seat-head"><b id="meName">你</b><span id="meTag"></span><span class="tclk" data-v="0"></span><span id="meTotal" class="total"></span><span class="score" id="meScore"></span></div>
       <div class="zone">
@@ -708,6 +720,7 @@ button.btn.hot:hover{background:var(--gold-hov)}
 <dialog id="setDlg"></dialog>
 <dialog id="fbDlg"></dialog>
 <dialog id="mixDlg"></dialog>
+<dialog id="setEnd"></dialog>
 <dialog id="termDlg"></dialog>
 <dialog id="voteDlg"></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -1646,7 +1659,7 @@ const YAKU_JA = {
 const JA_EXACT = {
   '摸牌山最後一張自摸（連自摸共 +1）': '牌山の最後の1枚でツモ（ツモと合わせて +1）',
   /* table */
-  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '高手・兩番起胡': '上級・2翻縛り', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。「2翻縛り」を選ぶと、あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色': '清一色（三元牌なし）で彩の部分がちょうど1つ（彩雀頭または彩ポン1組）、主色が1枚以上', '落葉': '秋色', '燈籠': '提灯', '經典': '定番', '配色': '配色', '我的戰績': '自分の成績', '勝率': '和了率', '勝局平均番數': '和了時の平均翻数', '勝局平均得分': '和了時の平均得点', '每手平均輸贏': '1局あたり平均収支', '自摸 / 榮胡': 'ツモ / ロン', '放銃': '放銃', '流局': '流局', '最高一手': '最高の一手', '常胡的牌型': 'よく和了る役', '還沒有記錄。玩幾手之後這裡會顯示你的戰績（需要在設定開啟牌局記錄）。': '記録がまだありません。何局か遊ぶとここに成績が出ます（設定で牌局記録をオンにしてください）。', '點一下選取／取消要鎖定的組合；沒選的牌留給順子或其他用途。': 'ロックする組み合わせをタップで選択／解除します。選ばなかった牌は順子などに使えます。', '取消': 'キャンセル', '鎖定所選': '選択をロック', '彩刻': '彩刻子', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '打出按鈕位置': '打牌ボタンの位置', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
+  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点', '高手・兩番起胡': '上級・2翻縛り', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。「2翻縛り」を選ぶと、あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色': '清一色（三元牌なし）で彩の部分がちょうど1つ（彩雀頭または彩ポン1組）、主色が1枚以上', '落葉': '秋色', '燈籠': '提灯', '經典': '定番', '配色': '配色', '我的戰績': '自分の成績', '勝率': '和了率', '勝局平均番數': '和了時の平均翻数', '勝局平均得分': '和了時の平均得点', '每手平均輸贏': '1局あたり平均収支', '自摸 / 榮胡': 'ツモ / ロン', '放銃': '放銃', '流局': '流局', '最高一手': '最高の一手', '常胡的牌型': 'よく和了る役', '還沒有記錄。玩幾手之後這裡會顯示你的戰績（需要在設定開啟牌局記錄）。': '記録がまだありません。何局か遊ぶとここに成績が出ます（設定で牌局記録をオンにしてください）。', '點一下選取／取消要鎖定的組合；沒選的牌留給順子或其他用途。': 'ロックする組み合わせをタップで選択／解除します。選ばなかった牌は順子などに使えます。', '取消': 'キャンセル', '鎖定所選': '選択をロック', '彩刻': '彩刻子', '對局長度': '対局の長さ', '單輪（4 局）': '1ラウンド（4局）', '整組（12 局）': '1セット（12局）', '無限': 'エンドレス', '單輪': '1ラウンド', '整組': '1セット', '每局輪流換莊。三輪＝紅中局、發財局、白板局，每輪 4 局。': '毎局、親が順番に回ります。3ラウンド＝中場・發場・白場、各4局です。', '查看總結': '最終順位を見る', '整組結束': 'セット終了', '紅中局結束': '中場終了', '這一組的得分變化與目前總分': 'このセットの得点の増減と現在の合計', '再玩一組': 'もう1セット遊ぶ', '等待房主開始新的一組…': 'ホストが次のセットを始めるのを待っています…', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '打出按鈕位置': '打牌ボタンの位置', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
   '手牌＋鳴牌的點值總和（未乘番數；彩碰被要的那張不計）': '手牌＋副露の点の合計（翻数を掛ける前。彩ポンで鳴いた1枚は数えません）',
   '整理': '理牌', '彩組': '彩まとめ', '把手上的彩眼／彩刻湊在一起並鎖定': '手牌の彩雀頭／彩刻子をまとめてロックします',
   '目前沒有可組的彩眼／彩刻': 'まとめられる彩雀頭／彩刻子はありません', '解鎖': 'ロック解除', '鎖定': 'ロック',
@@ -1720,6 +1733,7 @@ const JA_EXACT = {
   '傳送中…': '送信中…', '已送出，謝謝你！': '送信しました。ありがとうございます！', '送出失敗，請稍後再試': '送信できませんでした。しばらくしてからお試しください',
   '牌面示例：番種': '牌の例：役', ' 番：': ' 翻：',
 };
+const jaSetLabel = t => { const m = t.match(/^(紅中局|發財局|白板局) (\d)\/4$/); return m ? `${{ '紅中局': '中場', '發財局': '發場', '白板局': '白場' }[m[1]]} ${m[2]}/4` : (t.match(/^第 (\d+) 手$/) ? t.replace(/^第 (\d+) 手$/, '$1局目') : t); };
 const JA_PATTERNS = [
   [/^最近 (\d+) 手$/, (m) => `直近${m[1]}局`],
   [/^只有 (\d+) 手記錄$/, (m) => `記録は${m[1]}局のみ`],
@@ -1737,6 +1751,9 @@ const JA_PATTERNS = [
   [/^(.+)打出 <b>(.+)<\/b>，要不要？$/, (m) => `${m[1]}が <b>${m[2]}</b> を切りました。鳴きますか？`],
   [/^(.+)思考中…$/, (m) => `${m[1]}が考え中…`],
   [/^新局，(.+)做莊。$/, (m) => `新しい局です。${m[1]}が親です。`],
+  [/^新局（(.+)），(.+)做莊。$/, (m) => `新しい局（${jaSetLabel(m[1])}）です。${m[2]}が親です。`],
+  [/^第 (\d+) 手$/, (m) => `${m[1]}局目`],
+  [/^(紅中局|發財局|白板局) (\d)\/4$/, (m) => `${{ '紅中局': '中場', '發財局': '發場', '白板局': '白場' }[m[1]]} ${m[2]}/4`],
   [/^(.+?)(大槓|槓) (.+)$/, (m) => `${m[1]}：${m[2] === '大槓' ? '大カン' : 'カン'} ${m[3]}`],
   [/^(.+?)(吃|碰|槓) (.+?)(（混）)?$/, (m) => `${m[1]}：${{ 吃: 'チー', 碰: 'ポン', 槓: 'カン' }[m[2]]} ${m[3]}${m[4] ? '（彩）' : ''}`],
   [/^(.+?)打 (.+)$/, (m) => `${m[1]}：打牌 ${m[2]}`],
@@ -1779,7 +1796,7 @@ function jaRuby(html) {
 }
 
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
-const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off', palette: 'classic' };
+const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off', palette: 'classic', setLen: 'endless' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-recv') !== '2') { PREF.recOn = 'on'; localStorage.setItem('yjl-recOn', 'on'); localStorage.setItem('yjl-recv', '2'); } if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
 const applyBotLvl = () => { RULES.BOT_LEVEL = PREF.botLvl === 'pro' || PREF.botLvl === 'pro2' ? PREF.botLvl : 'easy'; applyMinFan(); };
 function applyMinFan() { let on = false; try { on = online(); } catch (e) {}   // 啟動時 ROOM 還沒建立
@@ -2378,6 +2395,7 @@ function render() {
   const rb = $('#resBack'); rb.hidden = !UI.viewTable; rb.textContent = L('回到結算', 'Back to results');
   $('#wall').innerHTML = WALL_SVG + `<span>${L('牌山', 'Wall')}</span><b>${G.wall.length}</b>`;
   const mf = $('#minFan'), two = RULES.MIN_TOTAL === 2; mf.textContent = two ? L('兩番起胡', '2 fan min') : L('一番起胡', '1 fan min'); mf.classList.toggle('two', two);
+  $('#roundTag').innerHTML = `<span class="lg">${setLabel(false)}</span><span class="sh">${setLabel(true)}</span>`;
   const wl = $('#wall'), LOW = 20;   // 牌山剩 20 張：抖動 3 下、底色閃紅提醒快沒牌了（每手一次）
   if (G.wall.length > LOW + 4) { UI.lowShown = false; wl.classList.remove('low'); }
   else if (G.wall.length <= LOW && !UI.lowShown) { UI.lowShown = true; wl.classList.add('low'); setTimeout(() => wl.classList.remove('low'), 1700); }
@@ -2953,13 +2971,36 @@ function flushGreedLog() {
       : L(`【除錯】${who}放棄${e.tsumo ? '自摸' : '榮胡'}，改做對對胡`, `[debug] ${who} passed on a ${e.tsumo ? 'self-draw' : 'Ron'} win, going for all triplets`));
   }
 }
+/* ===== 對局長度：單輪（4 局）／整組（12 局）／無限。每局換莊（輪流坐莊）；三輪＝紅中局、發財局、白板局 ===== */
+const SETLEN = { round: 4, set: 12, endless: Infinity };
+const SETC = { len: 'endless', done: 0, over: false, start: [0, 0, 0, 0], fresh: true };
+const setLenPref = () => online() ? (ROOM.setLen || 'set') : (PREF.setLen || 'endless');
+function setReset() { SETC.len = SETLEN[setLenPref()] ? setLenPref() : 'endless'; SETC.done = 0; SETC.over = false; SETC.start = scores.slice(); SETC.fresh = false; }
+const ROUND_NAMES = [['紅中局', 'Red', '中'], ['發財局', 'Green', '發'], ['白板局', 'White', '白']];
+function setLabel(short) {   // 例：紅中局 2/4；手機縮成「中 2/4」；無限＝第 N 手
+  if (SETC.len === 'endless') return L(`第 ${SETC.done + 1} 手`, `Hand ${SETC.done + 1}`);
+  const ri = Math.min(2, Math.floor(SETC.done / 4)), h = SETC.done % 4 + 1, rn = ROUND_NAMES[ri];
+  return short ? `${L(rn[2], rn[1])} ${h}/4` : `${L(rn[0], rn[1] + ' round')} ${h}/4`;
+}
+function setAdvance() { SETC.done++; if (SETC.len !== 'endless' && SETC.done >= SETLEN[SETC.len]) SETC.over = true; }
+$('#setEnd').addEventListener('close', () => { if (SETC.over) { UI.viewTable = true; render(); } });   // 關掉總結就回到牌桌，可從「回到結算」再打開
+function newSet() { SETC.fresh = true; dealer = 0; $('#setEnd').close?.(); play(); }
+function showSetEnd() {
+  const d = $('#setEnd'), rows = [0, 1, 2, 3].map(sx => ({ sx, d: scores[sx] - (SETC.start[sx] || 0) })).sort((a, b) => b.d - a.d);
+  const nm = sx => WHO[sx] + (online() && ROOM.names[(sx + mySeat) % 4] ? ` · ${ROOM.names[(sx + mySeat) % 4]}` : '');
+  const title = SETC.len === 'round' ? L('紅中局結束', 'Red Dragon round complete') : L('整組結束', 'Set complete');
+  d.innerHTML = `${XBTN()}<h2>${title}</h2><p class="mxnote">${L('這一組的得分變化與目前總分', 'Points gained this set, and your current totals')}</p><div class="selist">${rows.map((r, i) => `<div class="serow${i === 0 ? ' top' : ''}"><span class="serank">${i + 1}</span><span class="sename">${nm(r.sx)}</span><b class="${r.d >= 0 ? 'pos' : 'neg'}">${r.d >= 0 ? '+' : ''}${r.d}</b><span class="setot">${scores[r.sx]}</span></div>`).join('')}</div><div class="mxact">${ROOM.mode === 'guest' ? `<button type="button" class="btn" disabled>${L('等待房主開始新的一組…', 'Waiting for the host to start a new set…')}</button>` : `<button type="button" class="btn primary" id="seNew">${L('再玩一組', 'Play another set')}</button>`}</div>`;
+  const nb = d.querySelector('#seNew'); if (nb) nb.onclick = () => setTimeout(newSet, 0);
+  d.showModal();
+}
 async function play() {
+  if (SETC.fresh) setReset();
   const my = ++runId; ROOM.handNo++;
   if (isHost() && ROOM.tc) { ROOM.bank = [0, 1, 2, 3].map(() => ROOM.tc.a); const m = { t: 'clk', reset: true, banks: ROOM.bank.slice() }; clkApply(m); bcast(m); }
   G = newGame(dealer); G.turn = dealer; G.persona = BOTP.slice(); G.persona0 = G.persona.slice(); HIST = [0, 1, 2, 3].map(s => [handPts(s)]); UI.viewTable = false; UI.locks = []; UI.drawnId = null; UI.sel = null; UI.mode = null; UI.manual = false; UI.order = [];
   LOGS.length = 0; renderLog(); clearActions(); recStart();
   $('#result').close?.(); render();
-  const dl = dealer; log(() => L(`新局，${WHO[dl]}做莊。`, !online() && dl === 0 ? 'New hand. You deal.' : `New hand. ${WHO[dl]} deals.`));
+  const dl = dealer, sl = setLabel(false); log(() => L(`新局（${sl}），${WHO[dl]}做莊。`, !online() && dl === 0 ? `New hand (${sl}). You deal.` : `New hand (${sl}). ${WHO[dl]} deals.`));
   let seat = dealer, rep = false, needDraw = true;
   const alive = () => my === runId;
   while (alive()) {
@@ -3086,7 +3127,7 @@ function finish(res) {
   UI.result = res;
   const ev = res.ev;
   log(() => { const who = WHO[res.winner], how = res.tsumo ? L('自摸', 'self-draw (Zimo)') : L(`${WHO[res.from]}出銃`, `discard from ${WHO[res.from]} (Ron)`); return L(`${who}胡牌（${how}）${evTxt(ev)}`, `${who} won (${how}) ${evTxt(ev)}`); });
-  dealer = res.winner === dealer ? dealer : (dealer + 1) % 4;
+  dealer = (dealer + 1) % 4; setAdvance();   // 每局換莊（輪流），不論有沒有人胡
   showResult(true);
   setStatus(() => L('本局結束。', 'Hand over.'));
   render(); sendResult(res);
@@ -3096,12 +3137,12 @@ function endDraw() {
   log(() => L('流局', 'Draw'));
   HIST.forEach((a, i) => { const v = handPts(i); if (a[a.length - 1] !== v) a.push(v); });
   UI.result = { draw: true, hist: HIST.map(a => a.slice()) };
-  dealer = (dealer + 1) % 4; renderResult(); $('#result').showModal(); $('#result').scrollTop = 0;
+  dealer = (dealer + 1) % 4; setAdvance(); renderResult(); $('#result').showModal(); $('#result').scrollTop = 0;
   setStatus(() => L('流局。', 'Draw.')); render(); sendResult(UI.result);
 }
 function renderResult() {
   const res = UI.result, d = $('#result'); if (!res) return;
-  const next = `<form method="dialog" style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="nextBtn">${L('下一局', 'Next hand')}</button><button class="btn" id="viewTable" type="button">${L('看牌桌', 'View table')}</button></form>`;
+  const next = `<form method="dialog" style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="nextBtn">${SETC.over ? L('查看總結', 'Final standings') : L('下一局', 'Next hand')}</button><button class="btn" id="viewTable" type="button">${L('看牌桌', 'View table')}</button></form>`;
   if (res.draw) {
     d.innerHTML = `<h2>${L('流局', 'Draw')}</h2><p>${L('牌山摸完，沒有人胡牌。', 'The wall ran out and nobody won.')}</p><div class="reveal" id="rv"></div>${next}`;
     const rv = d.querySelector('#rv'); for (let s = 0; s < 4; s++) rv.appendChild(handRow(s, WHO[s]));
@@ -3125,8 +3166,8 @@ function renderResult() {
   }
   d.insertAdjacentHTML('afterbegin', `<div class="rtop">${['rsLang', 'rsRules', 'rsSet'].map((id, i) => `<button class="btn icn" id="${id}" type="button" title="${[L('切換語言', 'Switch language'), L('規則', 'Rules'), L('設定', 'Settings')][i]}" aria-label="${[L('切換語言', 'Switch language'), L('規則', 'Rules'), L('設定', 'Settings')][i]}">${[$('#langBtn').innerHTML, '?', $('#setBtn').innerHTML][i]}</button>`).join('')}</div>`);
   d.querySelector('.rtop').onclick = e => { const b = e.target.closest('button'); if (!b) return; if (b.id === 'rsRules') $('#rules').showModal(); else if (b.id === 'rsSet') { renderSettings(); $('#setDlg').showModal(); } else openLangMenu(b); };
-  if (ROOM.mode === 'guest') { const nb = d.querySelector('#nextBtn'); nb.disabled = true; nb.textContent = L('等待房主開始下一局…', 'Waiting for the host…'); d.querySelector('form').addEventListener('submit', e => e.preventDefault()); }
-  else d.querySelector('#nextBtn').onclick = () => setTimeout(play, 0);
+  if (ROOM.mode === 'guest' && !SETC.over) { const nb = d.querySelector('#nextBtn'); nb.disabled = true; nb.textContent = L('等待房主開始下一局…', 'Waiting for the host…'); d.querySelector('form').addEventListener('submit', e => e.preventDefault()); }
+  else d.querySelector('#nextBtn').onclick = () => setTimeout(SETC.over ? showSetEnd : play, 0);
   d.querySelector('#viewTable').onclick = () => { UI.viewTable = true; d.close(); render(); };
 }
 $('#resBack').onclick = () => { UI.viewTable = false; renderResult(); const d = $('#result'); d.showModal(); d.scrollTop = 0; render(); };
@@ -3236,7 +3277,7 @@ $('#langBtn').onclick = e => openLangMenu(e.currentTarget);
 let toastTm = null;
 function toast(zh, en) { const t = $('#toast'); t.textContent = L(zh, en); t.classList.add('on'); clearTimeout(toastTm); toastTm = setTimeout(() => t.classList.remove('on'), 3800); }
 const humanSeats = () => [0, 1, 2, 3].filter(i => i === 0 || ROOM.kind[i] === 'human');
-function restartNow() { scores = [0, 0, 0, 0]; saveSoloScores(); dealer = 0; $('#result').close?.(); play(); }
+function restartNow() { scores = [0, 0, 0, 0]; saveSoloScores(); dealer = 0; SETC.fresh = true; $('#result').close?.(); play(); }
 function showVote(name, onAnswer) {
   const d = $('#voteDlg');
   d.innerHTML = `<h2>${L('重新開局？', 'Restart the game?')}</h2><p>${L(`<b>${name}</b> 想重新開局（分數歸零）。你同意嗎？`, `<b>${name}</b> wants to restart the game (scores reset). Agree?`)}</p><div class="vb"><button class="btn" data-v="0">${L('不同意', 'Decline')}</button><button class="btn primary" data-v="1">${L('同意', 'Agree')}</button></div>`;
@@ -3351,7 +3392,7 @@ function viewOf(seat) { return a => (a - seat + 4) % 4; }
 function snapshot(sv) {
   const R = viewOf(sv), V = v => (v + sv) % 4, vs = [0, 1, 2, 3];
   return {
-    t: 'state', hn: ROOM.handNo, me: sv, names: ROOM.names,
+    t: 'state', hn: ROOM.handNo, me: sv, names: ROOM.names, set: { len: SETC.len, done: SETC.done },
     hands: vs.map(v => v === 0 ? G.hands[V(0)] : G.hands[V(v)].map(() => ({ id: -1, s: 'z', n: 0, k: 'back' }))),
     melds: vs.map(v => G.melds[V(v)]), discards: vs.map(v => G.discards[V(v)]),
     wall: G.wall.length, turn: G.turn == null ? null : R(G.turn), dealer: R(G.dealer),
@@ -3368,7 +3409,7 @@ function sendResult(res) {
     const c = ROOM.conns[k]; if (!c || !c.open) continue;
     const sv = +k, R = viewOf(sv), V = v => (v + sv) % 4, vs = [0, 1, 2, 3];
     const hist = vs.map(v => res.hist[V(v)]), r = res.draw ? { draw: true, hist } : Object.assign({}, res, { hist, winner: R(res.winner), from: res.from == null ? null : R(res.from), delta: vs.map(v => res.delta[V(v)]) });
-    try { c.send({ t: 'result', res: r, hands: vs.map(v => G.hands[V(v)]), melds: vs.map(v => G.melds[V(v)]), scores: vs.map(v => scores[V(v)]), hn: ROOM.handNo }); } catch (e) {}
+    try { c.send({ t: 'result', res: r, hands: vs.map(v => G.hands[V(v)]), melds: vs.map(v => G.melds[V(v)]), scores: vs.map(v => scores[V(v)]), hn: ROOM.handNo, set: { len: SETC.len, done: SETC.done, over: SETC.over }, ss: vs.map(v => SETC.start[V(v)]) }); } catch (e) {}
   }
 }
 function loadPeer() {
@@ -3385,10 +3426,10 @@ function toSolo(keepMsg) {
   try { ROOM.peer && ROOM.peer.destroy(); } catch (e) {}
   clearInterval(ROOM.wd); clearInterval(ROOM.ping);
   Object.assign(ROOM, { afk: {}, seen: {}, mode: 'solo', code: null, peer: null, conns: {}, kind: ['host', 'bot', 'bot', 'bot'], names: ['', '', '', ''], pending: {}, started: false, conn: null, vote: null, ready: [true, false, false, false], tc: null, zooming: false });
-  ROOM.minFan = 1; applyMinFan();
+  ROOM.minFan = 1; ROOM.setLen = 'set'; applyMinFan();
   CLK.act = {};
   if (!keepMsg) ROOM.msg = '';
-  mySeat = 0; scores = loadSoloScores(); dealer = 0; UI.mode = null; UI.cancelClaim = null;
+  mySeat = 0; scores = loadSoloScores(); dealer = 0; SETC.fresh = true; UI.mode = null; UI.cancelClaim = null;
   $('#newBtn').style.display = ''; updateOnlineBtn(); renderLobby();
   play();
 }
@@ -3400,7 +3441,7 @@ async function createRoom() {
     const code = rndCode(), peer = new Peer('kowloon-' + code, peerOpts);
     peer.on('open', () => {
       runId++; ROOM.peer = peer; ROOM.code = code; ROOM.mode = 'host'; ROOM.started = false; ROOM.conns = {}; ROOM.pending = {};
-      ROOM.kind = ['host', 'open', 'open', 'open']; ROOM.names = [ROOM.myName, '', '', '']; mySeat = 0; G = null; ROOM.msg = ''; ROOM.ready = [true, false, false, false]; ROOM.tc = { a: 30, b: 10 };
+      ROOM.kind = ['host', 'open', 'open', 'open']; ROOM.names = [ROOM.myName, '', '', '']; mySeat = 0; G = null; ROOM.msg = ''; ROOM.ready = [true, false, false, false]; ROOM.tc = { a: 30, b: 10 }; ROOM.setLen = 'set';
       scores = [0, 0, 0, 0]; dealer = 0; clearActions(); updateOnlineBtn(); renderLobby(); hideLanding(); if (!$('#lobby').open) $('#lobby').showModal();
       peer.on('connection', hostConn);
       clearInterval(ROOM.wd); ROOM.wd = setInterval(() => { for (const k in ROOM.conns) { const c = ROOM.conns[k]; if (c && Date.now() - (ROOM.seen[k] || 0) > 15000) c.gone && c.gone(); } }, 4000);
@@ -3448,11 +3489,11 @@ function hostConn(conn) {
   conn.gone = gone; conn.on('close', gone); conn.on('error', gone);
 }
 function sendLobby() {
-  for (const k in ROOM.conns) { const c = ROOM.conns[k]; if (c && c.open) c.send({ t: 'lobby', code: ROOM.code, kind: ROOM.kind, names: ROOM.names, you: +k, started: ROOM.started, ready: ROOM.ready, tc: ROOM.tc, mf: ROOM.minFan }); }
+  for (const k in ROOM.conns) { const c = ROOM.conns[k]; if (c && c.open) c.send({ t: 'lobby', code: ROOM.code, kind: ROOM.kind, names: ROOM.names, you: +k, started: ROOM.started, ready: ROOM.ready, tc: ROOM.tc, mf: ROOM.minFan, sl: ROOM.setLen }); }
 }
 function startGame() {
   if (!isHost() || !allReady()) return;
-  applyMinFan(); ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0; BOTP = [0, 1, 2, 3].map(() => pickPersona());   // 電腦的性格：一場不變，離開再進來才重抽
+  applyMinFan(); ROOM.started = true; scores = [0, 0, 0, 0]; dealer = 0; SETC.fresh = true; BOTP = [0, 1, 2, 3].map(() => pickPersona());   // 電腦的性格：一場不變，離開再進來才重抽
   dragonZoom(() => { $('#lobby').close(); updateOnlineBtn(); play(); }); sendLobby();
 }
 const allReady = () => ROOM.kind.slice(1).every((k, i) => k === 'bot' || (k === 'human' && ROOM.ready[i + 1]));
@@ -3487,7 +3528,7 @@ function guestMsg(m, conn, peer, markJoined, code) {
     markJoined();
     if (ROOM.mode !== 'guest') { runId++; ROOM.mode = 'guest'; ROOM.peer = peer; ROOM.conn = conn; G = null; clearActions(); }
     const was = ROOM.started;
-    Object.assign(ROOM, { code, kind: m.kind, names: m.names, started: m.started, msg: '', ready: m.ready || ROOM.ready, tc: m.tc || null, minFan: m.mf === 2 ? 2 : 1 }); applyMinFan(); mySeat = m.you; updateOnlineBtn(); hideLanding();
+    Object.assign(ROOM, { code, kind: m.kind, names: m.names, started: m.started, msg: '', ready: m.ready || ROOM.ready, tc: m.tc || null, minFan: m.mf === 2 ? 2 : 1, setLen: m.sl || 'set' }); applyMinFan(); mySeat = m.you; updateOnlineBtn(); hideLanding();
     if (!was && m.started) dragonZoom(() => { if ($('#lobby').open) $('#lobby').close(); });
     renderLobby(); if (!m.started && !$('#lobby').open) $('#lobby').showModal(); return;
   }
@@ -3504,7 +3545,8 @@ function guestMsg(m, conn, peer, markJoined, code) {
     return;
   }
   if (m.t === 'state') {
-    if (m.hn !== ROOM.handNo) { UI.viewTable = false; ROOM.handNo = m.hn; LOGS.length = 0; renderLog(); UI.manual = false; UI.order = []; UI.locks = []; UI.sel = null; UI.mode = null; $('#result').close?.(); clearActions(); }
+    if (m.set) { SETC.len = m.set.len; SETC.done = m.set.done; SETC.over = false; }
+    if (m.hn !== ROOM.handNo) { $('#setEnd').close?.(); UI.viewTable = false; ROOM.handNo = m.hn; LOGS.length = 0; renderLog(); UI.manual = false; UI.order = []; UI.locks = []; UI.sel = null; UI.mode = null; $('#result').close?.(); clearActions(); }
     ROOM.names = m.names; mySeat = m.me; ROOM.started = true;
     { const cnt = a => a.reduce((x, y) => x + y.length, 0), same = G && m.hn === ROOM.handNo && G.discards;
       if (same) { const nm = cnt(m.melds) - cnt(G.melds); if (nm > 0) { const last = m.melds.flat().some(x => x.type === 'kong') && cnt(m.melds.map(a => a.filter(x => x.type === 'kong'))) > cnt(G.melds.map(a => a.filter(x => x.type === 'kong'))) ? 'kong' : 'pung'; sfxMeld(last); } else if (cnt(m.discards) > cnt(G.discards)) SFX.place(); } }
@@ -3524,6 +3566,7 @@ function guestMsg(m, conn, peer, markJoined, code) {
     if (UI.mode === 'claim' && UI.cancelClaim) { UI.cancelClaim(); clearActions(); render(); }
   } else if (m.t === 'result') {
     G.hands = m.hands; G.melds = m.melds; scores = m.scores; UI.mode = null; clearActions();
+    if (m.set) { SETC.len = m.set.len; SETC.done = m.set.done; SETC.over = !!m.set.over; SETC.start = m.ss || SETC.start; }
     UI.result = m.res; showResult(!m.res.draw);
     setStatus(() => L(m.res.draw ? '流局。' : '本局結束。', m.res.draw ? 'Draw.' : 'Hand over.')); render();
   }
@@ -3563,8 +3606,10 @@ function renderLobby() {
       <div class="tcrow${tc ? '' : ' off'}">A ${L('時間庫', 'bank')} ${sel('tcA', [0, 10, 15, 20, 30, 45, 60, 90, 120], tc ? tc.a : 30)} ${L('秒', 's')} <span>+</span> B ${L('每手', 'per turn')} ${sel('tcB', [3, 5, 8, 10, 15, 20, 30], tc ? tc.b : 10)} ${L('秒', 's')}</div>
       <p class="note" title="${L('每次出牌或鳴牌有 B 秒；B 用完才動用 A（每局重設，所有人共用同一設定）。時間到自動由電腦代打。', 'Each turn or claim gets B seconds; once B runs out your A bank drains (reset every hand, same for everyone). At zero a bot plays for you.')}">${L('B 秒用完才動用 A（每局重設）；時間到由電腦代打。', 'B runs out first, then A drains (reset each hand). At 0 a bot plays.')}</p>
       <h3>${L('起胡番數', 'Minimum to win')}</h3>
-      <div class="chips"><button type="button" class="chip ${ROOM.minFan === 2 ? '' : 'on'}" data-mf="1">${L('一番起胡', '1 fan min')}</button><button type="button" class="chip ${ROOM.minFan === 2 ? 'on' : ''}" data-mf="2">${L('兩番起胡', '2 fan min')}</button></div>`
-    : `<h3>${L('思考時間', 'Time control')}</h3><p class="note" style="margin-top:0">${tcTxt(tc)}${tc ? ' · A ' + L('時間庫', 'bank') + ' + B ' + L('每手', 'per turn') : ''}</p><h3>${L('起胡番數', 'Minimum to win')}</h3><p class="note" style="margin-top:0">${ROOM.minFan === 2 ? L('兩番起胡', '2 fan min') : L('一番起胡', '1 fan min')}</p>`;
+      <div class="chips"><button type="button" class="chip ${ROOM.minFan === 2 ? '' : 'on'}" data-mf="1">${L('一番起胡', '1 fan min')}</button><button type="button" class="chip ${ROOM.minFan === 2 ? 'on' : ''}" data-mf="2">${L('兩番起胡', '2 fan min')}</button></div>
+      <h3>${L('對局長度', 'Game length')}</h3>
+      <div class="chips">${[['round', '單輪（4 局）', 'One round (4 hands)'], ['set', '整組（12 局）', 'Full set (12 hands)'], ['endless', '無限', 'Endless']].map(([v, zh, en]) => `<button type="button" class="chip ${(ROOM.setLen || 'set') === v ? 'on' : ''}" data-sl="${v}">${L(zh, en)}</button>`).join('')}</div>`
+    : `<h3>${L('思考時間', 'Time control')}</h3><p class="note" style="margin-top:0">${tcTxt(tc)}${tc ? ' · A ' + L('時間庫', 'bank') + ' + B ' + L('每手', 'per turn') : ''}</p><h3>${L('起胡番數', 'Minimum to win')}</h3><p class="note" style="margin-top:0">${ROOM.minFan === 2 ? L('兩番起胡', '2 fan min') : L('一番起胡', '1 fan min')}</p><h3>${L('對局長度', 'Game length')}</h3><p class="note" style="margin-top:0">${({ round: L('單輪（4 局）', 'One round (4 hands)'), set: L('整組（12 局）', 'Full set (12 hands)'), endless: L('無限', 'Endless') })[ROOM.setLen || 'set']}</p>`;
   const acts = !pre ? '' : hostMode
     ? `<div class="acts"><button class="btn big" id="lbFill" type="button" ${open ? '' : 'disabled'}>${L('空位全部用電腦補', 'Fill empty seats with bots')}</button>
         <button class="btn primary big" id="lbStart" type="button" ${allReady() ? '' : 'disabled'}>${L('開始遊戲', 'Start game')}</button></div>
@@ -3591,6 +3636,7 @@ $('#lobby').addEventListener('click', e => {
   else if (t.id === 'lbStart') startGame();
   else if (t.id === 'lbClose') $('#lobby').close();
   else if (t.id === 'lbReady') { const v = !ROOM.ready[mySeat]; ROOM.ready[mySeat] = v; try { ROOM.conn.send({ t: 'ready', v }); } catch (x) {} renderLobby(); }
+  else if (t.dataset.sl != null && isHost() && !t.closest('#landing')) { ROOM.setLen = t.dataset.sl; sendLobby(); renderLobby(); }
   else if (t.dataset.mf != null && isHost()) { ROOM.minFan = +t.dataset.mf === 2 ? 2 : 1; applyMinFan(); sendLobby(); renderLobby(); }
   else if (t.dataset.tc != null && isHost()) { ROOM.tc = TC_PRESETS[+t.dataset.tc] ? Object.assign({}, TC_PRESETS[+t.dataset.tc]) : null; sendLobby(); renderLobby(); }
   else if (t.id === 'lbLeave') { toSolo(); $('#lobby').close(); showLanding(); }
@@ -3917,6 +3963,8 @@ function renderSettings() {
     <h3>${L('背景音樂', 'Background music')}</h3><div class="chips">${chip('music', 'on', '開', 'On', PREF.music !== 'off')}${chip('music', 'off', '關', 'Off', PREF.music === 'off')}</div>
     <div class="vol"><span>${L('音量', 'Volume')}</span><input type="range" id="stMusicVol" min="0" max="100" step="1" value="${PREF.musicVol}" aria-label="${L('背景音樂音量', 'Background music volume')}"><output id="stMusicOut">${PREF.musicVol}%</output></div>
     <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', PREF.botLvl !== 'pro' && PREF.botLvl !== 'pro2')}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}${chip('bot', 'pro2', '高手・兩番起胡', 'Expert · 2 fan min', PREF.botLvl === 'pro2')}</div>
+    <h3>${L('對局長度', 'Game length')}</h3><div class="chips">${chip('sl', 'round', '單輪（4 局）', 'One round (4 hands)', PREF.setLen === 'round')}${chip('sl', 'set', '整組（12 局）', 'Full set (12 hands)', PREF.setLen === 'set')}${chip('sl', 'endless', '無限', 'Endless', PREF.setLen !== 'round' && PREF.setLen !== 'set')}</div>
+    <p class="note" style="margin:6px 0 0">${L('每局輪流換莊。三輪＝紅中局、發財局、白板局，每輪 4 局。', 'The deal passes on every hand. A full set is three rounds of 4 hands: Red, Green and White Dragon.')}</p>
     <p class="note" style="margin:6px 0 0">${L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。選「兩番起胡」時，全桌（包括你）都要 2 番以上才能胡（碎番也計）。', 'Expert bots plan their hands, track what has been played, read the table and play defensively. "2 fan min" makes the whole table, you included, need 2 fan or more to win (half fans count).')}</p>
     <div class="phoneonly"><h3>${L('打出按鈕位置', 'Discard button side')}</h3><div class="chips">${chip('dock', 'right', '右', 'Right', PREF.dockSide !== 'left')}${chip('dock', 'left', '左', 'Left', PREF.dockSide === 'left')}</div></div>
     <h3>${L('牌局記錄（分析用）', 'Hand history (for analysis)')}</h3><div class="chips">${chip('rec', 'on', '開', 'On', PREF.recOn === 'on')}${chip('rec', 'off', '關', 'Off', PREF.recOn !== 'on')}</div>
@@ -3935,6 +3983,7 @@ $('#setDlg').addEventListener('click', e => {
   else if (g === 'music') { PREF.music = v; musicApply(); renderSettings(); }
   else if (g === 'dock') { PREF.dockSide = v === 'left' ? 'left' : 'right'; savePref(); renderSettings(); if (G) render(); return; }
   else if (g === 'rec') { PREF.recOn = v === 'on' ? 'on' : 'off'; savePref(); renderSettings(); return; }
+  else if (g === 'sl') { PREF.setLen = v === 'round' || v === 'set' ? v : 'endless'; savePref(); if (!online()) { setReset(); render(); } renderSettings(); return; }
   else if (g === 'bot') { PREF.botLvl = v === 'pro' || v === 'pro2' ? v : 'easy'; applyBotLvl(); savePref(); renderSettings(); return; }
   else { LANG = v === 'en' ? 'en' : v === 'ja' ? 'ja' : 'zh'; if (v === 'tc' || v === 'sc') PREF.script = v === 'sc' ? 's' : 't'; }
   savePref(); applyLang();
@@ -4009,6 +4058,7 @@ function renderLanding() {
         <div class="joinrow"><input class="cd" id="lnCode" maxlength="4" value="${cd}" placeholder="${L('房間代碼', 'ROOM CODE')}" aria-label="${L('房間代碼', 'Room code')}" autocomplete="off"><button class="btn big2" id="lnGo" type="button">${L('加入房間', 'Join room')}</button></div>
         <button class="btn big" id="lnBots" type="button">${L('電腦對戰', 'Play with bots')}<small>${L('一人對三個電腦，即刻開局', 'You vs 3 bots, start right away')}</small></button>
         <div class="botlv"><span>${L('電腦強度', 'Bot level')}</span><button type="button" class="chip ${PREF.botLvl !== 'pro' && PREF.botLvl !== 'pro2' ? 'on' : ''}" data-bot="easy">${L('新手', 'Easy')}</button><button type="button" class="chip ${PREF.botLvl === 'pro' ? 'on' : ''}" data-bot="pro">${L('高手', 'Expert')}</button><button type="button" class="chip ${PREF.botLvl === 'pro2' ? 'on' : ''}" data-bot="pro2">${L('高手・兩番起胡', 'Expert · 2 fan min')}</button></div>
+        <div class="botlv"><span>${L('對局長度', 'Length')}</span><button type="button" class="chip ${PREF.setLen === 'round' ? 'on' : ''}" data-sl="round">${L('單輪', '1 round')}</button><button type="button" class="chip ${PREF.setLen === 'set' ? 'on' : ''}" data-sl="set">${L('整組', 'Full set')}</button><button type="button" class="chip ${PREF.setLen !== 'round' && PREF.setLen !== 'set' ? 'on' : ''}" data-sl="endless">${L('無限', 'Endless')}</button></div>
         <p class="err" id="lnMsg" aria-live="polite">${ROOM.msg || ''}</p>
       </div>
       <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed Pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragons · 6 fan cap')}</span></div>
@@ -4017,10 +4067,12 @@ function renderLanding() {
   const c = $('#lnCode'); if (c) c.addEventListener('input', () => { c.value = c.value.toUpperCase().replace(/[^A-Z]/g, ''); });
 }
 $('#landing').addEventListener('click', e => {
+  const sl = e.target.closest('#landing button[data-sl]');
+  if (sl) { PREF.setLen = sl.dataset.sl; savePref(); $('#landing').querySelectorAll('button[data-sl]').forEach(b => b.classList.toggle('on', b === sl)); return; }
   const lv = e.target.closest('button[data-bot]');
   if (lv) { PREF.botLvl = ['pro', 'pro2'].includes(lv.dataset.bot) ? lv.dataset.bot : 'easy'; applyBotLvl(); savePref(); $('#landing').querySelectorAll('button[data-bot]').forEach(b => b.classList.toggle('on', b === lv)); return; }
   const t = e.target.closest('button'); if (!t) return;
-  if (t.id === 'lnBots') { try { const n = cleanName(($('#lnName') || {}).value); if (n) localStorage.setItem('yjl-name', n); } catch (x) {} if (ROOM.zooming) return; dragonZoom(() => { if (online()) toSolo(); play(); hideLanding(); }); }
+  if (t.id === 'lnBots') { try { const n = cleanName(($('#lnName') || {}).value); if (n) localStorage.setItem('yjl-name', n); } catch (x) {} if (ROOM.zooming) return; dragonZoom(() => { if (online()) toSolo(); SETC.fresh = true; play(); hideLanding(); }); }
   else if (t.id === 'lnCreate') createRoom();
   else if (t.id === 'lnGo') joinRoom();
   else if (t.id === 'lnLang') openLangMenu(t);
