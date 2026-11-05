@@ -159,7 +159,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
       const fl = flushOf(sp.pairs.flatMap(k => [k, k]), 0, 0); if (fl) items.push(fl);
       if (isConcealed && tsumo) items.push({ name: '不求人', fan: RULES.BQ_FAN });
       if (concealed.every(t => t.s !== 'z' && t.n >= 7)) items.push({ name: '全小字', fan: 3 });
-      if (concealed.every(t => t.s === 'z' || t.n <= 6)) items.push({ name: '斷小字', fan: 2 });
+      if (concealed.every(noSmallOk)) items.push({ name: noSmallName(), fan: 2 });
       cands.push(finish(items, 0, null, { pair: 'seven' }));
     }
   }
@@ -211,7 +211,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     // 混一色／彩一色：第一副三元刻不另計（已包含在混一色內）
     if (fl && fl.name !== '清一色') { const di = items.findIndex(x => x.name === '三元刻'); if (di >= 0) items.splice(di, 1); }
     if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全小字', 3);
-    if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷小字', 2);
+    if (allTiles.every(noSmallOk)) add(noSmallName(), 2);
     if (isConcealed && tsumo && !items.some(x => x.name === '四暗刻')) add('不求人', RULES.BQ_FAN);   // 四暗刻已經是門清，自摸只加自摸半番
     cands.push(finish(items, bonus, bonusName, { pair: d.pair, sets: d.sets }));
   }
@@ -374,6 +374,9 @@ function botClaims(g, from, t, skip = []) {
 }
 
 /* ---- 高手電腦：算向聽數、看牌效率與場上形勢（鳴牌、已見牌），不亂打 ---- */
+RULES.NS_NODRAG = true;   // 斷小字無三元：不只沒有 1–3，也不能有三元牌
+function noSmallOk(t) { return t.s === 'z' ? !RULES.NS_NODRAG : t.n <= 6; }
+function noSmallName() { return RULES.NS_NODRAG ? '斷小字無三元' : '斷小字'; }
 RULES.CAI_FAN = 2; RULES.CAI_PURE = true;   // 彩一色的番數；只限清一色
 RULES.BOT_LEVEL = 'easy';   // 'easy' | 'pro' | 'pro2'（高手＋兩番起胡）；模擬時可用 g.botLv[seat] 逐家指定
 // 貪番（像真人一樣：牌山還長、手上已能胡時，放掉小胡，改做更大的牌）
@@ -519,7 +522,7 @@ function planList(a, melds) {
     if (a[z] >= 3) { const c = a.slice(); c[z] -= 3; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 1, p: 0 }), b: 24 }); }
     else if (a[z] === 2) { const c = a.slice(); c[z] -= 2; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 0, p: 1 }) + 0, b: 24 }); }
   }
-  if (!mTiles.some(t => t.s !== 'z' && t.n >= 7)) plans.push({ n: 'nosmall', sh: shanten(mask(i => i >= 27 || i % 9 <= 5), need, 'normal'), b: 30 });
+  if (!mTiles.some(t => t.s !== 'z' && t.n >= 7)) plans.push({ n: 'nosmall', sh: shanten(mask(i => i < 27 ? i % 9 <= 5 : !RULES.NS_NODRAG), need, 'normal'), b: 30 });
   for (let su = 0; su < 3; su++) {
     if (mTiles.some(t => t.s !== 'z' && ORD[t.s + 1] !== su * 9)) continue;
     plans.push({ n: 'flush' + su, sh: shanten(mask(i => i >= 27 || Math.floor(i / 9) === su), need, 'normal'), b: 28 });

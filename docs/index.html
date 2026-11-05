@@ -877,7 +877,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
       const fl = flushOf(sp.pairs.flatMap(k => [k, k]), 0, 0); if (fl) items.push(fl);
       if (isConcealed && tsumo) items.push({ name: '不求人', fan: RULES.BQ_FAN });
       if (concealed.every(t => t.s !== 'z' && t.n >= 7)) items.push({ name: '全小字', fan: 3 });
-      if (concealed.every(t => t.s === 'z' || t.n <= 6)) items.push({ name: '斷小字', fan: 2 });
+      if (concealed.every(noSmallOk)) items.push({ name: noSmallName(), fan: 2 });
       cands.push(finish(items, 0, null, { pair: 'seven' }));
     }
   }
@@ -929,7 +929,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
     // 混一色／彩一色：第一副三元刻不另計（已包含在混一色內）
     if (fl && fl.name !== '清一色') { const di = items.findIndex(x => x.name === '三元刻'); if (di >= 0) items.splice(di, 1); }
     if (allTiles.every(t => t.s !== 'z' && t.n >= 7)) add('全小字', 3);
-    if (allTiles.every(t => t.s === 'z' || t.n <= 6)) add('斷小字', 2);
+    if (allTiles.every(noSmallOk)) add(noSmallName(), 2);
     if (isConcealed && tsumo && !items.some(x => x.name === '四暗刻')) add('不求人', RULES.BQ_FAN);   // 四暗刻已經是門清，自摸只加自摸半番
     cands.push(finish(items, bonus, bonusName, { pair: d.pair, sets: d.sets }));
   }
@@ -1092,6 +1092,9 @@ function botClaims(g, from, t, skip = []) {
 }
 
 /* ---- 高手電腦：算向聽數、看牌效率與場上形勢（鳴牌、已見牌），不亂打 ---- */
+RULES.NS_NODRAG = true;   // 斷小字無三元：不只沒有 1–3，也不能有三元牌
+function noSmallOk(t) { return t.s === 'z' ? !RULES.NS_NODRAG : t.n <= 6; }
+function noSmallName() { return RULES.NS_NODRAG ? '斷小字無三元' : '斷小字'; }
 RULES.CAI_FAN = 2; RULES.CAI_PURE = true;   // 彩一色的番數；只限清一色
 RULES.BOT_LEVEL = 'easy';   // 'easy' | 'pro' | 'pro2'（高手＋兩番起胡）；模擬時可用 g.botLv[seat] 逐家指定
 // 貪番（像真人一樣：牌山還長、手上已能胡時，放掉小胡，改做更大的牌）
@@ -1237,7 +1240,7 @@ function planList(a, melds) {
     if (a[z] >= 3) { const c = a.slice(); c[z] -= 3; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 1, p: 0 }), b: 24 }); }
     else if (a[z] === 2) { const c = a.slice(); c[z] -= 2; plans.push({ n: 'dragon', sh: shanten(c, need, 'normal', { s: 0, p: 1 }) + 0, b: 24 }); }
   }
-  if (!mTiles.some(t => t.s !== 'z' && t.n >= 7)) plans.push({ n: 'nosmall', sh: shanten(mask(i => i >= 27 || i % 9 <= 5), need, 'normal'), b: 30 });
+  if (!mTiles.some(t => t.s !== 'z' && t.n >= 7)) plans.push({ n: 'nosmall', sh: shanten(mask(i => i < 27 ? i % 9 <= 5 : !RULES.NS_NODRAG), need, 'normal'), b: 30 });
   for (let su = 0; su < 3; su++) {
     if (mTiles.some(t => t.s !== 'z' && ORD[t.s + 1] !== su * 9)) continue;
     plans.push({ n: 'flush' + su, sh: shanten(mask(i => i >= 27 || Math.floor(i / 9) === su), need, 'normal'), b: 28 });
@@ -1633,7 +1636,7 @@ const $ = s => document.querySelector(s);
 const SEAT_JA = ['あなた', '下家', '対面', '上家'];
 const YAKU_JA = {
   '三元刻': '役牌（三元牌）', '平胡': '平和', '對對胡': '対々和', '彩一色': '彩一色',
-  '混一色': '混一色', '清一色': '清一色', '全小字': '全小字', '斷小字': '断小字', '不求人': '不求人（門前ツモ）',
+  '混一色': '混一色', '清一色': '清一色', '全小字': '全小字', '斷小字': '断小字', '斷小字無三元': '断小字無三元', '不求人': '不求人（門前ツモ）',
   '三暗刻': '三暗刻', '四暗刻': '四暗刻', '七對子': '七対子', '小三元': '小三元', '大三元': '大三元',
   '幺九順': '一気通貫（幺九順）', '門清幺九順': '門前幺九順', '幺九龍': '幺九龍', '門清幺九龍': '門前幺九龍', '槓三元': '三元カン',
   '天胡': '天和', '地胡': '地和', '人胡': '人和', '槓': 'カン', '三元大補槓': '三元大カン', '門清': '門前',
@@ -1694,7 +1697,7 @@ const JA_EXACT = {
   '紅中／發財／白板刻子，明暗皆可，每組 +1': '白・發・中の刻子。明暗どちらも可、1組ごとに +1', '全順子、無三元': '順子のみ・三元牌なし',
   '4 刻 + 眼（彩碰可）': '刻子4組＋雀頭（彩ポン可）', '混一色或清一色，眼是彩眼，至少一張為主色（首副三元刻不另計）': '混一色／清一色で雀頭が彩雀頭、主色1枚以上（最初の三元刻は別計算しない）',
   '混一色或清一色，一刻是彩碰，至少一張為主色（首副三元刻不另計）': '混一色／清一色で刻子の1つが彩ポン、主色1枚以上（最初の三元刻は別計算しない）',
-  '一門 + 三元（首副三元刻不另計）': '1色＋三元牌（最初の三元刻は別計算しない）', '無鳴牌、自摸': '副露なし・ツモ', '沒有 1–3': '1〜3を含まない',
+  '一門 + 三元（首副三元刻不另計）': '1色＋三元牌（最初の三元刻は別計算しない）', '無鳴牌、自摸': '副露なし・ツモ', '沒有 1–3、沒有三元牌': '1〜3なし・三元牌なし', '沒有 1–3': '1〜3を含まない',
   '3 組暗刻': '暗刻3組', '7 對，可重複，不可彩眼': '7対（同じ牌4枚＝2対も可）、彩雀頭は不可',
   '2 刻 + 1 眼 · +30': '刻子2＋雀頭1 ・ +30', '全部 1–3': 'すべて1〜3', '同花 123·456·789 · 其餘任一面子': '同色123・456・789 ＋ 残り1組は何でも',
   '一門、無三元（不含彩碰／彩眼）': '1色のみ・三元牌なし（彩ポン／彩雀頭は不可）', '4 組暗刻': '暗刻4組', '4 組暗刻（不另計對對胡、不求人）': '暗刻4組（対々和・不求人は別計算しない）', '有鳴牌，或四暗刻自摸': '副露がある手、または四暗刻のツモ', '三元全刻 · +60': '三元牌すべて刻子 ・ +60',
@@ -1765,7 +1768,7 @@ const JA_RUBY = [
   ['欠一門無字', '<ruby>欠一門無字<rt>ケツイーメンムジ</rt></ruby>'],
   ['彩一色', '<ruby>彩一色<rt>さいイーソー</rt></ruby>'],
   ['彩ポン', '<ruby>彩<rt>さい</rt></ruby>ポン'], ['彩チー', '<ruby>彩<rt>さい</rt></ruby>チー'],
-  ['不求人', '<ruby>不求人<rt>プーチウレン</rt></ruby>'], ['全小字', '<ruby>全小字<rt>ぜんしょうじ</rt></ruby>'], ['断小字', '<ruby>断小字<rt>だんしょうじ</rt></ruby>'],
+  ['不求人', '<ruby>不求人<rt>プーチウレン</rt></ruby>'], ['全小字', '<ruby>全小字<rt>ぜんしょうじ</rt></ruby>'], ['断小字', '<ruby>断小字<rt>だんしょうじ</rt></ruby>'], ['断小字無三元', '<ruby>断小字<rt>だんしょうじ</rt></ruby>無三元'],
   ['大字牌', '<ruby>大字牌<rt>だいじはい</rt></ruby>'], ['小字牌', '<ruby>小字牌<rt>しょうじはい</rt></ruby>'],
 ];
 const JA_RUBY_RX = new RegExp(JA_RUBY.map(x => x[0]).sort((a, b) => b.length - a.length).join('|'), 'g');
@@ -1806,7 +1809,7 @@ ORDER.forEach(k => { if (k[0] !== 'z') ORD[k] = ORDER.indexOf(k[0] + '1') + (9 -
 const tn = t => { if (t.s !== 'z') t = { ...t, n: 10 - t.n }; return LANG === 'en' ? enTile(t.s, t.n) : LANG === 'zh' && t.s === 'z' ? ZH_DRAGON[t.n] : tname(t); };
 const kn = k => tn({ s: k[0], n: +k.slice(1), k });
 const knFull = k => LANG === 'en' ? enTile(k[0], k[0] === 'z' ? +k.slice(1) : dnum(+k.slice(1))) : kn(k);
-const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Blessing of Heaven','地胡':'Blessing of Earth','人胡':'Blessing of Man','槓':'Kong','三元大補槓':'Grand dragon Kong','門清':'Concealed','自摸':'Self-draw','海底撈月':'Win on Last Tile','槓上自摸':'Win on Kong','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
+const YAKU_EN = {'三元刻':'Dragon triplet','平胡':'All Sequences','對對胡':'All Triplets','彩一色':'Mixed Flush','混一色':'Half Flush','清一色':'Full Flush','全小字':'All Small','斷小字':'No Small','斷小字無三元':'No Small, No Dragons','不求人':'Concealed Self-Draw','三暗刻':'Three Concealed Triplets','四暗刻':'Four Concealed Triplets','七對子':'Seven Pairs','小三元':'Small Dragons','大三元':'Great Dragons','幺九順':'Kowloon Straight','門清幺九順':'Concealed Kowloon Straight','幺九龍':'Kowloon Dragons','門清幺九龍':'Concealed Kowloon Dragons','槓三元':'Dragon Kongs','天胡':'Blessing of Heaven','地胡':'Blessing of Earth','人胡':'Blessing of Man','槓':'Kong','三元大補槓':'Grand dragon Kong','門清':'Concealed','自摸':'Self-draw','海底撈月':'Win on Last Tile','槓上自摸':'Win on Kong','斷一門無三元':'Missing suit, no dragons','胡大字':'Win on big tile'};
 const yn = name => { if (LANG === 'zh') return name; const m = name.match(/^(.+?)(×\d+)?$/), T = LANG === 'ja' ? YAKU_JA : YAKU_EN; return (T[m[1]] || m[1]) + (m[2] ? ' ' + m[2] : ''); };
 const ICON = { p: 'c', s: 'k', m: 'w' };
 const faceHTML = (sx, n, badge) => sx === 'z'
@@ -1831,7 +1834,7 @@ const HAND_EX = [
   [2, '彩一色', 'Mixed Flush', 'p1 s1|p2 p3 p4|p4 p5 p6|p5 p6 p7|p7 p8 p9'],
   [2, '彩一色', 'Mixed Flush', 'p1 s1 m1|p2 p3 p4|p4 p5 p6|p5 p6 p7|p8 p8'],
   [2, '混一色', 'Half Flush', 'p1 p2 p3|p4 p5 p6|p5 p5 p5|z1 z1 z1|p8 p8'],
-  [2, '斷小字', 'No Small', 'p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'],
+  [2, '斷小字無三元', 'No Small, No Dragons', 'p2 p3 p4|s3 s4 s5|m4 m5 m6|p4 p5 p6|s6 s6'],
   [1, '三暗刻', 'Three Concealed Triplets', 'p4 p4 p4|s5 s5 s5|m6 m6 m6|p1 p2 p3|s2 s2'],
   [2, '七對子', 'Seven Pairs', 'p8 p8|p8 p8|s7 s7|s9 s9|m7 m7|m9 m9|z1 z1'],
   [3, '小三元', 'Small Dragons', 'z1 z1 z1|z2 z2 z2|z3 z3|p2 p3 p4|s4 s5 s6'],
@@ -1858,7 +1861,7 @@ const EXGEN = {
   '對對胡': () => [exRpg(), exRpg(), exRpg(), exRpg(), exRpr()],
   '彩一色': () => (exR(2) ? (() => { const x = exPick(EXS), o = exPick(EXS.filter(q => q !== x)), n = 1 + exR(3); return [`${x}${n} ${o}${n}`, exRch(x), exRch(x), exSet(x), exSet(x)]; })() : (() => { const x = exPick(EXS), n = 1 + exR(3), o = EXS.filter(q => q !== x); return [exR(2) ? `${x}${n} ${o[0]}${n} ${o[1]}${n}` : `${x}${n} ${x}${n} ${exPick(o)}${n}`, exRch(x), exRch(x), exRch(x), exRpr(x)]; })()),
   '混一色': () => { const x = exPick(EXS); return [exSet(x), exSet(x), exR(2) ? exDpg() : exSet(x), exDpg(), exR(2) ? exRpr(x) : 'z' + (1 + exR(3)) + ' z' + (1 + exR(3))]; },
-  '斷小字': () => [exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRpg(undefined, 3, 6), exRpr(undefined, 2, 6)],
+  '斷小字無三元': () => [exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRch(undefined, 1, 4), exRpg(undefined, 3, 6), exRpr(undefined, 2, 6)],
   '三暗刻': () => [exRpg(), exRpg(), exRpg(), exRch(), exRpr()],
   '七對子': () => { const ks = []; while (ks.length < 7) { const k = exPick(EXS) + (2 + exR(8)); if (!ks.includes(k)) ks.push(k); } return ks.map(k => k + ' ' + k); },
   '小三元': () => { const d = exPick([[1, 2, 3], [2, 3, 1], [3, 1, 2]]); return [exPg('z', d[0]), exPg('z', d[1]), `z${d[2]} z${d[2]}`, exRch(), exSet(exPick(EXS))]; },
@@ -1980,7 +1983,7 @@ zh: `  <h2>規則</h2>
       <ul>
         <li><b>混一色</b>：一門 + 三元。不可彩碰、彩刻、彩眼；第一副三元刻不另計。</li>
         <li><b>彩一色</b>：清一色（無三元），但其中恰有一處是「彩」：眼是彩眼，或其中一刻是彩碰／彩刻；該彩眼／彩碰／彩刻必須至少有一張是主色（例如 8筒8筒8萬 在筒子手牌）；彩眼和彩碰不可同時有，多於一刻彩碰也不可；有三元的混一色不算。</li>
-        <li><b>斷小字</b>：整副手牌沒有 1–3。</li>
+        <li><b>斷小字無三元</b>：整副手牌沒有 1–3，也沒有三元牌（中發白）。</li>
         <li><b>七對子</b>：門清狀態下組成 7 對。四張相同算兩對（如 2222）；可疊混一色、清一色；不可彩眼；不重複算門清。</li>
       </ul>
     </li>
@@ -2127,7 +2130,7 @@ en: `  <h2>Kowloon Dragons (幺九龍): Rules</h2>
       <ul>
         <li><b>Half Flush (混一色)</b>: one suit plus dragons. No mixed Pung, mixed triplet or mixed pair The first dragon triplet isn't counted separately.</li>
         <li><b>Mixed Flush (彩一色)</b>: a Full Flush (no dragons) with exactly one mixed part: either the pair is a mixed pair, or one of the triplets is a mixed Pung / mixed triplet. That mixed pair, Pung or triplet must contain at least one tile of the main suit (e.g. 8-Circle 8-Circle 8-Character in a Circles hand). A mixed pair and a mixed Pung together, or more than one mixed Pung, don't count. A Half Flush with a mixed part doesn't count.</li>
-        <li><b>No Small (斷小字)</b>: no 1–3 anywhere in the hand.</li>
+        <li><b>No Small, No Dragons (斷小字無三元)</b>: no 1–3 and no dragon tiles anywhere in the hand.</li>
         <li><b>Seven Pairs (七對子)</b>: seven pairs, all concealed. Four of a kind counts as two pairs (2222). No mixed pair. Can stack with Half Flush and Full Flush. No Concealed bonus on top.</li>
       </ul>
     </li>
@@ -2234,7 +2237,7 @@ RULES_HTML.ja = `  <h2>ルール</h2>
       <ul>
         <li><b>混一色</b>：1色＋三元牌。彩ポン・彩刻子・彩雀頭は不可。最初の三元刻は別計算しない。</li>
         <li><b>彩一色</b>：清一色（三元牌なし）で、「彩」の部分がちょうど1つだけあるもの（雀頭が彩雀頭、または刻子の1つが彩ポン／彩刻子）。該当の彩雀頭・彩ポン・彩刻子に主色が1枚以上あること（例：八筒八筒八萬 を筒子の手で）。彩雀頭と彩ポンの併用、彩ポン2組以上は不可。三元牌のある混一色は対象外です。</li>
-        <li><b>断小字</b>：手牌に1〜3が1枚もない。</li>
+        <li><b>断小字無三元</b>：手牌に1〜3が1枚もなく、三元牌（白・發・中）もない。</li>
         <li><b>七対子</b>：門前（鳴きなし）で7対をそろえる。同じ牌4枚＝2対も可（2222）。混一色・清一色と複合可。彩雀頭は不可。門前は別計算しない。</li>
       </ul>
     </li>
@@ -3129,7 +3132,7 @@ function renderResult() {
 $('#resBack').onclick = () => { UI.viewTable = false; renderResult(); const d = $('#result'); d.showModal(); d.scrollTop = 0; render(); };
 const CHEAT_TIERS = [
   [1, [['三元刻', '紅中／發財／白板刻子，明暗皆可，每組 +1', 'Red/Green/White Dragon triplet, open or concealed, +1 each'], ['平胡', '全順子、無三元', 'all sequences, no dragons'], ['對對胡', '4 刻 + 眼（彩碰可）', '4 triplets + pair (mixed Pung ok)'], ['不求人', '無鳴牌、自摸', 'no calls, self-draw'], ['三暗刻', '3 組暗刻', '3 concealed triplets'], ]],
-  [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['彩一色', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色', 'full flush (no dragons) with exactly one mixed part (mixed pair or one mixed Pung), at least one tile in the main suit'], ['斷小字', '沒有 1–3', 'no 1–3'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 2222 ok, no mixed pair']]],
+  [2, [['混一色', '一門 + 三元（首副三元刻不另計）', 'one suit + dragons (1st dragon triplet not counted)'], ['彩一色', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色', 'full flush (no dragons) with exactly one mixed part (mixed pair or one mixed Pung), at least one tile in the main suit'], ['斷小字無三元', '沒有 1–3、沒有三元牌', 'no 1–3, no dragons'], ['七對子', '7 對，可重複，不可彩眼', '7 pairs, 2222 ok, no mixed pair']]],
   [3, [['小三元', '2 刻 + 1 眼 · +30', '2 dragon triplets + pair · +30'], ['全小字', '全部 1–3', 'only 1–3'], ['幺九順', '同花 123·456·789 · 其餘任一面子', 'same-suit 123·456·789 + any set']]],
   [4, [['清一色', '一門、無三元（不含彩碰／彩眼）', 'one suit, no dragons (no mixed)'], ['四暗刻', '4 組暗刻（不另計對對胡、不求人）', '4 concealed triplets (no All Triplets or Concealed Self-Draw on top)'], ['大三元', '三元全刻 · +60', 'all 3 dragon triplets · +60'], ['門清幺九順', '+30', '+30']]],
   [6, [['幺九龍', '同花 123·456·789 + 紅中、發財、白板 + 眼 · +30', 'same-suit 123·456·789 + Red·Green·White Dragon + pair · +30'], ['門清幺九龍', '+90', '+90'], ['槓三元', '紅中、發財、白板全槓 · +90', 'kongs of all 3 dragons · +90'], ['天胡', '莊家起手即胡', 'dealer wins on the starting hand'], ['地胡', '閒家胡莊家第一隻打出的牌', 'win on the dealer\'s first discard'], ['人胡', '閒家第一次摸牌自摸，之前無人吃碰槓', 'first-draw self-draw, no calls before']]]
