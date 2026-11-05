@@ -3557,11 +3557,11 @@ function renderLobby() {
   const settings = hostMode && pre
     ? `<h3>${L('設定', 'Settings')} · ${L('思考時間', 'Time control')} (A + B)</h3>
       <div class="chips">${TC_PRESETS.map((p, n) => `<button type="button" class="chip ${(p && tc && p.a === tc.a && p.b === tc.b) || (!p && !tc) ? 'on' : ''}" data-tc="${n}">${p ? p.a + '+' + p.b : L('不限時', 'No limit')}</button>`).join('')}</div>
-      <h3>${L('起胡番數', 'Minimum to win')}</h3>
-      <div class="chips"><button type="button" class="chip ${ROOM.minFan === 2 ? '' : 'on'}" data-mf="1">${L('一番起胡', '1 fan min')}</button><button type="button" class="chip ${ROOM.minFan === 2 ? 'on' : ''}" data-mf="2">${L('兩番起胡', '2 fan min')}</button></div>
       <div class="tcrow${tc ? '' : ' off'}">A ${L('時間庫', 'bank')} ${sel('tcA', [0, 10, 15, 20, 30, 45, 60, 90, 120], tc ? tc.a : 30)} ${L('秒', 's')} <span>+</span> B ${L('每手', 'per turn')} ${sel('tcB', [3, 5, 8, 10, 15, 20, 30], tc ? tc.b : 10)} ${L('秒', 's')}</div>
-      <p class="note" title="${L('每次出牌或鳴牌有 B 秒；B 用完才動用 A（每局重設，所有人共用同一設定）。時間到自動由電腦代打。', 'Each turn or claim gets B seconds; once B runs out your A bank drains (reset every hand, same for everyone). At zero a bot plays for you.')}">${L('B 秒用完才動用 A（每局重設）；時間到由電腦代打。', 'B runs out first, then A drains (reset each hand). At 0 a bot plays.')}</p>`
-    : `<h3>${L('起胡番數', 'Minimum to win')}</h3><p class="note" style="margin-top:0">${ROOM.minFan === 2 ? L('兩番起胡', '2 fan min') : L('一番起胡', '1 fan min')}</p><h3>${L('思考時間', 'Time control')}</h3><p class="note" style="margin-top:0">${tcTxt(tc)}${tc ? ' · A ' + L('時間庫', 'bank') + ' + B ' + L('每手', 'per turn') : ''}</p>`;
+      <p class="note" title="${L('每次出牌或鳴牌有 B 秒；B 用完才動用 A（每局重設，所有人共用同一設定）。時間到自動由電腦代打。', 'Each turn or claim gets B seconds; once B runs out your A bank drains (reset every hand, same for everyone). At zero a bot plays for you.')}">${L('B 秒用完才動用 A（每局重設）；時間到由電腦代打。', 'B runs out first, then A drains (reset each hand). At 0 a bot plays.')}</p>
+      <h3>${L('起胡番數', 'Minimum to win')}</h3>
+      <div class="chips"><button type="button" class="chip ${ROOM.minFan === 2 ? '' : 'on'}" data-mf="1">${L('一番起胡', '1 fan min')}</button><button type="button" class="chip ${ROOM.minFan === 2 ? 'on' : ''}" data-mf="2">${L('兩番起胡', '2 fan min')}</button></div>`
+    : `<h3>${L('思考時間', 'Time control')}</h3><p class="note" style="margin-top:0">${tcTxt(tc)}${tc ? ' · A ' + L('時間庫', 'bank') + ' + B ' + L('每手', 'per turn') : ''}</p><h3>${L('起胡番數', 'Minimum to win')}</h3><p class="note" style="margin-top:0">${ROOM.minFan === 2 ? L('兩番起胡', '2 fan min') : L('一番起胡', '1 fan min')}</p>`;
   const acts = !pre ? '' : hostMode
     ? `<div class="acts"><button class="btn big" id="lbFill" type="button" ${open ? '' : 'disabled'}>${L('空位全部用電腦補', 'Fill empty seats with bots')}</button>
         <button class="btn primary big" id="lbStart" type="button" ${allReady() ? '' : 'disabled'}>${L('開始遊戲', 'Start game')}</button></div>
