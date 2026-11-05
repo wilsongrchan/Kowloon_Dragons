@@ -107,7 +107,7 @@ rt{font-size:.55em;font-weight:400;color:var(--muted);letter-spacing:0}
 
 /* tiles: sized by font-size so everything scales together */
 .tile{--u:14px;font-size:var(--u);width:3.3em;height:4em;position:relative;flex:none;border-radius:.45em;
-  background:linear-gradient(170deg,#fffdf2,var(--ivory) 55%,#eadfbf);color:#222;border:.12em solid #2b2a28;
+  background:linear-gradient(170deg,var(--tf1,#fffdf2),var(--tf2,var(--ivory)) 55%,var(--tf3,#eadfbf));color:#222;border:.12em solid #2b2a28;
   box-shadow:0 .26em 0 var(--jade-d),0 .26em 0 .12em #2b2a28;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12em;
   font-family:var(--ui);font-weight:900;line-height:1;margin-bottom:.45em;padding:0}
@@ -120,14 +120,14 @@ rt{font-size:.55em;font-weight:400;color:var(--muted);letter-spacing:0}
 .tile .ic.c{width:1.05em;height:1.05em;border-radius:50%;border:.24em solid currentColor;position:relative}
 .tile .ic.c::after{content:"";position:absolute;inset:.17em;border-radius:50%;background:currentColor}
 .tile .ic.k{width:.5em;height:1.25em;border-radius:.22em;background:currentColor;position:relative}
-.tile .ic.k::after{content:"";position:absolute;left:-.06em;right:-.06em;top:50%;height:.14em;margin-top:-.07em;background:var(--ivory);opacity:.9}
+.tile .ic.k::after{content:"";position:absolute;left:-.06em;right:-.06em;top:50%;height:.14em;margin-top:-.07em;background:var(--tf2,var(--ivory));opacity:.9}
 .tile .ic.w{font:700 1.35em/1 var(--ui)}
 .tile .h{font:700 2.3em/1 var(--ui)}
 .tile .v{display:none} /* 點值 = 牌面數字，不再顯示金色點值徽章（程式碼保留） */
 .tile .v{position:absolute;top:-.35em;right:-.4em;min-width:1.4em;height:1.4em;padding:0 .2em;border-radius:99px;background:var(--badge-bg);
   font:700 .7em/1.4em var(--ui);text-align:center;color:var(--badge-fg);margin:0;-webkit-text-stroke:0}
-.tile.p{color:var(--blue)} .tile.s{color:var(--green)} .tile.m{color:var(--red)}
-.tile.z1{color:var(--red)} .tile.z2{color:var(--green)} .tile.z3{color:var(--blue)}
+.tile.p{color:var(--tcp,var(--blue))} .tile.s{color:var(--tcs,var(--green))} .tile.m{color:var(--tcm,var(--red))}
+.tile.z1{color:var(--tcm,var(--red))} .tile.z2{color:var(--tcs,var(--green))} .tile.z3{color:var(--tcp,var(--blue))}
 .tile.z3 .h{position:relative;width:2.3em;height:3.1em;font-size:1em;border:.17em solid currentColor;border-radius:.4em;
   background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(36,92,156,.07))}
 .tile.z3 .h::before{content:"";position:absolute;inset:.22em;border:.07em solid currentColor;border-radius:.25em}
@@ -573,6 +573,22 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 @media (prefers-color-scheme: dark){:root[data-palette="lantern"]:not([data-theme]){--bg:#230709;--h:#ffe6a8;--pg:#f6e3c8;--pgm:#d8a98f;--table:#5c141b;--table2:#711f27;--line:#8f2d36;--gold:#ffcf4a;--gold-hov:#ffdb73;--gold-rgb:255,207,74;--gold-d:#a67c10;--text:#fff0d4;--muted:#f0b9a6;--badge-bg:rgba(60,6,10,.9);--fieldA:rgba(60,6,10,.55);--field:#3f0a0f;--vig1:#7e1f28;--vig2:#2d0609;--hov:#85252e;--pos:#8dffa8;--neg:#ffd2c2;--cn:#ffd96b;--jade:#d4a017;--jade2:#e8bb3a;--jade-d:#9a7210}}
 :root[data-palette="lantern"][data-theme="light"]{--bg:#f6e4de;--h:#7a1018;--pg:#3b1a1a;--pgm:#8a5a55;--table:#f2cfc6;--table2:#fae6e0;--pillbg:#fae6e0;--lbar:rgba(122,16,24,.16);--lbarh:rgba(122,16,24,.3);--gold:#b8860b;--gold-hov:#cf9a1c;--gold-rgb:184,134,11;--totalbg:#fdf0dc;--line:#e0a99f;--text:#3b1414;--muted:#8a5a55;--badge-bg:#a5121c;--ivt:#7a1018;--vig1:#fbeae5;--vig2:#e8b9af;--hov:#f0c4bb;--pos:#2f7a3d;--cn:#a8740c;--jade:#c8242b;--jade2:#dd4a4f;--jade-d:#8f161c}
 @media (prefers-color-scheme: light){:root[data-palette="lantern"]:not([data-theme]){--bg:#f6e4de;--h:#7a1018;--pg:#3b1a1a;--pgm:#8a5a55;--table:#f2cfc6;--table2:#fae6e0;--pillbg:#fae6e0;--lbar:rgba(122,16,24,.16);--lbarh:rgba(122,16,24,.3);--gold:#b8860b;--gold-hov:#cf9a1c;--gold-rgb:184,134,11;--totalbg:#fdf0dc;--line:#e0a99f;--text:#3b1414;--muted:#8a5a55;--badge-bg:#a5121c;--ivt:#7a1018;--vig1:#fbeae5;--vig2:#e8b9af;--hov:#f0c4bb;--pos:#2f7a3d;--cn:#a8740c;--jade:#c8242b;--jade2:#dd4a4f;--jade-d:#8f161c}}
+/* 麻將牌顏色：主題配色（PREF.tiles = 'theme'）——牌面一律近白（不偏黃）、三門花色的顏色跟著配色走；高對比牌色開啟時照舊由它蓋過；傳統配色＝不加任何覆蓋 */
+:root[data-tiles="theme"][data-palette="neon"]{--tf1:#ffffff;--tf2:#f5f3fc;--tf3:#d9d4ec;--tcp:#0a86c2;--tcs:#0d9c78;--tcm:#d6208f}
+:root[data-tiles="theme"][data-palette="harvest"]{--tf1:#ffffff;--tf2:#f7f6f3;--tf3:#e0ddd6;--tcp:#436d8c;--tcs:#5f9a22;--tcm:#d4511a}
+:root[data-tiles="theme"][data-palette="lantern"]{--tf1:#ffffff;--tf2:#f7f6f3;--tf3:#e0ddd6;--tcp:#2f5f8f;--tcs:#1f8a48;--tcm:#d3201c}
+/* 九龍夜 Neon Night：夜間＝深靛藍＋螢光粉／青；日間＝薰衣草白＋深粉／青。牌面維持象牙色；發光只用在夜間 */
+:root[data-palette="neon"][data-theme="dark"]{--bg:#090720;--h:#eaf9ff;--pg:#e9e6ff;--pgm:#9d9ad8;--table:#16134a;--table2:#201a66;--line:#3b2f94;--gold:#ff4fb8;--gold-hov:#ff7acb;--gold-rgb:255,79,184;--gold-d:#a3186f;--text:#eeeeff;--muted:#a9a6e3;--badge-bg:rgba(9,7,36,.92);--fieldA:rgba(9,7,36,.6);--field:#110e3a;--vig1:#2b1f80;--vig2:#05041a;--hov:#2d2674;--pos:#5cffd0;--neg:#ff9cc0;--cn:#39e6f5;--jade:#12b5c9;--jade2:#35dcec;--jade-d:#0b7f8f;--pillbg:#1a1560;--totalbg:#251d78;--nglow:0 0 12px rgba(255,79,184,.6);--nglow2:0 0 18px rgba(255,79,184,.45);--ntitle:0 0 6px rgba(57,230,245,.8),0 0 18px rgba(57,230,245,.45),0 0 34px rgba(255,79,184,.5);--nrt:0 0 8px rgba(57,230,245,.7)}
+@media (prefers-color-scheme: dark){:root[data-palette="neon"]:not([data-theme]){--bg:#090720;--h:#eaf9ff;--pg:#e9e6ff;--pgm:#9d9ad8;--table:#16134a;--table2:#201a66;--line:#3b2f94;--gold:#ff4fb8;--gold-hov:#ff7acb;--gold-rgb:255,79,184;--gold-d:#a3186f;--text:#eeeeff;--muted:#a9a6e3;--badge-bg:rgba(9,7,36,.92);--fieldA:rgba(9,7,36,.6);--field:#110e3a;--vig1:#2b1f80;--vig2:#05041a;--hov:#2d2674;--pos:#5cffd0;--neg:#ff9cc0;--cn:#39e6f5;--jade:#12b5c9;--jade2:#35dcec;--jade-d:#0b7f8f;--pillbg:#1a1560;--totalbg:#251d78;--nglow:0 0 12px rgba(255,79,184,.6);--nglow2:0 0 18px rgba(255,79,184,.45);--ntitle:0 0 6px rgba(57,230,245,.8),0 0 18px rgba(57,230,245,.45),0 0 34px rgba(255,79,184,.5);--nrt:0 0 8px rgba(57,230,245,.7)}}
+:root[data-palette="neon"][data-theme="light"]{--bg:#f0ecff;--h:#2a1a6b;--pg:#2a2350;--pgm:#6b63a8;--table:#e2d9ff;--table2:#f0ebff;--pillbg:#f0ebff;--lbar:rgba(42,26,107,.16);--lbarh:rgba(42,26,107,.3);--gold:#d6208f;--gold-hov:#ea3fa6;--gold-rgb:214,32,143;--gold-d:#a3186f;--totalbg:#ffe3f4;--line:#c4b8f2;--text:#241b52;--muted:#6b63a8;--badge-bg:#d6208f;--ivt:#2a1a6b;--fieldA:rgba(255,255,255,.85);--field:#fff;--vig1:#faf7ff;--vig2:#d6cbff;--hov:#e0d6ff;--pos:#0a8a6a;--neg:#c21860;--cn:#0aa6b8;--jade:#0aa6b8;--jade2:#2cc5d6;--jade-d:#077887;--nglow:0 2px 8px rgba(214,32,143,.28);--nglow2:0 3px 12px rgba(214,32,143,.25);--ntitle:2px 2px 0 rgba(214,32,143,.3);--nrt:none}
+@media (prefers-color-scheme: light){:root[data-palette="neon"]:not([data-theme]){--bg:#f0ecff;--h:#2a1a6b;--pg:#2a2350;--pgm:#6b63a8;--table:#e2d9ff;--table2:#f0ebff;--pillbg:#f0ebff;--lbar:rgba(42,26,107,.16);--lbarh:rgba(42,26,107,.3);--gold:#d6208f;--gold-hov:#ea3fa6;--gold-rgb:214,32,143;--gold-d:#a3186f;--totalbg:#ffe3f4;--line:#c4b8f2;--text:#241b52;--muted:#6b63a8;--badge-bg:#d6208f;--ivt:#2a1a6b;--fieldA:rgba(255,255,255,.85);--field:#fff;--vig1:#faf7ff;--vig2:#d6cbff;--hov:#e0d6ff;--pos:#0a8a6a;--neg:#c21860;--cn:#0aa6b8;--jade:#0aa6b8;--jade2:#2cc5d6;--jade-d:#077887;--nglow:0 2px 8px rgba(214,32,143,.28);--nglow2:0 3px 12px rgba(214,32,143,.25);--ntitle:2px 2px 0 rgba(214,32,143,.3);--nrt:none}}
+:root[data-palette="neon"] .brand h1{text-shadow:var(--ntitle)}
+:root[data-palette="neon"] .btn.primary,:root[data-palette="neon"] #landing .chip.on,:root[data-palette="neon"] .chip.on{color:#1a0716;box-shadow:var(--nglow)}
+:root[data-palette="neon"][data-theme="light"] .btn.primary,:root[data-palette="neon"][data-theme="light"] #landing .chip.on,:root[data-palette="neon"][data-theme="light"] .chip.on{color:#fff}
+@media (prefers-color-scheme: light){:root[data-palette="neon"]:not([data-theme]) .btn.primary,:root[data-palette="neon"]:not([data-theme]) #landing .chip.on,:root[data-palette="neon"]:not([data-theme]) .chip.on{color:#fff}}
+:root[data-palette="neon"] #lnBots,:root[data-palette="neon"] #lnCreate{box-shadow:var(--nglow2)}
+:root[data-palette="neon"] #minFan{box-shadow:var(--nglow)}
+:root[data-palette="neon"] .tbar .rt{text-shadow:var(--nrt)}
 @media (prefers-color-scheme: dark){:root:not([data-theme]){--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}}
 #setDlg h3{margin:14px 0 6px}
 #setDlg .phoneonly{display:none}
@@ -1700,7 +1716,7 @@ const YAKU_JA = {
 const JA_EXACT = {
   '摸牌山最後一張自摸（連自摸共 +1）': '牌山の最後の1枚でツモ（ツモと合わせて +1）',
   /* table */
-  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点',  '大師': '達人', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。', '大師固定採「兩番起胡」：全桌（包括你）都要 2 番以上才能胡（碎番也計）。大師會按手牌選路線，並算清楚每張牌是否真的夠番。': '達人は常に「2翻縛り」です。あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。手牌から狙う役を選び、和了牌が本当に2翻に届くかを一枚ずつ確かめます。', '大師固定採「兩番起胡」：全桌都要 2 番以上才能胡。': '達人は「2翻縛り」：全員が2翻以上でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色': '清一色（三元牌なし）で彩の部分がちょうど1つ（彩雀頭または彩ポン1組）、主色が1枚以上', '落葉': '秋色', '燈籠': '提灯', '經典': '定番', '配色': '配色', '我的戰績': '自分の成績', '勝率': '和了率', '勝局平均番數': '和了時の平均翻数', '勝局平均得分': '和了時の平均得点', '每手平均輸贏': '1局あたり平均収支', '自摸 / 榮胡': 'ツモ / ロン', '放銃': '放銃', '流局': '流局', '最高一手': '最高の一手', '常胡的牌型': 'よく和了る役', '還沒有記錄。玩幾手之後這裡會顯示你的戰績（需要在設定開啟牌局記錄）。': '記録がまだありません。何局か遊ぶとここに成績が出ます（設定で牌局記録をオンにしてください）。', '點一下選取／取消要鎖定的組合；沒選的牌留給順子或其他用途。': 'ロックする組み合わせをタップで選択／解除します。選ばなかった牌は順子などに使えます。', '取消': 'キャンセル', '鎖定所選': '選択をロック', '彩刻': '彩刻子', '對局長度': '対局の長さ', '一圈（4 手）': '1ラウンド（4局）', '一局（12 手）': '1セット（12局）', '無限': 'エンドレス', '一圈': '1ラウンド', '一局': '1セット', '每手輪流換莊。一圈 4 手；紅中圈、發財圈、白板圈三圈合稱一局，共 12 手。': '毎局、親が順番に回ります。3ラウンド＝中場・發場・白場、各4局です。', '查看總結': '最終順位を見る', '一局結束': 'セット終了', '紅中圈結束': '中場終了', '這一局的得分變化與目前總分': 'このセットの得点の増減と現在の合計', '再玩一局': 'もう1セット遊ぶ', '等待房主開始新的一局…': 'ホストが次のセットを始めるのを待っています…', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '打出按鈕位置': '打牌ボタンの位置', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
+  '牌山': '牌山', '可吃': 'チーできます', '': '', '莊': '親', '分數': '持ち点', '手牌點值': '手牌の点',  '大師': '達人', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級は牌効率を考え、場に出た牌を覚え、鳴きを読み、守備もします。', '大師固定採「兩番起胡」：全桌（包括你）都要 2 番以上才能胡（碎番也計）。大師會按手牌選路線，並算清楚每張牌是否真的夠番。': '達人は常に「2翻縛り」です。あなたを含む全員が2翻以上（半翻も含む）でないと和了できません。手牌から狙う役を選び、和了牌が本当に2翻に届くかを一枚ずつ確かめます。', '大師固定採「兩番起胡」：全桌都要 2 番以上才能胡。': '達人は「2翻縛り」：全員が2翻以上でないと和了できません。', '起胡番數': '和了に必要な翻数', '一番起胡': '1翻縛り', '兩番起胡': '2翻縛り', '1 fan min': '1翻縛り', '清一色（無三元）恰有一處彩（彩眼或一刻彩碰），至少一張為主色': '清一色（三元牌なし）で彩の部分がちょうど1つ（彩雀頭または彩ポン1組）、主色が1枚以上', '落葉': '秋色', '九龍夜': 'ネオンナイト', '麻將牌顏色': '牌の色', '傳統配色': '伝統配色', '主題配色': 'テーマ配色', '燈籠': '提灯', '經典': '定番', '配色': '配色', '我的戰績': '自分の成績', '勝率': '和了率', '勝局平均番數': '和了時の平均翻数', '勝局平均得分': '和了時の平均得点', '每手平均輸贏': '1局あたり平均収支', '自摸 / 榮胡': 'ツモ / ロン', '放銃': '放銃', '流局': '流局', '最高一手': '最高の一手', '常胡的牌型': 'よく和了る役', '還沒有記錄。玩幾手之後這裡會顯示你的戰績（需要在設定開啟牌局記錄）。': '記録がまだありません。何局か遊ぶとここに成績が出ます（設定で牌局記録をオンにしてください）。', '點一下選取／取消要鎖定的組合；沒選的牌留給順子或其他用途。': 'ロックする組み合わせをタップで選択／解除します。選ばなかった牌は順子などに使えます。', '取消': 'キャンセル', '鎖定所選': '選択をロック', '彩刻': '彩刻子', '對局長度': '対局の長さ', '一圈（4 手）': '1ラウンド（4局）', '一局（12 手）': '1セット（12局）', '無限': 'エンドレス', '一圈': '1ラウンド', '一局': '1セット', '每手輪流換莊。一圈 4 手；紅中圈、發財圈、白板圈三圈合稱一局，共 12 手。': '毎局、親が順番に回ります。3ラウンド＝中場・發場・白場、各4局です。', '查看總結': '最終順位を見る', '一局結束': 'セット終了', '紅中圈結束': '中場終了', '這一局的得分變化與目前總分': 'このセットの得点の増減と現在の合計', '再玩一局': 'もう1セット遊ぶ', '等待房主開始新的一局…': 'ホストが次のセットを始めるのを待っています…', '電腦強度': 'COMの強さ', '高對比牌色': '高コントラスト牌色', '打出按鈕位置（手機）': '打牌ボタンの位置（スマホ）', '打出按鈕位置': '打牌ボタンの位置', '新手': '初級', '高手': '上級', '高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。': '上級COMは牌効率を考え、捨て牌を覚え、場の副露を読み、守りも考えます。', '手牌點值走勢': '手牌の点の推移', '開局': '配牌',
   '手牌＋鳴牌的點值總和（未乘番數；彩碰被要的那張不計）': '手牌＋副露の点の合計（翻数を掛ける前。彩ポンで鳴いた1枚は数えません）',
   '整理': '理牌', '彩組': '彩まとめ', '把手上的彩眼／彩刻湊在一起並鎖定': '手牌の彩雀頭／彩刻子をまとめてロックします',
   '目前沒有可組的彩眼／彩刻': 'まとめられる彩雀頭／彩刻子はありません', '解鎖': 'ロック解除', '鎖定': 'ロック',
@@ -1837,14 +1853,14 @@ function jaRuby(html) {
 }
 
 let LANG = 'zh'; try { const v = localStorage.getItem('yjl-lang'); LANG = v === 'en' || v === 'ja' ? v : 'zh'; } catch (e) {}
-const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off', palette: 'classic', setLen: 'endless' };
+const PREF = { theme: 'auto', fs: 'm', script: 't', music: 'on', sfx: 'on', musicVol: '57', botLvl: 'easy', recOn: 'on', dockSide: 'right', hc: 'off', palette: 'classic', tiles: 'trad', setLen: 'endless' };
 try { for (const k in PREF) PREF[k] = localStorage.getItem('yjl-' + k) || PREF[k]; if (localStorage.getItem('yjl-recv') !== '2') { PREF.recOn = 'on'; localStorage.setItem('yjl-recOn', 'on'); localStorage.setItem('yjl-recv', '2'); } if (localStorage.getItem('yjl-audiov') !== '2') { PREF.music = 'on'; PREF.sfx = 'on'; localStorage.setItem('yjl-audiov', '2'); } if (localStorage.getItem('yjl-musicv') !== '2') { PREF.musicVol = '57'; localStorage.setItem('yjl-musicv', '2'); } } catch (e) {} // audiov 2：音樂與音效預設改為開，舊的「關」只重設一次
 if (PREF.botLvl === 'pro2') PREF.botLvl = 'master';   // 舊的「高手・兩番起胡」改成大師
 const applyBotLvl = () => { RULES.BOT_LEVEL = ['pro', 'master'].includes(PREF.botLvl) ? PREF.botLvl : 'easy'; applyMinFan(); };
 function applyMinFan() { let on = false; try { on = online(); } catch (e) {}   // 啟動時 ROOM 還沒建立
   RULES.MIN_TOTAL = on ? (ROOM.minFan === 2 ? 2 : 0) : (PREF.botLvl === 'master' ? 2 : 0); }   // 兩番起胡：單人看電腦強度設定，房間由房主決定
 applyBotLvl();
-const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'light' || PREF.theme === 'dark' ? r.setAttribute('data-theme', PREF.theme) : r.removeAttribute('data-theme'); PREF.palette === 'harvest' || PREF.palette === 'lantern' ? r.setAttribute('data-palette', PREF.palette) : r.removeAttribute('data-palette'); r.setAttribute('data-hc', PREF.hc === 'on' ? 'on' : 'off'); r.setAttribute('data-fs', PREF.fs); };
+const applyPrefs = () => { const r = document.documentElement; PREF.theme === 'light' || PREF.theme === 'dark' ? r.setAttribute('data-theme', PREF.theme) : r.removeAttribute('data-theme'); ['harvest', 'lantern', 'neon'].includes(PREF.palette) ? r.setAttribute('data-palette', PREF.palette) : r.removeAttribute('data-palette'); r.setAttribute('data-hc', PREF.hc === 'on' ? 'on' : 'off'); PREF.tiles === 'theme' ? r.setAttribute('data-tiles', 'theme') : r.removeAttribute('data-tiles'); r.setAttribute('data-fs', PREF.fs); };
 applyPrefs();
 const L = (zh, en) => LANG === 'en' ? en : LANG === 'ja' ? jaT(zh) : zh;
 const SEAT = { zh: ['你', '下家', '對家', '上家'], en: ['You', 'Downstream', 'Across', 'Upstream'], ja: SEAT_JA };
@@ -4006,7 +4022,8 @@ function renderSettings() {
   const chip = (grp, v, zh, en, on) => `<button type="button" class="chip ${on ? 'on' : ''}" data-set="${grp}:${v}">${L(zh, en)}</button>`;
   d.innerHTML = `${XBTN()}<h2>${L('設定', 'Settings')}</h2>
     <h3>${L('外觀', 'Appearance')}</h3><div class="chips">${chip('theme', 'auto', '自動', 'Auto', PREF.theme === 'auto')}${chip('theme', 'light', '淺色', 'Light', PREF.theme === 'light')}${chip('theme', 'dark', '深色', 'Dark', PREF.theme === 'dark')}</div>
-    <h3>${L('配色', 'Color palette')}</h3><div class="chips">${chip('palette', 'classic', '經典', 'Classic', PREF.palette !== 'harvest' && PREF.palette !== 'lantern')}${chip('palette', 'harvest', '落葉', 'Harvest', PREF.palette === 'harvest')}${chip('palette', 'lantern', '燈籠', 'Lantern', PREF.palette === 'lantern')}</div>
+    <h3>${L('配色', 'Color palette')}</h3><div class="chips">${chip('palette', 'classic', '經典', 'Classic', !['harvest', 'lantern', 'neon'].includes(PREF.palette))}${chip('palette', 'harvest', '落葉', 'Harvest', PREF.palette === 'harvest')}${chip('palette', 'lantern', '燈籠', 'Lantern', PREF.palette === 'lantern')}${chip('palette', 'neon', '九龍夜', 'Neon Night', PREF.palette === 'neon')}</div>
+    <h3>${L('麻將牌顏色', 'Tile colors')}</h3><div class="chips">${chip('tiles', 'trad', '傳統配色', 'Traditional', PREF.tiles !== 'theme')}${chip('tiles', 'theme', '主題配色', 'Match theme', PREF.tiles === 'theme')}</div>
     <h3>${L('高對比牌色', 'High-contrast tile colors')}</h3><div class="chips">${chip('hc', 'off', '關', 'Off', PREF.hc !== 'on')}${chip('hc', 'on', '開', 'On', PREF.hc === 'on')}</div>
     <h3>${L('字體大小', 'Text size')}</h3><div class="chips">${chip('fs', 's', '小', 'Small', PREF.fs === 's')}${chip('fs', 'm', '中', 'Medium', PREF.fs === 'm')}${chip('fs', 'l', '大', 'Large', PREF.fs === 'l')}</div>
     <h3>${L('音效', 'Sound effects')}</h3><div class="chips">${chip('sfx', 'on', '開', 'On', PREF.sfx !== 'off')}${chip('sfx', 'off', '關', 'Off', PREF.sfx === 'off')}</div>
@@ -4028,7 +4045,7 @@ function renderSettings() {
 $('#setDlg').addEventListener('click', e => {
   const b = e.target.closest('button[data-set]'); if (!b) return;
   const [g, v] = b.dataset.set.split(':');
-  if (g === 'theme' || g === 'fs' || g === 'palette') { PREF[g] = v; applyPrefs(); }
+  if (g === 'theme' || g === 'fs' || g === 'palette' || g === 'tiles') { PREF[g] = v; applyPrefs(); }
   else if (g === 'hc') { PREF.hc = v === 'on' ? 'on' : 'off'; applyPrefs(); savePref(); renderSettings(); return; }
   else if (g === 'sfx') { PREF.sfx = v; savePref(); renderSettings(); if (v === 'on') SFX.place(); }
   else if (g === 'music') { PREF.music = v; musicApply(); renderSettings(); }
