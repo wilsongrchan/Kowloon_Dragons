@@ -857,7 +857,7 @@ function evaluateHand(melds, concealed, tsumo, winTile, kongDraw, special, lastT
   };
   const cands = [];
   let shapeOk = false;
-  // 幺九龍／門清幺九龍：同花 123+456+789 + 中發白各一 + 同花或三元的眼（該牌共三張）；吃的牌只可以是同花 123／456
+  // 幺九龍／門清幺九龍：同花 123+456+789 + 中發白各一 + 同花或三元的眼（該牌共三張）；吃的牌只可以是同花 123／456（引擎編號；畫面上＝789／456，畫面上的 123 不能吃）
   if (allTiles.length === 14) {
     const c0 = counts(allTiles);
     for (const su of ['p', 's', 'm']) {

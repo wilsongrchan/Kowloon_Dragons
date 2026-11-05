@@ -20,6 +20,7 @@ The shown numbers are reversed: displayed d = 10 - n, so there are (10 - d) copi
 - Commands: `npm run build`, `npm run sim`
 
 ## Current rules (as implemented; latest from Wilson)
+**Numbers in this whole section are ENGINE numbers (shown = 10 - n). Quick conversion for claims: only shown 456/567/678/789 chows can be claimed (engine 123/234/345/456); anything containing shown 1-3 (= 小字 = engine 7-9) is never claimable; shown 7-9 (= 大字 = engine 1-3) are the rare tiles used for 彩碰/彩刻/彩眼. So an open Kowloon Straight (幺九順, shown 123+456+789) can claim shown 456 and 789 chows only, and the shown 123 chow must be self-drawn.**
 Tiles: 筒/索/萬 n copies of number n (45 each), 中發白 x5 each, 150 total. Value = 10 - n (一=9 ... 九=1), honors 0; number tiles total 495.
 Hand 13, win 14: 4 sets + pair.
 - 吃碰槓 as normal mahjong. 小字 (1-3) can never kong or concealed-kong (explicit guard in engine.js; naturally impossible anyway, max 3 copies). 7-9 can never be 吃/碰/槓'd, 暗槓 of 7-9 also banned.
@@ -34,7 +35,7 @@ Hand 13, win 14: 4 sets + pair.
 - 1番 added 2026-11-01 (Wilson; from bot-sim balance tests): 不求人 (concealed + tsumo; replaces 門清/自摸; was 2番) and 三暗刻 (was 2番) are now 1番 (`RULES.BQ_FAN`/`SAN_FAN`, default 1). 四暗刻 (4番) no longer stacks with 不求人: a concealed tsumo 四暗刻 = 4番 + 自摸 half (ron = 4番 + 門清 half). Test switches `RULES.BQ_FAN/SAN_FAN/SAN_NOSTACK` and `scripts/rl/rules.js` (style-vs-style rule balance runs).
 - 3番: 小三元 (+30 hand pts), 全小字 (all 7-9; no 門清 half), 幺九順 (same suit 123+456+789; remaining set chow or pung any suit; pair any; open hand; +30 hand pts)
 - 4番: 清一色 (no mixed; no 斷一門無三元), 四暗刻, 大三元 (+60), 門清幺九順 (concealed 幺九順, +60 [was +30], no 門清 half)
-- 6番 (cap): 幺九龍 (+60 [was +30]; claimed 123/456 chows of that suit allowed), 門清幺九龍 (+120 [was +90], no open melds), 槓三元 (kongs of all 3 dragons, +90), 天胡 (dealer wins on starting 14), 地胡 (non-dealer wins on the dealer's first discard), 人胡 (non-dealer wins by tsumo on their first draw, no calls before). 天胡/地胡/人胡 need only a complete shape (no other fan), flat 6 fan, +30 hand pts (Wilson 2026-10-26), pts x6. Engine tracks g.drawN / g.discardN / g.calls for these.
+- 6番 (cap): 幺九龍 (+60 [was +30]; claimed engine 123/456 chows of that suit allowed = shown 789/456; shown 123 can never be claimed), 門清幺九龍 (+120 [was +90], no open melds), 槓三元 (kongs of all 3 dragons, +90), 天胡 (dealer wins on starting 14), 地胡 (non-dealer wins on the dealer's first discard), 人胡 (non-dealer wins by tsumo on their first draw, no calls before). 天胡/地胡/人胡 need only a complete shape (no other fan), flat 6 fan, +30 hand pts (Wilson 2026-10-26), pts x6. Engine tracks g.drawN / g.discardN / g.calls for these.
 - 暗刻: ankan counts as concealed; on ron, the triplet completed by the winning tile counts as open, BUT 榮胡進眼 doesn't ruin concealed triplets (if the winning tile can sit in the pair or a chow, the triplet stays concealed).
 - Half fan 碎番 (+0.5, need >=1 real fan first): 槓上自摸 (self-draw on the replacement tile after a kong; stacks with 自摸 and 槓, so +1.5 in total; engine: g.lastDrawRep -> evaluateHand kongDraw), 槓 (each), 三元大補槓, 門清, 斷一門無三元 (missing one of 筒/索/萬 AND no 中發白), 自摸 (only open hands; 門清加自摸 already includes it), 胡大字 (winning tile is a 小字 1-3)
 - 無彩吃無彩碰 was DELETED as a 碎番 by Wilson (no longer exists).
