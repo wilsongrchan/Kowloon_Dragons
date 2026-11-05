@@ -49,7 +49,7 @@ Hand 13, win 14: 4 sets + pair.
 - Payment placeholder: tsumo each pays 1x; ron discarder pays 2x (RULES.RON_MULT). No dealer bonus/wind rotation.
 - Bots are naive (no defense, random claims) - for rule testing only.
 
-## Sim findings (bonuses now 小三元 +30, 大三元 +60, 幺九龍 +50 — Wilson's change; figures below were measured with the old +20/+40/+40 and are slightly stale: per-hand averages for 小三元/大三元/幺九龍 rise by ~10/20/10 pts × 3-4. Bot sim 20k games: old avg 86.5 pts, new avg 87.4 pts, fan split unchanged ~32/32/21/15%)
+## Sim findings (bonuses now 小三元 +30, 大三元 +60, 幺九龍 +30 (門清幺九龍 +90; an older note here said +50, the engine and rules say +30) — Wilson's change; figures below were measured with the old +20/+40/+40 and are slightly stale: per-hand averages for 小三元/大三元/幺九龍 rise by ~10/20/10 pts × 3-4. Bot sim 20k games: old avg 86.5 pts, new avg 87.4 pts, fan split unchanged ~32/32/21/15%)
 Bots (10k games): ~96% win rate, avg 87 pts. Fan split 1番 32 / 2番 32 / 3番 21 / 4番 15 %. Avg score by actual fan: 39 / 80 / 126 / 149.
 Generated concealed hands, avg score ron/tsumo: 全小字 71/112 (weakest by design), 混一色 158/184, 對對胡 178/196, 小三元 177/188, 四暗刻 192/195, 清一色 197/228, 斷小字 235/328, 大三元 245/247, 幺九順 251/260, 幺九龍 362/362.
 Tier overlap: only ~21% of 2番 hands score below the 1番 median (was 39% with x1.5/x2/x3).
