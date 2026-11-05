@@ -421,7 +421,7 @@ header .meta{order:2}
 #lobby .note{font-size:calc(12px*var(--fs,1));color:var(--muted);margin-top:10px}
 #lobby .err{color:var(--neg);min-height:1.4em;margin:6px 0 0;font-size:calc(13px*var(--fs,1))}
 #roomPill{display:none}
-#setDlg{max-width:min(400px,94vw)}
+#setDlg,#botSetup{max-width:min(400px,94vw)}
 #setDlg .vol{display:flex;gap:10px;align-items:center;margin-top:10px}
 #setDlg .vol span{color:var(--muted);font-size:calc(13px*var(--fs,1))}
 #setDlg .vol input{flex:1;min-width:0;accent-color:var(--gold)}
@@ -596,20 +596,17 @@ body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
 :root[data-palette="neon"] .hero,:root[data-palette="neon"] .hero b{color:#fff}
 :root[data-palette="neon"] .hero small,:root[data-palette="neon"] .hero span{color:rgba(255,255,255,.88)}
 :root[data-palette="neon"] .hero b{text-shadow:0 2px 0 rgba(0,0,0,.18)}
-:root[data-palette="neon"] button.btn.primary,:root[data-palette="neon"] button.btn.hot,:root[data-palette="neon"] #lobby .chip.on,:root[data-palette="neon"] #landing .botlv .chip.on,:root[data-palette="neon"] #setDlg .chip.on,:root[data-palette="neon"] .tile.wintile::after,:root[data-palette="neon"] #hand .lgrp.locked .lbar{color:#fff}
+:root[data-palette="neon"] button.btn.primary,:root[data-palette="neon"] button.btn.hot,:root[data-palette="neon"] #lobby .chip.on,:root[data-palette="neon"] #setDlg .chip.on,:root[data-palette="neon"] #botSetup .chip.on,:root[data-palette="neon"] .tile.wintile::after,:root[data-palette="neon"] #hand .lgrp.locked .lbar{color:#fff}
 :root[data-palette="neon"] .tbar .rt{text-shadow:var(--nrt)}
 @media (prefers-color-scheme: dark){:root:not([data-theme]){--bg:#12181e;--h:#efe8d2;--pg:#e8e3d3;--pgm:#9fb0bd}}
-#setDlg h3{margin:14px 0 6px}
+#setDlg h3,#botSetup h3{margin:14px 0 6px}
+#botSetup .mxact{margin-top:20px}
+#botSetup .mxact .btn{width:100%;padding:12px 16px}
 #setDlg .phoneonly{display:none}
 @media (max-width:520px){#setDlg .phoneonly{display:block}}
-#setDlg .chips{display:flex;flex-wrap:wrap;gap:6px}
-#setDlg .chip{font:500 calc(14px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
-#landing .botlv{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:2px;color:var(--muted);font-size:calc(13px*var(--fs,1))}
-#landing .botlv .chip{font:500 calc(13px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:4px 12px;cursor:pointer}
-#landing .botnote{margin:2px 0 0;text-align:center;color:var(--muted);font-size:calc(12px*var(--fs,1))}
-#landing .botnote[hidden]{display:none}
-#landing .botlv .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
-#setDlg .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
+#setDlg .chips,#botSetup .chips{display:flex;flex-wrap:wrap;gap:6px}
+#setDlg .chip,#botSetup .chip{font:500 calc(14px*var(--fs,1)) var(--ui);color:var(--text);background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
+#setDlg .chip.on,#botSetup .chip.on{background:var(--gold);color:#2a1f08;border-color:var(--gold);font-weight:700}
 #hand .lgrp{position:relative;display:inline-flex}
 #hand .lrow2{display:flex;gap:3px;align-items:flex-end}
 #hand .lbar{position:absolute;left:0;right:0;bottom:-17px;height:15px;padding:0;border:0;border-radius:8px;background:var(--lbar,rgba(255,255,255,.45));color:#22313e;cursor:pointer;touch-action:manipulation;display:grid;place-items:center;transition:background .15s}
@@ -3015,6 +3012,33 @@ document.addEventListener('click', e => {
 /* ===== 首頁 / landing ===== */
 const LAND = { join: false };
 function hideLanding() { $('#landing').hidden = true; }
+/* 電腦對戰：按下「電腦對戰」才問電腦強度與對局長度，按「開始」才開局 */
+function openBotSetup() {
+  let d = $('#botSetup'); if (!d) { d = document.createElement('dialog'); d.id = 'botSetup'; document.body.appendChild(d); }
+  const chip = (grp, v, zh, en, on) => `<button type="button" class="chip ${on ? 'on' : ''}" data-bs="${grp}:${v}">${L(zh, en)}</button>`;
+  const draw = () => {
+    d.innerHTML = `${XBTN()}<h2>${L('電腦對戰', 'Play vs bots')}</h2>
+    <h3>${L('電腦強度', 'Bot level')}</h3><div class="chips">${chip('bot', 'easy', '新手', 'Easy', !['pro', 'master'].includes(PREF.botLvl))}${chip('bot', 'pro', '高手', 'Expert', PREF.botLvl === 'pro')}${chip('bot', 'master', '大師', 'Master', PREF.botLvl === 'master')}</div>
+    <p class="note" style="margin:6px 0 0">${PREF.botLvl === 'master' ? L('大師固定採「兩番起胡」：全桌（包括你）都要 2 番以上才能胡（碎番也計）。大師會按手牌選路線，並算清楚每張牌是否真的夠番。', 'Master always plays with a 2 fan minimum: the whole table, you included, needs 2 fan or more to win (half fans count). It picks a route from its hand and checks that each winning tile really reaches 2 fan.') : PREF.botLvl === 'pro' ? L('高手會算牌效率、記已出的牌、看場上鳴牌，也懂得防守。', 'Expert bots plan their hands, track what has been played, read the table and play defensively.') : L('新手電腦打法簡單，適合先熟悉規則。', 'Easy bots play simply, good for learning the rules.')}</p>
+    <h3>${L('對局長度', 'Game length')}</h3><div class="chips">${chip('sl', 'round', '一圈（4 手）', 'One round (4 hands)', PREF.setLen === 'round')}${chip('sl', 'set', '一局（12 手）', 'Full set (12 hands)', PREF.setLen === 'set')}${chip('sl', 'endless', '無限', 'Endless', PREF.setLen !== 'round' && PREF.setLen !== 'set')}</div>
+    <p class="note" style="margin:6px 0 0">${L('每手輪流換莊。一圈 4 手；紅中圈、發財圈、白板圈三圈合稱一局，共 12 手。', 'The deal passes on every hand. A full set is three rounds of 4 hands: Red, Green and White Dragon.')}</p>
+    <div class="mxact"><button type="button" class="btn primary" id="bsStart">${L('開始', 'Start')}</button></div>`;
+  };
+  draw();
+  d.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.bs) {
+      const [g, v] = b.dataset.bs.split(':');
+      if (g === 'bot') { PREF.botLvl = ['pro', 'master'].includes(v) ? v : 'easy'; applyBotLvl(); } else PREF.setLen = v === 'round' || v === 'set' ? v : 'endless';
+      savePref(); draw();
+    } else if (b.id === 'bsStart') {
+      d.close();
+      if (ROOM.zooming) return;
+      dragonZoom(() => { if (online()) toSolo(); SETC.fresh = true; play(); hideLanding(); });
+    }
+  };
+  d.showModal();
+}
 function showLanding() { renderLanding(); $('#landing').hidden = false; }
 function renderLanding() {
   const el = $('#lnInner'); if (!el) return;
@@ -3030,9 +3054,6 @@ function renderLanding() {
         <button class="btn primary big" id="lnCreate" type="button">${L('創建房間', 'Create room')}<small>${L('把代碼傳給朋友，空位可用電腦補', 'Share the code with friends; bots fill empty seats')}</small></button>
         <div class="joinrow"><input class="cd" id="lnCode" maxlength="4" value="${cd}" placeholder="${L('房間代碼', 'ROOM CODE')}" aria-label="${L('房間代碼', 'Room code')}" autocomplete="off"><button class="btn big2" id="lnGo" type="button">${L('加入房間', 'Join room')}</button></div>
         <button class="btn big" id="lnBots" type="button">${L('電腦對戰', 'Play with bots')}<small>${L('一人對三個電腦，即刻開局', 'You vs 3 bots, start right away')}</small></button>
-        <div class="botlv"><span>${L('電腦強度', 'Bot level')}</span><button type="button" class="chip ${!['pro', 'master'].includes(PREF.botLvl) ? 'on' : ''}" data-bot="easy">${L('新手', 'Easy')}</button><button type="button" class="chip ${PREF.botLvl === 'pro' ? 'on' : ''}" data-bot="pro">${L('高手', 'Expert')}</button><button type="button" class="chip ${PREF.botLvl === 'master' ? 'on' : ''}" data-bot="master">${L('大師', 'Master')}</button></div>
-        <p class="botnote" id="botNoteL"${PREF.botLvl === 'master' ? '' : ' hidden'}>${L('大師固定採「兩番起胡」：全桌都要 2 番以上才能胡。', 'Master plays with a 2 fan minimum: everyone needs 2 fan or more to win.')}</p>
-        <div class="botlv"><span>${L('對局長度', 'Length')}</span><button type="button" class="chip ${PREF.setLen === 'round' ? 'on' : ''}" data-sl="round">${L('一圈', '1 round')}</button><button type="button" class="chip ${PREF.setLen === 'set' ? 'on' : ''}" data-sl="set">${L('一局', 'Full set')}</button><button type="button" class="chip ${PREF.setLen !== 'round' && PREF.setLen !== 'set' ? 'on' : ''}" data-sl="endless">${L('無限', 'Endless')}</button></div>
         <p class="err" id="lnMsg" aria-live="polite">${ROOM.msg || ''}</p>
       </div>
       <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed Pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragons · 6 fan cap')}</span></div>
@@ -3041,12 +3062,8 @@ function renderLanding() {
   const c = $('#lnCode'); if (c) c.addEventListener('input', () => { c.value = c.value.toUpperCase().replace(/[^A-Z]/g, ''); });
 }
 $('#landing').addEventListener('click', e => {
-  const sl = e.target.closest('#landing button[data-sl]');
-  if (sl) { PREF.setLen = sl.dataset.sl; savePref(); $('#landing').querySelectorAll('button[data-sl]').forEach(b => b.classList.toggle('on', b === sl)); return; }
-  const lv = e.target.closest('button[data-bot]');
-  if (lv) { PREF.botLvl = ['pro', 'master'].includes(lv.dataset.bot) ? lv.dataset.bot : 'easy'; applyBotLvl(); savePref(); $('#landing').querySelectorAll('button[data-bot]').forEach(b => b.classList.toggle('on', b === lv)); const bn = $('#botNoteL'); if (bn) bn.hidden = PREF.botLvl !== 'master'; return; }
   const t = e.target.closest('button'); if (!t) return;
-  if (t.id === 'lnBots') { try { const n = cleanName(($('#lnName') || {}).value); if (n) localStorage.setItem('yjl-name', n); } catch (x) {} if (ROOM.zooming) return; dragonZoom(() => { if (online()) toSolo(); SETC.fresh = true; play(); hideLanding(); }); }
+  if (t.id === 'lnBots') { try { const n = cleanName(($('#lnName') || {}).value); if (n) localStorage.setItem('yjl-name', n); } catch (x) {} if (ROOM.zooming) return; openBotSetup(); }
   else if (t.id === 'lnCreate') createRoom();
   else if (t.id === 'lnGo') joinRoom();
   else if (t.id === 'lnLang') openLangMenu(t);
