@@ -3329,6 +3329,14 @@ function tutSteps() {
         'あなたの直前の人（<b>上家</b>）が捨てた牌で順子が作れるときは<b>チー</b>できます。チーは上家の牌だけ、ポン・カンは誰の牌でも可で、チーより優先されます。'),
       ...callStep(false) },
     {
+      t: LL('特別規則：彩碰・彩眼', 'Special rule: mixed pung and pair', '特別ルール：彩ポン・彩雀頭'),
+      p: LL('這是幺九龍獨有的玩法：稀少的<b>大字 7、8、9</b>，只要<b>數字相同</b>，花色不同也能湊！三張叫<b>彩碰</b>（可以向別人碰，或全在手上叫彩刻），兩張可以當<b>彩眼</b>。順子則一定要同花色，沒有「彩吃」。',
+        'Here is a rule only Kowloon Dragons has: the rare <b>big tiles 7, 8 and 9</b> can be grouped by <b>number alone</b>, even in different suits! Three of them are a <b>Mixed Pung</b> (you can call it from a discard, or hold it concealed as a Mixed Triplet), and two can be the <b>Mixed Pair</b>. Sequences must still be one suit: there is no mixed chow.',
+        '幺九龍だけの特別ルール：レアな<b>大字7・8・9</b>は、<b>数字が同じなら種類が違っても</b>組めます！3枚は<b>彩ポン</b>（捨て牌から鳴くことも、手の中で彩刻子にすることもできます）、2枚は<b>彩雀頭</b>になれます。順子は同じ種類だけで、彩チーはありません。'),
+      stage: `<div class="tt-row"><span class="wrap scat">${tGrp(LL('彩碰', 'Mixed Pung', '彩ポン'), 'p8 s8 m8', 'cai g1')}</span><span class="wrap scat">${tGrp(LL('彩眼', 'Mixed Pair', '彩雀頭'), 'p9 s9', 'cai g2')}</span></div>`,
+      acts: [[300, 'say', LL('七八九：不同花色也能湊', '7-8-9: different suits can group', '七八九：違う種類でも組める')], [1000, 'rm', '.wrap', 'scat'], [2000, 'add', '.g1', 'on'], [2000, 'say', LL('彩碰：同數字、不同花色', 'Mixed Pung: same number, different suits', '彩ポン：同じ数字・違う種類')], [3300, 'add', '.g2', 'on'], [3300, 'say', LL('兩張也可以當眼', 'Two can also be the pair', '2枚で雀頭にもなれる')]]
+    },
+    {
       t: LL('胡牌！', 'Winning!', 'あがり！'),
       p: LL('湊齊 4 組＋1 對就胡。<b>自摸</b>＝自己摸到最後那張；<b>榮胡</b>＝別人打出你要的那張，你喊胡（由出銃的人付較多分）。',
         'Complete 4 sets + 1 pair and you win. <b>Zimo</b> = you draw the winning tile yourself. <b>Ron</b> = someone discards the tile you need and you call the win (the discarder pays more).',
