@@ -3490,8 +3490,8 @@ function drillDataNew() {
 }
 function drillHand(q) {
   const keys = q.hand.split(' '), pick = q.kind === 'discard', hl = DR.hl || [];
-  const tile = i => tT(keys[i], (pick ? 'dpick ' : '') + (hl.includes(i) ? 'hl' : ''), `data-k="${keys[i]}" data-di="${pick ? i : ''}"`);
-  const meld = q.meld ? `<div class="tt-row"><span class="tt-grp tight on">${q.meld.split(' ').map(k => tT(k)).join('')}<span class="lb">${q.meldLb}</span></span></div>` : '';
+  const tile = i => tT(keys[i], (pick ? 'dpick ' : '') + (hl.includes(i) ? 'hl' : ''), `data-k="${keys[i]}" data-idx="${i}" data-di="${pick ? i : ''}"`);
+  const meld = q.meld ? `<div class="tt-row"><span class="tt-grp tight on">${q.meld.split(' ').map(k => tT(k)).join('')}${DR.slot ? '<span class="tile ph" id="drSlot0"></span>' : ''}<span class="lb">${q.meldLb}</span></span></div>` : '';
   if (DR.arr && q.groups) return `<div class="tt-row">${q.groups.map(g => `<span class="tt-grp tight ${g.lb ? 'on' : ''}">${g.i.map(tile).join('')}${g.lb ? `<span class="lb">${g.lb}</span>` : ''}</span>`).join('')}</div>`;
   return [0, 7].map(s => `<div class="tt-row">${keys.slice(s, s + 7).map((k, j) => tile(s + j)).join('')}</div>`).join('') + meld;
 }
@@ -3500,9 +3500,9 @@ function renderDrill() {
   const D = drillData(), d = $('#tutDlg'), N = D.length;
   if (DR.i >= N) return renderDrillEnd(N);
   const q = D[DR.i], pick = q.kind === 'discard';
-  DR.ok = false; DR.wrong = false; DR.arr = false; DR.hl = [];
+  DR.ok = false; DR.wrong = false; DR.arr = false; DR.hl = []; DR.slot = false;
   const rows = `<div id="drHand">${drillHand(q)}</div>`;
-  const zone = pick ? '' : `<div class="tt-zone"><span class="zl">${q.zl || LL(q.from + '打出', q.from + ' discards', q.from + 'の捨て牌')}</span>${tT(q.disc, 'hl')}</div>`;
+  const zone = pick ? '' : `<div class="tt-zone"><span class="zl">${q.zl || LL(q.from + '打出', q.from + ' discards', q.from + 'の捨て牌')}</span>${tT(q.disc, 'hl', 'id="drDisc"')}</div>`;
   d.innerHTML = `${XBTN()}<div class="tthead"><h2>${LL('練習', 'Practice', '練習')}</h2><span class="ttn">${DR.i + 1} / ${N}</span></div>`
     + `<div class="tts dr" id="ttStage">${zone}${rows}</div><p class="ttp" style="min-height:0"><b>${q.q}</b></p>`
     + (q.groups ? `<div class="dropts"><button type="button" class="btn" id="drArr">${LL('整理手牌', 'Arrange hand', '手牌を整理')}</button></div>` : '')
@@ -3529,8 +3529,26 @@ function drillPick(type, val) {
   DR.ok = true; if (!DR.wrong) DR.score++;
   DR.hl = []; const used = [];
   (q.use || []).forEach(k => { const i = keys.findIndex((x, j) => x === k && !used.includes(j)); if (i >= 0) used.push(i); });
-  DR.hl = type === 'tile' ? [val] : used; redraw();
+  if (type === 'opt' && q.disc && q.ans !== 'pass') drillClaimAnim(q, used);
+  else { DR.hl = type === 'tile' ? [val] : used; redraw(); }
   $('#drNext').disabled = false;
+}
+// 吃碰槓胡成功：被要的牌和手上的牌一起飛進一組裡
+function drillClaimAnim(q, used) {
+  const st = $('#ttStage'), at = (ms, f) => TUT.timers.push(setTimeout(f, ms));
+  if (q.meld) {
+    DR.slot = true; $('#drHand').innerHTML = drillHand(q);
+    at(150, () => tutFly(st, '#drDisc', '#drSlot0'));
+    at(900, () => { st.querySelectorAll('#drHand .tt-grp .tile').forEach(e => e.classList.add('hl')); const d = $('#drDisc'); if (d) d.classList.add('hl'); });
+    return;
+  }
+  const keys = q.hand.split(' '), num = it => +(it.disc ? q.disc : keys[it.i]).slice(1);
+  const items = used.map(i => ({ i })).concat([{ disc: true }]).sort((a, b) => num(a) - num(b));
+  const row = document.createElement('div'); row.className = 'tt-row';
+  row.innerHTML = `<span class="tt-grp tight" id="drMeld">${items.map((_, n) => `<span class="tile ph ms${n}"></span>`).join('')}<span class="lb">${q.O[q.ans]}</span></span>`;
+  st.appendChild(row);
+  items.forEach((it, n) => at(200 + n * 260, () => tutFly(st, it.disc ? '#drDisc' : `#drHand [data-idx="${it.i}"]`, `.ms${n}`)));
+  at(200 + items.length * 260 + 600, () => { $('#drMeld').classList.add('on'); st.querySelectorAll('.tile').forEach(e => { if (e.style.transform) e.classList.add('hl'); }); });
 }
 function renderDrillEnd(N) {
   const landing = !$('#landing').hidden, s = DR.score;
