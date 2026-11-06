@@ -582,6 +582,8 @@ body:has(#cheatDlg[open]) #cheatTab{right:min(340px,86vw);animation:none}
 .tt-calc em{font-style:normal;font-size:calc(11.5px*var(--fs,1));color:var(--muted);font-weight:500;margin-left:3px}
 .tt-calc .big{font:900 calc(34px*var(--fs,1)) var(--face);color:var(--gold-t)}
 .tts.sm{--tu:clamp(6.5px,2vw,9px)}
+.tts.xs{--tu:clamp(4.8px,1.5vw,9px)}
+.tts.xs .tt-row{flex-wrap:nowrap}
 .tts .gapl{margin-left:calc(var(--tu)*.9)}
 .tt-col{display:flex;flex-direction:column;align-items:center;gap:2px;transition:opacity .45s,transform .45s}
 .tt-col em{font-style:normal;font-size:calc(11.5px*var(--fs,1));color:var(--muted);font-weight:700}
@@ -3316,8 +3318,9 @@ function tutSteps() {
       p: LL('輪到你時，先從牌牆<b>摸一張</b>（13 變 14 張），再<b>打出一張</b>（回到 13 張）。打出的牌放在桌面中間。打哪張，是整個遊戲的重點。',
         'On your turn, <b>draw a tile</b> from the wall (13 → 14), then <b>discard one</b> (back to 13). Discards go face-up in the middle of the table. Choosing what to discard is the heart of the game.',
         '自分の番に山から<b>1枚ツモ</b>（13→14枚）して、<b>1枚捨て</b>（13枚に戻る）ます。捨て牌は卓の中央に並びます。何を捨てるかがゲームの核心です。'),
+      cls: 'xs',
       stage: `<div class="tt-zone"><span class="zl">${LL('棄牌', 'Discards', '捨て牌')}</span>${tT('m8')}${tT('s1')}<span class="tile ph slot"></span></div>`
-        + `<div class="tt-row">${tT('p2')}${tT('p3')}${tT('s5')}${tT('s6')}${tT('m3', 'dis')}${tT('z2')}${tT('p8')}${tT('p4', 'hid draw gapl')}</div>`,
+        + `<div class="tt-row">${'p2 p3 p5 p8 m3 m6 m7 m8 s5 s6 s9 s9 z2'.split(' ').map(k => tT(k, k === 'm3' ? 'dis' : '')).join('')}${tT('p4', 'hid draw gapl')}</div>`,
       acts: [[400, 'say', LL('先摸一張（13 → 14）', 'Draw one (13 → 14)', 'まず1枚ツモ（13→14）')], [600, 'show', '.draw'], [2100, 'say', LL('再打出一張（14 → 13）', 'Then discard one (14 → 13)', '1枚捨てる（14→13）')], [2200, 'add', '.dis', 'hl'], [3000, 'fly', '.dis', '.slot'], [3800, 'rm', '.dis', 'hl']]
     },
     { t: LL('碰：拿別人的牌', 'Pung: take a discard', 'ポン：捨て牌をもらう'),
