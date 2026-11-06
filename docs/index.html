@@ -4512,7 +4512,10 @@ function tutSteps() {
 }
 
 /* ===== 新手練習：什麼時候吃、碰、槓、胡，以及該打哪張 ===== */
-const DR = { i: 0, score: 0, ok: false, wrong: false, set: 'new' };
+const DR = { i: 0, score: 0, ok: false, wrong: false, set: 'new', sub: false };
+const drillCur = () => DR.sub ? drillSub(drillData()[DR.i]) : drillData()[DR.i];
+// 吃碰槓之後要打出一張：把「成功之後」的手牌變成一題打牌題
+const drillSub = q => ({ kind: 'discard', sub: true, q: q.after.q, hand: q.after.hand, groups: q.after.groups, ans: q.after.dis, why: q.after.why, ok: q.after.ok, meld: q.after.meld, meldLb: q.O[q.ans], O: q.O });
 function drillData() { return DR.set === 'pro' ? drillDataPro() : drillDataNew(); }
 function drillDataPro() {
   const O = { chow: LL('吃', 'Chow', 'チー'), pung: LL('碰', 'Pung', 'ポン'), win: LL('胡', 'Win', 'ロン'), pass: LL('過', 'Pass', 'パス'), dis: LL('打出這張', 'Discard it', 'そのまま捨てる'), big: LL('大槓', 'Grand kong', '大カン') };
@@ -4550,15 +4553,15 @@ function drillDataNew() {
   const O = { chow: LL('吃', 'Chow', 'チー'), zimo: LL('自摸', 'Zimo', 'ツモ'), dis: LL('打出這張', 'Discard it', 'そのまま捨てる'), pung: LL('碰', 'Pung', 'ポン'), kong: LL('槓', 'Kong', 'カン'), win: LL('胡', 'Win', 'ロン'), pass: LL('過', 'Pass', 'パス') };
   const up = LL('上家', 'Upstream', '上家'), across = LL('對家', 'Across', '対面'), down = LL('下家', 'Downstream', '下家');
   const R = [
-    { kind: 'claim', from: up, disc: 'p5', hand: 'p4 p6 p9 s2 s3 s5 s8 s9 m3 m7 m8 z2 z2', use: ['p4', 'p6'], opts: ['chow', 'pung', 'pass'], ans: 'chow', O,
+    { kind: 'claim', from: up, disc: 'p5', hand: 'p4 p6 p8 p9 m4 m4 m5 m6 m7 s2 s5 s6 s7', use: ['p4', 'p6'], opts: ['chow', 'pung', 'pass'], ans: 'chow', O,
       q: LL('上家打出一張五筒。你手上有四筒和六筒。你可以怎麼做？', 'Upstream discards a 5 of circles. You hold a 4 and a 6 of circles. What can you do?', '上家が五筒を捨てました。手には四筒と六筒があります。どうしますか？'),
       ok: LL('對！四筒＋五筒＋六筒組成順子。吃只能吃上家打出的牌。', 'Right! 4-5-6 of circles makes a sequence. You can only chow the upstream player’s discard.', '正解！四五六筒で順子。チーできるのは上家の捨て牌だけです。'),
       why: { pung: LL('碰需要手上有兩張一樣的五筒，你只有四筒和六筒。', 'A pung needs two identical 5s in your hand. You hold a 4 and a 6.', 'ポンには同じ五筒が2枚必要です。手にあるのは四筒と六筒です。'), pass: LL('不用放過：這張五筒剛好能和四筒、六筒連成順子。', 'No need to pass: this 5 completes a sequence with your 4 and 6.', '見送る必要はありません。この五筒で四筒・六筒と順子になります。') } },
-    { kind: 'claim', from: across, disc: 's6', hand: 'p2 p3 p5 p8 s4 s6 s6 s9 m2 m7 m9 z1 z3', use: ['s6', 's6'], opts: ['chow', 'pung', 'kong', 'pass'], ans: 'pung', O,
+    { kind: 'claim', from: across, disc: 's6', hand: 'p2 p3 p4 m2 m4 m4 s6 s6 s8 s9 z1 z1 z1', use: ['s6', 's6'], opts: ['chow', 'pung', 'kong', 'pass'], ans: 'pung', O,
       q: LL('對家打出一張六索。你手上有兩張六索。你可以怎麼做？', 'Across discards a 6 of bamboo. You hold two 6s of bamboo. What can you do?', '対面が六索を捨てました。手には六索が2枚あります。どうしますか？'),
       ok: LL('對！手上有兩張一樣的，任何人打出第三張都可以碰。', 'Right! With two identical tiles you can pung anyone’s discard.', '正解！同じ牌を2枚持っていれば、誰の捨て牌でもポンできます。'),
       why: { chow: LL('吃只能吃上家的牌，而且你手上沒有五索、七索。', 'Chow only works on the upstream player’s discard, and you hold no 5 or 7 of bamboo.', 'チーは上家の牌だけで、五索・七索も持っていません。'), kong: LL('槓需要手上有三張一樣的，你只有兩張。', 'A kong needs three identical tiles in hand. You have two.', 'カンには同じ牌が3枚必要です。持っているのは2枚です。'), pass: LL('你有兩張六索，可以碰！', 'You hold two 6s of bamboo, so you can pung!', '六索を2枚持っているのでポンできます！') } },
-    { kind: 'claim', from: down, disc: 'm5', hand: 'p3 p6 p9 s2 s4 s7 s9 m5 m5 m5 m8 z2 z2', use: ['m5', 'm5', 'm5'], opts: ['pung', 'kong', 'pass'], ans: 'kong', O,
+    { kind: 'claim', from: down, disc: 'm5', hand: 'p2 p3 p4 p8 p9 m5 m5 m5 s4 s4 z1 z1 z1', use: ['m5', 'm5', 'm5'], opts: ['pung', 'kong', 'pass'], ans: 'kong', O,
       q: LL('你手上有三張五萬，下家打出第四張五萬。你想拿來湊成「四張一組」，要喊什麼？', 'You hold three 5s of characters and Downstream discards the fourth. You want to take it as a group of four. What do you call?', '五萬を3枚持っていて、下家が4枚目を捨てました。4枚1組にするには何と言いますか？'),
       ok: LL('對！四張一樣叫槓，之後還要從牌牆補摸一張牌。', 'Right! Four identical tiles is a kong, and you draw a bonus tile from the wall afterwards.', '正解！同じ牌4枚はカン。そのあと山からもう1枚引きます。'),
       why: { pung: LL('碰也是拿牌，但你已經有三張，拿第四張可以槓：四張一組，還能多補摸一張。', 'A pung also takes a tile, but you already hold three: taking the fourth makes a kong, which also gives you a bonus draw.', 'ポンでも鳴けますが、すでに3枚あるので4枚目でカンになり、追加で1枚引けます。'), pass: LL('三張在手、第四張出現，不要放過，可以槓！', 'Three in hand and the fourth appears: don’t pass, you can kong!', '3枚持っていて4枚目が出たので、見送らずカンできます！') } },
@@ -4586,21 +4589,36 @@ function drillDataNew() {
   const G13 = [{ i: [0, 1, 2], lb: seq }, { i: [3, 4], lb: wt }, { i: [5, 6], lb: pr }, { i: [7, 8, 9], lb: seq }, { i: [10, 11, 12], lb: tri }];
   const G14 = [{ i: [0, 1, 2], lb: seq }, { i: [3, 4], lb: wt }, { i: [5, 6], lb: pr }, { i: [7], lb: '' }, { i: [8, 9, 10], lb: seq }, { i: [11, 12, 13], lb: tri }];
   R.forEach(q => { if (q.hand.startsWith('p2 p3 p4 p7 p8')) q.groups = q.kind === 'discard' ? G14 : G13; });
+  const Gx = (...a) => a.map(([i, lb]) => ({ i, lb }));
+  const sub = (zh, en, ja) => LL(zh, en, ja), keep = LL('這張在組合裡有用。找找看哪張牌和其他牌都連不起來？', 'That tile is part of a set or pair. Which tile connects to nothing?', 'この牌はメンツか雀頭の一部です。どこにもつながらない牌はどれ？');
+  const wait = (n7, ja7) => LL(`${n7}在等${n7 === '八筒九筒' ? '七筒' : '七索'}，留著！`, `Those are waiting for a ${n7 === '八筒九筒' ? '7 of circles' : '7 of bamboo'}. Keep them!`, `${ja7}は待ち牌です。残しましょう！`);
+  R[0].after = { hand: 'p8 p9 m4 m4 m5 m6 m7 s2 s5 s6 s7', meld: 'p4 p5 p6', dis: 's2', groups: Gx([[0, 1], LL('等牌', 'Waiting', '待ち')], [[2, 3], pr], [[4, 5, 6], seq], [[7], ''], [[8, 9, 10], seq]),
+    q: sub('吃成功！現在手上有 14 張（手牌 11 張＋吃來的 3 張），一定要打出一張。哪張最沒用？', 'Chow done! You now hold 14 tiles (11 in hand plus the 3 you chowed), so you must discard one. Which is the least useful?', 'チー成功！手牌は14枚（手に11枚＋チーした3枚）で、1枚捨てる必要があります。いちばん不要な牌はどれ？'),
+    ok: sub('對！二索是孤張。吃牌之後一定要打出一張，打掉它就聽牌了：再有一張七筒就胡牌。', 'Right! The 2 of bamboo is a loose tile. After a chow you always have to discard one, and with it gone you are ready (tenpai): one more 7 of circles wins.', '正解！二索は孤立牌です。チーのあとは必ず1枚捨てます。これで聴牌：七筒が来ればあがりです。'),
+    why: { _: keep, p8: wait('八筒九筒', '八筒九筒'), p9: wait('八筒九筒', '八筒九筒') } };
+  R[1].after = { hand: 'p2 p3 p4 m2 m4 m4 s8 s9 z1 z1 z1', meld: 's6 s6 s6', dis: 'm2', groups: Gx([[0, 1, 2], seq], [[3], ''], [[4, 5], pr], [[6, 7], LL('等牌', 'Waiting', '待ち')], [[8, 9, 10], tri]),
+    q: sub('碰成功！現在手上有 14 張，一定要打出一張。哪張最沒用？', 'Pung done! You now hold 14 tiles, so you must discard one. Which is the least useful?', 'ポン成功！手牌は14枚で、1枚捨てる必要があります。いちばん不要な牌はどれ？'),
+    ok: sub('對！二萬是孤張。碰牌之後也要打出一張，打掉它就聽牌了：再有一張七索就胡牌。', 'Right! The 2 of characters is a loose tile. You must discard after a pung too, and with it gone you are ready (tenpai): one more 7 of bamboo wins.', '正解！二萬は孤立牌です。ポンのあとも必ず1枚捨てます。これで聴牌：七索が来ればあがりです。'),
+    why: { _: keep, s8: wait('八索九索', '八索九索'), s9: wait('八索九索', '八索九索'), z1: LL('紅中刻子有 1 番，留著！', 'The Red Dragon triplet is worth 1 fan. Keep it!', '中の刻子は1翻です。残しましょう！') } };
+  R[2].after = { hand: 'p2 p3 p4 p8 p9 m2 s4 s4 z1 z1 z1', meld: 'm5 m5 m5 m5', dis: 'm2', groups: Gx([[0, 1, 2], seq], [[3, 4], LL('等牌', 'Waiting', '待ち')], [[5], ''], [[6, 7], pr], [[8, 9, 10], tri]),
+    q: sub('槓成功！四張攤開，還要從牌牆補摸一張（二萬）。現在手上又有 14 張，要打出一張。哪張最沒用？', 'Kong done! Four tiles are laid out and you draw a bonus tile from the wall (a 2 of characters). You hold 14 tiles again, so discard one. Which is the least useful?', 'カン成功！4枚を公開し、山から補充牌（二萬）を引きました。手牌は再び14枚で、1枚捨てます。いちばん不要な牌はどれ？'),
+    ok: sub('對！補摸到的二萬是孤張，打掉它就聽牌了：再有一張七筒就胡牌。', 'Right! The bonus 2 of characters is a loose tile. Discard it and you are ready (tenpai): one more 7 of circles wins.', '正解！補充牌の二萬は孤立牌です。捨てれば聴牌：七筒が来ればあがりです。'),
+    why: { _: keep, p8: wait('八筒九筒', '八筒九筒'), p9: wait('八筒九筒', '八筒九筒'), z1: LL('紅中刻子有 1 番，留著！', 'The Red Dragon triplet is worth 1 fan. Keep it!', '中の刻子は1翻です。残しましょう！') } };
   return R;
 }
 function drillHand(q) {
   const keys = q.hand.split(' '), pick = q.kind === 'discard', hl = DR.hl || [];
   const tile = i => tT(keys[i], (pick ? 'dpick ' : '') + (hl.includes(i) ? 'hl' : ''), `data-k="${keys[i]}" data-idx="${i}" data-di="${pick ? i : ''}"`);
-  const meld = q.meld ? `<div class="tt-row"><span class="tt-grp tight on">${q.meld.split(' ').map(k => tT(k)).join('')}${DR.slot ? '<span class="tile ph" id="drSlot0"></span>' : ''}<span class="lb">${q.meldLb}</span></span></div>` : '';
-  if (DR.arr && q.groups) return `<div class="tt-row">${q.groups.map(g => `<span class="tt-grp tight ${g.lb ? 'on' : ''}">${g.i.map(tile).join('')}${g.lb ? `<span class="lb">${g.lb}</span>` : ''}</span>`).join('')}</div>`;
+  const meld = q.meld ? `<div class="tt-row"><span class="tt-grp on">${q.meld.split(' ').map(k => tT(k)).join('')}${DR.slot ? '<span class="tile ph" id="drSlot0"></span>' : ''}<span class="lb">${q.meldLb}</span></span></div>` : '';
+  if (DR.arr && q.groups) return `<div class="tt-row">${q.groups.map(g => `<span class="tt-grp ${g.lb ? 'on' : ''}">${g.i.map(tile).join('')}${g.lb ? `<span class="lb">${g.lb}</span>` : ''}</span>`).join('')}</div>`;
   return [0, 7].map(s => `<div class="tt-row">${keys.slice(s, s + 7).map((k, j) => tile(s + j)).join('')}</div>`).join('') + meld;
 }
 function renderDrill() {
   tutStop();
   const D = drillData(), d = $('#tutDlg'), N = D.length;
   if (DR.i >= N) return renderDrillEnd(N);
-  const q = D[DR.i], pick = q.kind === 'discard';
-  DR.ok = false; DR.wrong = false; DR.arr = false; DR.hl = []; DR.slot = false;
+  const q = drillCur(), pick = q.kind === 'discard';
+  DR.ok = false; if (!DR.sub) DR.wrong = false; DR.arr = false; DR.hl = []; DR.slot = false;
   const rows = `<div id="drHand">${drillHand(q)}</div>`;
   const zone = pick ? '' : `<div class="tt-zone"><span class="zl">${q.zl || LL(q.from + '打出', q.from + ' discards', q.from + 'の捨て牌')}</span>${tT(q.disc, 'hl', 'id="drDisc"')}</div>`;
   d.innerHTML = `${XBTN()}<div class="tthead"><h2>${LL('練習', 'Practice', '練習')}</h2><span class="ttn">${DR.i + 1} / ${N}</span></div>`
@@ -4612,7 +4630,7 @@ function renderDrill() {
 }
 function drillPick(type, val) {
   if (DR.ok) return;
-  const q = drillData()[DR.i], fb = $('#drFb'); let ok, msg;
+  const q = drillCur(), fb = $('#drFb'); let ok, msg;
   if (type === 'tile') { const k = q.hand.split(' ')[val]; ok = k === q.ans; msg = ok ? q.ok : (q.why[k] || q.why._); }
   else { ok = val === q.ans; msg = ok ? q.ok : (q.why[val] || q.why._); }
   fb.className = 'drfb ' + (ok ? 'ok' : 'bad'); fb.textContent = (ok ? '✔ ' : '✘ ') + msg;
@@ -4626,12 +4644,12 @@ function drillPick(type, val) {
     }
     return;
   }
-  DR.ok = true; if (!DR.wrong) DR.score++;
+  DR.ok = true; if (!DR.wrong && !q.after) DR.score++;
   DR.hl = []; const used = [];
   (q.use || []).forEach(k => { const i = keys.findIndex((x, j) => x === k && !used.includes(j)); if (i >= 0) used.push(i); });
   if (type === 'opt' && q.disc && q.ans !== 'pass') drillClaimAnim(q, used);
   else { DR.hl = type === 'tile' ? [val] : used; redraw(); }
-  $('#drNext').disabled = false;
+  if (!q.after) $('#drNext').disabled = false;
 }
 // 吃碰槓胡成功：被要的牌和手上的牌一起飛進一組裡
 function drillClaimAnim(q, used) {
@@ -4640,15 +4658,17 @@ function drillClaimAnim(q, used) {
     DR.slot = true; $('#drHand').innerHTML = drillHand(q);
     at(150, () => tutFly(st, '#drDisc', '#drSlot0'));
     at(900, () => { st.querySelectorAll('#drHand .tt-grp .tile').forEach(e => e.classList.add('hl')); const d = $('#drDisc'); if (d) d.classList.add('hl'); });
+    if (q.after) at(2400, () => { DR.sub = true; renderDrill(); });
     return;
   }
   const keys = q.hand.split(' '), num = it => +(it.disc ? q.disc : keys[it.i]).slice(1);
   const items = used.map(i => ({ i })).concat([{ disc: true }]).sort((a, b) => num(a) - num(b));
   const row = document.createElement('div'); row.className = 'tt-row';
-  row.innerHTML = `<span class="tt-grp tight" id="drMeld">${items.map((_, n) => `<span class="tile ph ms${n}"></span>`).join('')}<span class="lb">${q.O[q.ans]}</span></span>`;
+  row.innerHTML = `<span class="tt-grp" id="drMeld">${items.map((_, n) => `<span class="tile ph ms${n}"></span>`).join('')}<span class="lb">${q.O[q.ans]}</span></span>`;
   st.appendChild(row);
   items.forEach((it, n) => at(200 + n * 260, () => tutFly(st, it.disc ? '#drDisc' : `#drHand [data-idx="${it.i}"]`, `.ms${n}`)));
   at(200 + items.length * 260 + 600, () => { $('#drMeld').classList.add('on'); st.querySelectorAll('.tile').forEach(e => { if (e.style.transform) e.classList.add('hl'); }); });
+  if (q.after) at(200 + items.length * 260 + 1800, () => { DR.sub = true; renderDrill(); });
 }
 function renderDrillEnd(N) {
   const landing = !$('#landing').hidden, s = DR.score;
@@ -4707,9 +4727,9 @@ $('#tutDlg').addEventListener('click', e => {
   const dt = e.target.closest('[data-di]'); if (dt && dt.dataset.di !== '') return drillPick('tile', +dt.dataset.di);
   const b = e.target.closest('button,[data-i]'); if (!b) return;
   if (b.dataset.o) return drillPick('opt', b.dataset.o);
-  if (b.id === 'drNext') { DR.i++; renderDrill(); return; }
-  if (b.id === 'drArr') { DR.arr = !DR.arr; const q = drillData()[DR.i]; $('#drHand').innerHTML = drillHand(q); b.textContent = DR.arr ? LL('還原', 'Reset', '元に戻す') : LL('整理手牌', 'Arrange hand', '手牌を整理'); return; }
-  if (b.dataset.tgo === 'drill') { if (TUT.k !== 'drill') DR.set = TUT.k; TUT.k = 'drill'; DR.i = 0; DR.score = 0; renderDrill(); return; }
+  if (b.id === 'drNext') { DR.sub = false; DR.i++; renderDrill(); return; }
+  if (b.id === 'drArr') { DR.arr = !DR.arr; const q = drillCur(); $('#drHand').innerHTML = drillHand(q); b.textContent = DR.arr ? LL('還原', 'Reset', '元に戻す') : LL('整理手牌', 'Arrange hand', '手牌を整理'); return; }
+  if (b.dataset.tgo === 'drill') { if (TUT.k !== 'drill') DR.set = TUT.k; TUT.k = 'drill'; DR.i = 0; DR.score = 0; DR.sub = false; renderDrill(); return; }
   const n = tutSteps().length, d = $('#tutDlg');
   if (b.id === 'ttPrev') { TUT.i = Math.max(0, TUT.i - 1); renderTut(); }
   else if (b.id === 'ttNext') { if (TUT.i >= n - 1) d.close(); else { TUT.i++; renderTut(); } }
