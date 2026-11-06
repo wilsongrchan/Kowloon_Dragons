@@ -3286,9 +3286,11 @@ function tutSteps() {
       p: LL('每種花色裡，<b>數字越大，牌越少</b>：一有 9 張，九只有 1 張。而每張牌的<b>點數就是牌面數字</b>，所以九最少、也最值錢。',
         'In every suit, <b>the bigger the number, the fewer copies</b>: nine copies of 1, but only one 9. A tile&#39;s <b>points equal its number</b>, so 9 is the rarest and the most valuable.',
         '各種類で<b>数字が大きいほど枚数が少なく</b>、一は9枚、九は1枚だけ。牌の<b>点数は数字そのまま</b>なので、九が一番レアで高得点です。'),
-      stage: tBars(),
-      acts: [[300, 'add+', '.bar', 'on', 100], [300, 'show+', '.cnt', 100], [1500, 'add', '.b1', 'hl'], [1500, 'say', LL('一：9 張・1 點', '1: nine copies, 1 point', '一：9枚・1点')],
-        [2900, 'rm', '.bar', 'hl'], [2900, 'add', '.b9', 'hl'], [2900, 'say', LL('九：只有 1 張・9 點', '9: one copy, 9 points', '九：1枚・9点')]]
+      cls: 'sm',
+      stage: [1, 3, 5, 7, 9].map(d => `<div class="tt-line hid l${d}"><span class="tl">×${10 - d}</span>${tRow(Array(10 - d).fill('p' + d).join(' '), '', 'hid r' + d)}</div>`).join(''),
+      acts: [[300, 'show', '.l1'], [400, 'show+', '.r1', 90], [900, 'say', LL('一：有 9 張，每張 1 點', '1: nine copies, 1 point each', '一：9枚・1枚1点')],
+        [1700, 'show', '.l3'], [1800, 'show+', '.r3', 90], [2600, 'show', '.l5'], [2700, 'show+', '.r5', 90], [3300, 'show', '.l7'], [3400, 'show+', '.r7', 90],
+        [4000, 'show', '.l9'], [4100, 'show+', '.r9', 90], [4300, 'add', '.r9', 'hl'], [4300, 'say', LL('九：只有 1 張，9 點！', '9: only one copy, 9 points!', '九：1枚だけ・9点！')]]
     },
     {
       t: LL('目標：4 組＋1 對', 'Goal: 4 sets + 1 pair', '目標：4組＋1対'),
