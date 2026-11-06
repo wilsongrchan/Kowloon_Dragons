@@ -507,13 +507,14 @@ body:has(#cheatDlg[open]) #cheatTab{right:min(340px,86vw);animation:none}
 #landing .foot{position:relative;font-size:calc(12px*var(--fs,1));color:var(--muted);text-align:center}
 .brand h1{cursor:pointer}
 /* ===== 動畫教學 ===== */
-#landing .tutrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;text-align:left}
-#landing .tutrow button,#rules .tutrow button{display:flex;flex-direction:column;gap:2px;align-items:flex-start;padding:10px 12px;border-radius:12px;text-align:left;font-size:calc(14px*var(--fs,1));font-weight:700;line-height:1.3;
+#landing .tutrow{display:grid;grid-template-columns:1fr;gap:8px;margin-top:14px;text-align:left}
+#tutDlg .tutrow{display:grid;gap:10px;margin:14px 0 4px}
+#tutDlg .tutrow button{width:100%;padding:14px 16px;font-size:calc(16px*var(--fs,1))}
+#landing .tutrow button,#rules .tutrow button,#tutDlg .tutrow button{display:flex;flex-direction:column;gap:2px;align-items:flex-start;padding:10px 12px;border-radius:12px;text-align:left;font-size:calc(14px*var(--fs,1));font-weight:700;line-height:1.3;
   color:var(--text);background:var(--table2);border:1px solid var(--line);cursor:pointer}
-#landing .tutrow button:hover,#rules .tutrow button:hover{border-color:var(--gold)}
-#landing .tutrow small,#rules .tutrow small{font:400 calc(11.5px*var(--fs,1))/1.35 var(--ui);color:var(--muted)}
-#rules .tutrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}
-@media (max-width:380px){#landing .tutrow,#rules .tutrow{grid-template-columns:1fr}}
+#landing .tutrow button:hover,#rules .tutrow button:hover,#tutDlg .tutrow button:hover{border-color:var(--gold)}
+#landing .tutrow small,#rules .tutrow small,#tutDlg .tutrow small{font:400 calc(11.5px*var(--fs,1))/1.35 var(--ui);color:var(--muted)}
+#rules .tutrow{display:grid;grid-template-columns:1fr;gap:8px;margin:10px 0 12px}
 #tutDlg{max-width:min(560px,96vw);padding:16px 16px 14px}
 #tutDlg .tthead{display:flex;align-items:baseline;gap:10px;padding-right:38px;margin-bottom:8px}
 #tutDlg .tthead h2{margin:0;font-size:calc(19px*var(--fs,1))}
@@ -3176,8 +3177,13 @@ const tChip = (txt, cls = 'hid') => `<span class="tt-chip ${cls}">${txt}</span>`
 const tBars = () => `<div class="tt-bars">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => `<div class="bc"><b class="cnt hid">${10 - d}</b><i class="bar b${d}" style="--h:${10 - d}"></i><span class="num">${d}</span></div>`).join('')}</div>`;
 
 function tutBtns() {
-  return `<div class="tutrow"><button type="button" data-tut="new">🀄 ${LL('完全沒玩過麻將', 'New to mahjong', '麻雀は初めて')}<small>${LL('動畫教學・約 2 分鐘', 'Animated tutorial · ~2 min', 'アニメで解説・約2分')}</small></button>`
-    + `<button type="button" data-tut="pro">🐉 ${LL('我會打麻將', 'I already play mahjong', '麻雀経験者')}<small>${LL('港式／日本／台灣玩家：看哪裡不同', 'HK · Japanese · Taiwanese: what is different', '香港・日本・台湾ルール経験者向け')}</small></button></div>`;
+  return `<div class="tutrow"><button type="button" data-tut="choose">📖 ${LL('遊戲教程', 'How to play', '遊び方')}<small>${LL('動畫教學・約 2 分鐘', 'Animated tutorial · ~2 min', 'アニメで解説・約2分')}</small></button></div>`;
+}
+function renderTutChoose() {
+  tutStop();
+  $('#tutDlg').innerHTML = `${XBTN()}<div class="tthead"><h2>${LL('遊戲教程', 'How to play', '遊び方')}</h2></div><p class="ttp" style="min-height:0">${LL('你以前玩過麻將嗎？', 'Have you played mahjong before?', 'これまでに麻雀をしたことはありますか？')}</p>`
+    + `<div class="tutrow"><button type="button" data-tut="new">🀄 ${LL('完全沒玩過麻將', 'Never played mahjong', '麻雀は初めて')}<small>${LL('從頭教起', 'Start from the basics', '基本から解説')}</small></button>`
+    + `<button type="button" data-tut="pro">🐉 ${LL('玩過麻將（香港、日本、台灣）', 'I have played (Hong Kong, Japanese or Taiwanese)', '麻雀経験あり（香港・日本・台湾）')}<small>${LL('只看哪裡不同', 'Just what is different', '違いだけ解説')}</small></button></div>`;
 }
 
 function tutSteps() {
@@ -3404,6 +3410,7 @@ function tutPlay() {
   q.forEach(([t, f]) => { if (rm) f(); else TUT.timers.push(setTimeout(f, t)); });
 }
 function renderTut() {
+  if (TUT.k === 'choose') return renderTutChoose();
   const d = $('#tutDlg'), S = tutSteps(), s = S[TUT.i], last = TUT.i === S.length - 1;
   const landing = !$('#landing').hidden;
   d.innerHTML = `${XBTN()}<div class="tthead"><h2>${s.t}</h2><span class="ttn">${TUT.i + 1} / ${S.length}</span></div>`
