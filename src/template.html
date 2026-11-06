@@ -548,6 +548,9 @@ body:has(#cheatDlg[open]) #cheatTab{right:min(340px,86vw);animation:none}
 .tt-grp .lb{position:absolute;left:50%;bottom:calc(var(--tu)*-1.9);transform:translateX(-50%);white-space:nowrap;font-size:calc(12px*var(--fs,1));font-weight:700;color:var(--gold-t);opacity:0;transition:opacity .4s}
 .tt-grp.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.12)}
 .tt-grp.on .lb{opacity:1}
+.tt-grp.bad.on{border-color:var(--neg);background:rgba(200,60,60,.12)}
+.tt-grp.bad.on .lb{color:var(--neg)}
+.xm{color:var(--neg);font-size:calc(26px*var(--fs,1));font-weight:900;transition:opacity .4s,transform .4s}
 .tt-grp.cai.on{border-style:solid;box-shadow:0 0 14px rgba(var(--gold-rgb),.55)}
 .tt-grp.tight{margin-bottom:calc(var(--tu)*.9)}
 .tt-say{position:absolute;top:8px;left:0;right:0;margin:0 auto;width:fit-content;max-width:94%;padding:4px 12px;border-radius:99px;background:rgba(var(--gold-rgb),.2);border:1px solid var(--gold);
@@ -3203,7 +3206,7 @@ function tutSteps() {
       p: LL('幺九龍是麻將的親戚：同樣是<b>吃、碰、槓</b>，湊 <b>4 組＋1 對</b>。但牌組完全不同：<b>沒有風牌、花牌</b>，只有三色數牌＋<b>中發白各 5 張</b>，共 150 張，普通麻將牌不能拿來玩。',
         'Kowloon Dragons is a cousin of mahjong: <b>chow, pung, kong</b> and <b>4 sets + a pair</b>. The tile set is different: <b>no winds, no flowers</b>, just three suits plus <b>5 copies of each dragon</b>, 150 tiles in all. A standard mahjong set will not do.',
         '幺九龍は麻雀の親戚で、<b>チー・ポン・カン</b>で<b>4メンツ＋雀頭</b>をつくります。ただし牌は別物：<b>風牌も花牌もなく</b>、3種の数牌と<b>中發白が各5枚</b>の計150枚。普通の麻雀牌では遊べません。'),
-      stage: `<div class="tt-row" style="gap:calc(var(--tu)*1.6)">${[['p5', LL('筒 ×45', 'Circles ×45', '筒 ×45')], ['s5', LL('索 ×45', 'Bamboo ×45', '索 ×45')], ['m5', LL('萬 ×45', 'Characters ×45', '萬 ×45')], ['z1', LL('龍 ×15', 'Dragons ×15', '字牌 ×15')]].map(([k, t]) => `<span class="tt-col hid">${tT(k)}<em>${t}</em></span>`).join('')}</div>`
+      stage: `<div class="tt-row" style="gap:calc(var(--tu)*1.6)">${[['p5', LL('筒 ×45', 'Circles ×45', '筒 ×45')], ['s5', LL('索 ×45', 'Bamboo ×45', '索 ×45')], ['m5', LL('萬 ×45', 'Characters ×45', '萬 ×45')], ['z1', LL('三元牌 ×15', 'Dragons ×15', '三元牌 ×15')]].map(([k, t]) => `<span class="tt-col hid">${tT(k)}<em>${t}</em></span>`).join('')}</div>`
         + `<div class="tt-calc hid calc"><span class="big"><span data-to="150">0</span></span><em>${LL('張', 'tiles', '枚')}</em></div>`
         + `<div class="tt-chips">${tChip(LL('風牌 ✗', 'Winds ✗', '風牌 ✗'), 'hid n1')}${tChip(LL('花牌 ✗', 'Flowers ✗', '花牌 ✗'), 'hid n2')}</div>`,
       acts: [[300, 'show+', '.tt-col', 350], [1900, 'show', '.calc'], [1950, 'count', '[data-to]', 1000], [3000, 'show+', '.n1,.n2', 300]]
@@ -3213,16 +3216,16 @@ function tutSteps() {
       p: LL('數字 n 的牌有 <b>10 − n 張</b>：一有 9 張，九只有 1 張。<b>點數＝牌面數字</b>，所以大字（7–9）又少又值錢，小字（1–3）又多又不值錢。每手的得分跟手牌點數掛鉤。',
         'A tile numbered n has <b>10 − n copies</b>: nine 1s but a single 9. <b>Points = the face number</b>, so big tiles (7–9) are rare and valuable and small tiles (1–3) are plentiful and cheap. Your hand&#39;s tile points feed straight into the score.',
         '数字nの牌は<b>10−n枚</b>：一は9枚、九は1枚。<b>点数は数字そのまま</b>なので、大字（7〜9）は少なく高価、小字（1〜3）は多く安価。手牌の点数がそのまま得点に反映されます。'),
-      stage: tBars() + `<div class="tt-bracket"><span class="bs" style="flex:3">${LL('小字 1–3', 'Small 1–3', '小字 1〜3')}</span><span style="flex:3">4–6</span><span class="bb" style="flex:3">${LL('大字 7–9', 'Big 7–9', '大字 7〜9')}</span></div>`,
+      stage: tBars() + `<div class="tt-bracket"><span class="bs" style="flex:3">${LL('小字 1–3', 'Small 1–3', '小字 1〜3')}</span><span style="flex:3">${LL('中字 4–6', 'Mid 4–6', '中字 4〜6')}</span><span class="bb" style="flex:3">${LL('大字 7–9', 'Big 7–9', '大字 7〜9')}</span></div>`,
       acts: [[300, 'add+', '.bar', 'on', 100], [300, 'show+', '.cnt', 100], [1500, 'add', '.b1', 'hl'], [1500, 'say', LL('一：9 張・1 點', '1: nine copies, 1 point', '一：9枚・1点')],
         [2800, 'rm', '.bar', 'hl'], [2800, 'add', '.b9', 'hl'], [2800, 'say', LL('九：只有 1 張・9 點', '9: one copy, 9 points', '九：1枚・9点')],
         [4100, 'rm', '.bar', 'hl'], [4100, 'add', '.bs', 'on'], [4100, 'say', LL('小字：又多又便宜', 'Small: plentiful and cheap', '小字：多くて安い')], [5300, 'rm', '.bs', 'on'], [5300, 'add', '.bb', 'on'], [5300, 'say', LL('大字：稀少、值錢', 'Big: rare and valuable', '大字：少なくて高い')]]
     },
     {
       t: LL('鳴牌限制', 'Calling rules', '鳴きのルール'),
-      p: LL('<b>小字 1–3 不能吃、碰、槓</b>，只能自己摸齊。<b>4–9 可碰，4–6 可槓</b>（7–9 只有 3 張以下）。<b>只能吃上家</b>，且被吃的順子不能含 1–3，所以只有 456／567／678／789 能吃。',
-        '<b>Small tiles 1–3 can never be chowed, punged or konged</b>: you must draw them yourself. <b>4–9 can be punged, 4–6 konged</b> (7–9 have three copies or fewer). <b>Chow only from upstream</b>, and a claimed chow cannot contain 1–3, so only 456 / 567 / 678 / 789 qualify.',
-        '<b>小字1〜3はチー・ポン・カンできません</b>（自分で引くだけ）。<b>4〜9はポン、4〜6はカン</b>可（7〜9は3枚以下）。<b>チーは上家だけ</b>で、1〜3を含む順子は不可。チーできるのは456／567／678／789だけです。'),
+      p: LL('<b>小字 1–3 不能吃、碰、槓</b>，只能自己摸齊。<b>中字 4–6 可碰可槓，大字 7–9 只能碰</b>（7–9 只有 3 張以下）。<b>只能吃上家</b>，且被吃的順子不能含 1–3，所以只有 456／567／678／789 能吃。',
+        '<b>Small tiles 1–3 can never be chowed, punged or konged</b>: you must draw them yourself. <b>Mid 4–6 can be punged or konged, big 7–9 only punged</b> (7–9 have three copies or fewer). <b>Chow only from upstream</b>, and a claimed chow cannot contain 1–3, so only 456 / 567 / 678 / 789 qualify.',
+        '<b>小字1〜3はチー・ポン・カンできません</b>（自分で引くだけ）。<b>中字4〜6はポン・カン、大字7〜9はポンのみ</b>可（7〜9は3枚以下）。<b>チーは上家だけ</b>で、1〜3を含む順子は不可。チーできるのは456／567／678／789だけです。'),
       stage: `<div class="tt-row">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => tT('p' + d, 't' + d)).join('')}</div>`,
       acts: [[400, 'add', '.t1,.t2,.t3', 'no'], [400, 'say', LL('1–3：不能鳴，只能自己摸', '1–3: never called, draw them yourself', '1〜3：鳴けない・自分で引くだけ')],
         [2000, 'add', '.t4,.t5,.t6,.t7,.t8,.t9', 'ok'], [2000, 'say', LL('4–9：可以碰', '4–9: can be punged', '4〜9：ポン可')],
@@ -3237,8 +3240,9 @@ function tutSteps() {
       p: LL('<b>大字 7、8、9</b> 可以用<b>不同花色</b>的同數字湊組：三張是<b>彩碰</b>（可以向人碰），全在手上叫<b>彩刻</b>；兩張可以當眼，叫<b>彩眼</b>。沒有彩吃，順子一定要同花色。',
         'For the <b>big tiles 7, 8 and 9</b>, the same number in <b>different suits</b> can form a group: three are a <b>Mixed Pung</b> (callable), held in hand a <b>Mixed Triplet</b>; two can be the pair, a <b>Mixed Pair</b>. There is no mixed chow: sequences are single-suit.',
         '<b>大字7・8・9</b>は<b>違う種類</b>の同じ数字で組をつくれます：3枚は<b>彩ポン</b>（鳴けます）、手の中なら<b>彩刻子</b>、2枚は<b>彩雀頭</b>。彩チーはなく、順子は同じ種類だけです。'),
-      stage: `<div class="tt-row"><span class="wrap scat">${tGrp(LL('彩碰', 'Mixed Pung', '彩ポン'), 'p8 s8 m8', 'cai g1')}</span><span class="wrap scat">${tGrp(LL('彩眼', 'Mixed Pair', '彩雀頭'), 'p9 s9', 'cai g2')}</span></div>`,
-      acts: [[300, 'say', LL('七八九：不同花色也能湊', '7-8-9: different suits can group', '七八九：違う種類でも組める')], [1000, 'rm', '.wrap', 'scat'], [2000, 'add', '.g1', 'on'], [2000, 'say', LL('彩碰：同數字、不同花色', 'Mixed Pung: same number, different suits', '彩ポン：同じ数字・違う種類')], [3300, 'add', '.g2', 'on'], [3300, 'say', LL('兩張也可以當眼', 'Two can also be the pair', '2枚で雀頭にもなれる')]]
+      stage: `<div class="tt-row"><span class="wrap scat">${tGrp(LL('彩碰', 'Mixed Pung', '彩ポン'), 'p8 s8 m8', 'cai g1')}</span><span class="wrap scat">${tGrp(LL('彩眼', 'Mixed Pair', '彩雀頭'), 'p9 s9', 'cai g2')}</span></div><div class="tt-row"><span class="wrap scat">${tGrp(LL('彩吃 ✗', 'Mixed Chow ✗', '彩チー ✗'), 'p7 s8 m9', 'bad g3')}</span><span class="xm hid xg">✗</span></div>`,
+      acts: [[300, 'say', LL('七八九：不同花色也能湊', '7-8-9: different suits can group', '七八九：違う種類でも組める')], [1000, 'rm', '.wrap', 'scat'], [2000, 'add', '.g1', 'on'], [2000, 'say', LL('彩碰：同數字、不同花色', 'Mixed Pung: same number, different suits', '彩ポン：同じ数字・違う種類')], [3300, 'add', '.g2', 'on'], [3300, 'say', LL('兩張也可以當眼', 'Two can also be the pair', '2枚で雀頭にもなれる')],
+        [4700, 'rm', '.wrap', 'scat'], [5600, 'add', '.g3', 'on'], [5600, 'show', '.xg'], [5600, 'say', LL('彩吃不行！順子要同花色', 'No mixed chow! A sequence must be one suit', '彩チーは不可！順子は同じ種類だけ')]]
     },
     {
       t: LL('番數與計分', 'Fan and scoring', '翻数と計算'),
@@ -3276,12 +3280,12 @@ function tutSteps() {
   return [
     {
       t: LL('認識牌', 'Meet the tiles', '牌を知ろう'),
-      p: LL('牌有三種花色：<b>筒</b>（圓圈）、<b>索</b>（竹）、<b>萬</b>（萬字），每種有 1 到 9。另外有三種字牌：<b>紅中、發財、白板</b>。全副一共 150 張。',
+      p: LL('牌有三種花色：<b>筒</b>（圓圈）、<b>索</b>（竹）、<b>萬</b>（萬字），每種有 1 到 9。另外有三種三元牌：<b>紅中、發財、白板</b>。全副一共 150 張。',
         'There are three suits: <b>Circles</b>, <b>Bamboo</b> and <b>Characters</b>, numbered 1 to 9. Plus three dragons: <b>Red, Green and White</b>. 150 tiles in total.',
-        '牌は3種類：<b>筒</b>（まる）、<b>索</b>（竹）、<b>萬</b>（萬の字）で、それぞれ1〜9。ほかに字牌が3種：<b>中・發・白</b>。全部で150枚です。'),
+        '牌は3種類：<b>筒</b>（まる）、<b>索</b>（竹）、<b>萬</b>（萬の字）で、それぞれ1〜9。ほかに三元牌が3種：<b>中・發・白</b>。全部で150枚です。'),
       cls: 'sm',
       stage: tRow('p1 p2 p3 p4 p5 p6 p7 p8 p9', 'r1', 'hid') + tRow('s1 s2 s3 s4 s5 s6 s7 s8 s9', 'r2', 'hid') + tRow('m1 m2 m3 m4 m5 m6 m7 m8 m9', 'r3', 'hid') + tRow('z1 z2 z3', 'r4', 'hid'),
-      acts: [[300, 'show+', '.r1 .tile', 70], [1100, 'show+', '.r2 .tile', 70], [1900, 'show+', '.r3 .tile', 70], [2700, 'show+', '.r4 .tile', 150], [3400, 'say', LL('三種花色＋三種字牌', '3 suits + 3 dragons', '数牌3種＋字牌3種')]]
+      acts: [[300, 'show+', '.r1 .tile', 70], [1100, 'show+', '.r2 .tile', 70], [1900, 'show+', '.r3 .tile', 70], [2700, 'show+', '.r4 .tile', 150], [3400, 'say', LL('三種花色＋三元牌', '3 suits + 3 dragons', '数牌3種＋三元牌')]]
     },
     {
       t: LL('越大越稀少', 'Bigger is rarer', '大きい数ほど少ない'),
@@ -3338,8 +3342,9 @@ function tutSteps() {
       p: LL('這是幺九龍獨有的玩法：稀少的<b>大字 7、8、9</b>，只要<b>數字相同</b>，花色不同也能湊！三張叫<b>彩碰</b>（可以向別人碰，或全在手上叫彩刻），兩張可以當<b>彩眼</b>。順子則一定要同花色，沒有「彩吃」。',
         'Here is a rule only Kowloon Dragons has: the rare <b>big tiles 7, 8 and 9</b> can be grouped by <b>number alone</b>, even in different suits! Three of them are a <b>Mixed Pung</b> (you can call it from a discard, or hold it concealed as a Mixed Triplet), and two can be the <b>Mixed Pair</b>. Sequences must still be one suit: there is no mixed chow.',
         '幺九龍だけの特別ルール：レアな<b>大字7・8・9</b>は、<b>数字が同じなら種類が違っても</b>組めます！3枚は<b>彩ポン</b>（捨て牌から鳴くことも、手の中で彩刻子にすることもできます）、2枚は<b>彩雀頭</b>になれます。順子は同じ種類だけで、彩チーはありません。'),
-      stage: `<div class="tt-row"><span class="wrap scat">${tGrp(LL('彩碰', 'Mixed Pung', '彩ポン'), 'p8 s8 m8', 'cai g1')}</span><span class="wrap scat">${tGrp(LL('彩眼', 'Mixed Pair', '彩雀頭'), 'p9 s9', 'cai g2')}</span></div>`,
-      acts: [[300, 'say', LL('七八九：不同花色也能湊', '7-8-9: different suits can group', '七八九：違う種類でも組める')], [1000, 'rm', '.wrap', 'scat'], [2000, 'add', '.g1', 'on'], [2000, 'say', LL('彩碰：同數字、不同花色', 'Mixed Pung: same number, different suits', '彩ポン：同じ数字・違う種類')], [3300, 'add', '.g2', 'on'], [3300, 'say', LL('兩張也可以當眼', 'Two can also be the pair', '2枚で雀頭にもなれる')]]
+      stage: `<div class="tt-row"><span class="wrap scat">${tGrp(LL('彩碰', 'Mixed Pung', '彩ポン'), 'p8 s8 m8', 'cai g1')}</span><span class="wrap scat">${tGrp(LL('彩眼', 'Mixed Pair', '彩雀頭'), 'p9 s9', 'cai g2')}</span></div><div class="tt-row"><span class="wrap scat">${tGrp(LL('彩吃 ✗', 'Mixed Chow ✗', '彩チー ✗'), 'p7 s8 m9', 'bad g3')}</span><span class="xm hid xg">✗</span></div>`,
+      acts: [[300, 'say', LL('七八九：不同花色也能湊', '7-8-9: different suits can group', '七八九：違う種類でも組める')], [1000, 'rm', '.wrap', 'scat'], [2000, 'add', '.g1', 'on'], [2000, 'say', LL('彩碰：同數字、不同花色', 'Mixed Pung: same number, different suits', '彩ポン：同じ数字・違う種類')], [3300, 'add', '.g2', 'on'], [3300, 'say', LL('兩張也可以當眼', 'Two can also be the pair', '2枚で雀頭にもなれる')],
+        [4700, 'rm', '.wrap', 'scat'], [5600, 'add', '.g3', 'on'], [5600, 'show', '.xg'], [5600, 'say', LL('彩吃不行！順子要同花色', 'No mixed chow! A sequence must be one suit', '彩チーは不可！順子は同じ種類だけ')]]
     },
     {
       t: LL('胡牌！', 'Winning!', 'あがり！'),
