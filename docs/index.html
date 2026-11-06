@@ -4516,7 +4516,7 @@ const DR = { i: 0, score: 0, ok: false, wrong: false };
 function drillData() {
   const O = { chow: LL('吃', 'Chow', 'チー'), zimo: LL('自摸', 'Zimo', 'ツモ'), dis: LL('打出這張', 'Discard it', 'そのまま捨てる'), pung: LL('碰', 'Pung', 'ポン'), kong: LL('槓', 'Kong', 'カン'), win: LL('胡', 'Win', 'ロン'), pass: LL('過', 'Pass', 'パス') };
   const up = LL('上家', 'Upstream', '上家'), across = LL('對家', 'Across', '対面'), down = LL('下家', 'Downstream', '下家');
-  return [
+  const R = [
     { kind: 'claim', from: up, disc: 'p5', hand: 'p4 p6 p9 s2 s3 s5 s8 s9 m3 m7 m8 z2 z2', use: ['p4', 'p6'], opts: ['chow', 'pung', 'pass'], ans: 'chow', O,
       q: LL('上家打出一張五筒。你手上有四筒和六筒。你可以怎麼做？', 'Upstream discards a 5 of circles. You hold a 4 and a 6 of circles. What can you do?', '上家が五筒を捨てました。手には四筒と六筒があります。どうしますか？'),
       ok: LL('對！四筒＋五筒＋六筒組成順子。吃只能吃上家打出的牌。', 'Right! 4-5-6 of circles makes a sequence. You can only chow the upstream player’s discard.', '正解！四五六筒で順子。チーできるのは上家の捨て牌だけです。'),
@@ -4549,17 +4549,29 @@ function drillData() {
       ok: LL('自摸！七八九筒湊成順子，4 組＋1 對完成。自己摸到最後一張叫自摸；全程沒吃碰，不求人 1 番，加上紅中刻子 1 番，共 2 番。', 'Zimo! 7-8-9 of circles completes the sequence: 4 sets + 1 pair. Drawing the winning tile yourself is a zimo; with no calls that is Concealed Self-Draw (1 fan), plus the Red Dragon triplet (1 fan): 2 fan in total.', 'ツモ！七八九筒で順子ができ、4メンツ＋雀頭が完成。自分で引いてあがるのがツモ。鳴きなしなので不求人が1翻、中の刻子が1翻で合計2翻です。'),
       why: { dis: LL('這張九筒就是你在等的牌，打掉太可惜了，直接自摸胡牌！', 'That 9 is exactly the tile you were waiting for. Do not throw it away, declare the zimo!', 'この九筒こそ待っていた牌です。捨てずにツモあがりしましょう！') } }
   ];
+  const seq = LL('順子', 'Sequence', '順子'), tri = LL('刻子', 'Triplet', '刻子'), pr = LL('眼', 'Pair', '雀頭'), wt = LL('等牌', 'Waiting', '待ち');
+  const G13 = [{ i: [0, 1, 2], lb: seq }, { i: [3, 4], lb: wt }, { i: [5, 6], lb: pr }, { i: [7, 8, 9], lb: seq }, { i: [10, 11, 12], lb: tri }];
+  const G14 = [{ i: [0, 1, 2], lb: seq }, { i: [3, 4], lb: wt }, { i: [5, 6], lb: pr }, { i: [7], lb: '' }, { i: [8, 9, 10], lb: seq }, { i: [11, 12, 13], lb: tri }];
+  R.forEach(q => { if (q.hand.startsWith('p2 p3 p4 p7 p8')) q.groups = q.kind === 'discard' ? G14 : G13; });
+  return R;
+}
+function drillHand(q) {
+  const keys = q.hand.split(' '), pick = q.kind === 'discard', hl = DR.hl || [];
+  const tile = i => tT(keys[i], (pick ? 'dpick ' : '') + (hl.includes(i) ? 'hl' : ''), `data-k="${keys[i]}" data-di="${pick ? i : ''}"`);
+  if (DR.arr && q.groups) return `<div class="tt-row">${q.groups.map(g => `<span class="tt-grp tight ${g.lb ? 'on' : ''}">${g.i.map(tile).join('')}${g.lb ? `<span class="lb">${g.lb}</span>` : ''}</span>`).join('')}</div>`;
+  return [0, 7].map(s => `<div class="tt-row">${keys.slice(s, s + 7).map((k, j) => tile(s + j)).join('')}</div>`).join('');
 }
 function renderDrill() {
   tutStop();
   const D = drillData(), d = $('#tutDlg'), N = D.length;
   if (DR.i >= N) return renderDrillEnd(N);
-  const q = D[DR.i], keys = q.hand.split(' '), pick = q.kind === 'discard';
-  DR.ok = false; DR.wrong = false;
-  const rows = [keys.slice(0, 7), keys.slice(7)].map((r, ri) => `<div class="tt-row">${r.map((k, ci) => tT(k, pick ? 'dpick' : '', `data-k="${k}" data-di="${pick ? ri * 7 + ci : ''}"`)).join('')}</div>`).join('');
+  const q = D[DR.i], pick = q.kind === 'discard';
+  DR.ok = false; DR.wrong = false; DR.arr = false; DR.hl = [];
+  const rows = `<div id="drHand">${drillHand(q)}</div>`;
   const zone = pick ? '' : `<div class="tt-zone"><span class="zl">${q.zl || LL(q.from + '打出', q.from + ' discards', q.from + 'の捨て牌')}</span>${tT(q.disc, 'hl')}</div>`;
   d.innerHTML = `${XBTN()}<div class="tthead"><h2>${LL('練習', 'Practice', '練習')}</h2><span class="ttn">${DR.i + 1} / ${N}</span></div>`
     + `<div class="tts dr" id="ttStage">${zone}${rows}</div><p class="ttp" style="min-height:0"><b>${q.q}</b></p>`
+    + (q.groups ? `<div class="dropts"><button type="button" class="btn" id="drArr">${LL('整理手牌', 'Arrange hand', '手牌を整理')}</button></div>` : '')
     + (pick ? '' : `<div class="dropts">${q.opts.map(o => `<button type="button" class="btn" data-o="${o}">${q.O[o]}</button>`).join('')}</div>`)
     + `<div class="drfb" id="drFb">${pick ? LL('點選一張牌打出。', 'Tap a tile to discard it.', '捨てる牌をタップしてください。') : LL('選一個動作。', 'Choose an action.', '操作を選んでください。')}</div>`
     + `<div class="ttnav"><span class="dots">${D.map((_, k) => `<i class="${k === DR.i ? 'on' : ''}"></i>`).join('')}</span><button class="btn primary" type="button" id="drNext" disabled>${DR.i === N - 1 ? LL('完成', 'Finish', '完了') : LL('下一題', 'Next', '次へ')} ›</button></div>`;
@@ -4570,10 +4582,20 @@ function drillPick(type, val) {
   if (type === 'tile') { const k = q.hand.split(' ')[val]; ok = k === q.ans; msg = ok ? q.ok : (q.why[k] || q.why._); }
   else { ok = val === q.ans; msg = ok ? q.ok : (q.why[val] || q.why._); }
   fb.className = 'drfb ' + (ok ? 'ok' : 'bad'); fb.textContent = (ok ? '✔ ' : '✘ ') + msg;
-  if (!ok) { DR.wrong = true; if (type === 'opt') { const b = $(`#tutDlg [data-o="${val}"]`); if (b) b.classList.add('no'); } return; }
+  const keys = q.hand.split(' '), redraw = () => { $('#drHand').innerHTML = drillHand(q); const ab = $('#drArr'); if (ab) ab.textContent = DR.arr ? LL('還原', 'Reset', '元に戻す') : LL('整理手牌', 'Arrange hand', '手牌を整理'); };
+  if (!ok) {
+    DR.wrong = true;
+    if (type === 'opt') { const b = $(`#tutDlg [data-o="${val}"]`); if (b) b.classList.add('no'); }
+    else if (q.groups) {
+      const g = q.groups.find(g => g.i.includes(val));
+      if (g) { DR.arr = true; DR.hl = g.i.slice(); redraw(); fb.textContent += LL('（亮起的是它所在的組合）', ' (the glowing tiles are the group it belongs to)', '（光っているのがその牌のいるグループです）'); }
+    }
+    return;
+  }
   DR.ok = true; if (!DR.wrong) DR.score++;
-  (q.use || []).forEach(k => { const t = [...$('#ttStage').querySelectorAll(`.tt-row .tile[data-k="${k}"]`)].find(e => !e.classList.contains('hl')); if (t) t.classList.add('hl'); });
-  if (type === 'tile') { const t = $('#ttStage').querySelectorAll('.tile')[val]; if (t) t.classList.add('hl'); }
+  DR.hl = []; const used = [];
+  (q.use || []).forEach(k => { const i = keys.findIndex((x, j) => x === k && !used.includes(j)); if (i >= 0) used.push(i); });
+  DR.hl = type === 'tile' ? [val] : used; redraw();
   $('#drNext').disabled = false;
 }
 function renderDrillEnd(N) {
@@ -4634,6 +4656,7 @@ $('#tutDlg').addEventListener('click', e => {
   const b = e.target.closest('button,[data-i]'); if (!b) return;
   if (b.dataset.o) return drillPick('opt', b.dataset.o);
   if (b.id === 'drNext') { DR.i++; renderDrill(); return; }
+  if (b.id === 'drArr') { DR.arr = !DR.arr; const q = drillData()[DR.i]; $('#drHand').innerHTML = drillHand(q); b.textContent = DR.arr ? LL('還原', 'Reset', '元に戻す') : LL('整理手牌', 'Arrange hand', '手牌を整理'); return; }
   if (b.dataset.tgo === 'drill') { TUT.k = 'drill'; DR.i = 0; DR.score = 0; renderDrill(); return; }
   const n = tutSteps().length, d = $('#tutDlg');
   if (b.id === 'ttPrev') { TUT.i = Math.max(0, TUT.i - 1); renderTut(); }
