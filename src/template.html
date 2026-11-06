@@ -3357,13 +3357,15 @@ function tutSteps() {
       acts: [[300, 'say', LL('只差一張七索就胡了', 'One 7 of bamboo away from winning', 'あと七索1枚であがり')], [1100, 'show', '.draw'], [2100, 'fly', '.draw', '.pslot'], [3000, 'add', '.pairg', 'on'], [3100, 'show', '.bn'], [3100, 'say', LL('湊齊了！', 'Complete!', '完成！')]]
     },
     {
-      t: LL('要有「番」才能胡', 'You need fan to win', '役（番）が必要'),
-      p: LL('光湊齊還不夠，至少要有 <b>1 番</b>的條件才能胡。得分＝<b>手牌點數 × 番數</b>。例：紅中刻子（1 番）＋不求人（門清自摸，1 番）＝ 2 番，手牌點數 53，得 53 × 2 = <b>106 分</b>。其他番種可在規則裡查看。',
-        'A complete hand is not enough: you need at least <b>1 fan</b> (scoring condition). Score = <b>tile points × fan</b>. Example: a Red Dragon triplet (1 fan) + Concealed Self-Draw (1 fan) = 2 fan; the hand&#39;s tile points are 53, so 53 × 2 = <b>106 points</b>. The rules list every fan.',
-        '形がそろうだけでは足りず、最低 <b>1翻</b> の条件が必要です。得点＝<b>手牌の点数 × 翻数</b>。例：中の刻子（1翻）＋不求人（門前ツモ、1翻）＝2翻、手牌の点数が53なら 53 × 2 = <b>106点</b>。他の役はルールで確認できます。'),
-      stage: `<div class="tt-chips">${tChip(yn('三元刻') + ' <b>+' + LL('1番', '1 fan', '1翻') + '</b>', 'hid c1')}${tChip(yn('不求人') + ' <b>+' + LL('1番', '1 fan', '1翻') + '</b>', 'hid c2')}</div>`
+      t: LL('什麼是「番」？', 'What is fan?', '「翻」とは？'),
+      p: LL('<b>番</b>是得分的條件，主要來自兩方面：<b>手牌組合</b>（例如三張紅中、全是順子）和<b>胡牌方式</b>（例如自己摸到、全程沒有吃碰）。至少要有 <b>1 番</b>才能胡；得分＝<b>手牌點數 × 番數</b>。例：紅中刻子（組合，1 番）＋不求人（自摸且沒吃碰，1 番）＝ 2 番，手牌點數 53，得 53 × 2 = <b>106 分</b>。',
+        '<b>Fan</b> are scoring conditions, and they come from two things: your <b>hand shape</b> (e.g. a triplet of Red Dragons, all sequences) and <b>how you win</b> (e.g. drawing the tile yourself, with no Chow or Pung calls). You need at least <b>1 fan</b> to win. Score = <b>tile points × fan</b>. Example: a Red Dragon triplet (shape, 1 fan) + Concealed Self-Draw (self-drawn, no calls, 1 fan) = 2 fan; the hand&#39;s tile points are 53, so 53 × 2 = <b>106 points</b>.',
+        '<b>翻</b>は得点の条件で、主に<b>手牌の形</b>（例：中の刻子、すべて順子）と<b>あがり方</b>（例：自分でツモ、チー・ポンなし）から生まれます。あがるには最低<b>1翻</b>が必要で、得点＝<b>手牌の点数 × 翻数</b>。例：中の刻子（形・1翻）＋不求人（ツモで鳴きなし・1翻）＝2翻、手牌の点数が53なら 53 × 2 = <b>106点</b>。'),
+      cls: 'sm',
+      stage: `<div class="tt-line hid l1"><span class="tl">${LL('手牌組合', 'Hand shape', '手牌の形')}</span>${tRow('z1 z1 z1')}${tChip(yn('三元刻') + ' <b>+' + LL('1番', '1 fan', '1翻') + '</b>', 'hid c1')}</div>`
+        + `<div class="tt-line hid l2"><span class="tl">${LL('胡牌方式', 'How you win', 'あがり方')}</span>${tChip(LL('自己摸到', 'Self-drawn', 'ツモ') + ' ＋ ' + LL('沒吃碰', 'no calls', '鳴きなし'), 'hid c2')}${tChip(yn('不求人') + ' <b>+' + LL('1番', '1 fan', '1翻') + '</b>', 'hid c3')}</div>`
         + `<div class="tt-calc hid calc"><span><span data-to="53">0</span><em>${LL('手牌點數', 'tile points', '牌の点数')}</em></span><span>×</span><span><span data-to="2">0</span><em>${LL('番', 'fan', '翻')}</em></span><span>=</span><span class="big"><span data-to="106">0</span></span></div>`,
-      acts: [[300, 'show', '.c1'], [1000, 'show', '.c2'], [1900, 'show', '.calc'], [2000, 'count', '[data-to]', 1200]]
+      acts: [[300, 'show', '.l1'], [800, 'show', '.c1'], [1700, 'show', '.l2'], [2100, 'show', '.c2'], [2600, 'show', '.c3'], [3500, 'show', '.calc'], [3600, 'count', '[data-to]', 1200]]
     },
     finish('最好的學法就是打一手。電腦對手可以先選「新手」；遇到不懂的，隨時按右上角「?」查規則。',
       'The best way to learn is to play a hand. Start with the Easy bots, and tap “?” at any time to look up the rules.',
