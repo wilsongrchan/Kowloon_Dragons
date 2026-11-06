@@ -4514,7 +4514,7 @@ function tutSteps() {
 /* ===== 新手練習：什麼時候吃、碰、槓、胡，以及該打哪張 ===== */
 const DR = { i: 0, score: 0, ok: false, wrong: false };
 function drillData() {
-  const O = { chow: LL('吃', 'Chow', 'チー'), pung: LL('碰', 'Pung', 'ポン'), kong: LL('槓', 'Kong', 'カン'), win: LL('胡', 'Win', 'ロン'), pass: LL('過', 'Pass', 'パス') };
+  const O = { chow: LL('吃', 'Chow', 'チー'), zimo: LL('自摸', 'Zimo', 'ツモ'), dis: LL('打出這張', 'Discard it', 'そのまま捨てる'), pung: LL('碰', 'Pung', 'ポン'), kong: LL('槓', 'Kong', 'カン'), win: LL('胡', 'Win', 'ロン'), pass: LL('過', 'Pass', 'パス') };
   const up = LL('上家', 'Upstream', '上家'), across = LL('對家', 'Across', '対面'), down = LL('下家', 'Downstream', '下家');
   return [
     { kind: 'claim', from: up, disc: 'p5', hand: 'p4 p6 p9 s2 s3 s5 s8 s9 m3 m7 m8 z2 z2', use: ['p4', 'p6'], opts: ['chow', 'pung', 'pass'], ans: 'chow', O,
@@ -4538,12 +4538,16 @@ function drillData() {
       ok: LL('胡！678筒＋234筒＋567索＋紅中刻子＋五萬眼，4 組＋1 對，紅中刻子有 1 番。能胡就胡，比吃優先！', 'Win! 6-7-8 + 2-3-4 of circles, 5-6-7 of bamboo, a Red Dragon triplet and a pair of 5s: 4 sets + 1 pair, and the dragon triplet gives 1 fan. A win beats a chow!', 'あがり！678筒＋234筒＋567索＋中の刻子＋五萬の雀頭で4メンツ＋1雀頭、中の刻子が1翻。あがれるときはチーより優先です！'),
       why: { chow: LL('可以吃，但吃了還要再打一張，不如直接胡牌！能胡的時候優先喊胡。', 'You could chow, but this tile completes your whole hand, so just win! Call the win first.', 'チーもできますが、この牌で手牌が完成します。あがりが優先です！'), pass: LL('這張就是你在等的牌，不要放過！', 'This is the tile you are waiting for. Don’t let it go!', 'これは待っていた牌です。見逃さないで！') } },
     { kind: 'discard', hand: 'p2 p3 p4 p7 p8 m5 m5 s2 s5 s6 s7 z1 z1 z1', ans: 's2', O,
-      q: LL('輪到你，剛摸完牌（14 張）。打掉一張就差一張胡牌了，該打哪張？點選要打出的牌。', 'Your turn, you just drew (14 tiles). Discard one and you are one tile from winning. Which one? Tap the tile to discard.', 'あなたの番で、ツモったところ（14枚）。1枚捨てれば、あと1枚であがりです。どれを捨てますか？牌をタップ。'),
-      ok: LL('對！二索是孤張，和其他牌都連不起來。打掉後只差一張六筒或九筒（七八筒在等它們）就胡牌。', 'Right! The 2 of bamboo is a loose tile that connects to nothing. After discarding it you only need a 6 or 9 of circles (your 7-8 are waiting for them).', '正解！二索は孤立牌で、どことも組めません。捨てれば、あと六筒か九筒（七八筒の待ち）であがりです。'),
+      q: LL('輪到你，剛摸完牌（14 張）。差一張就聽牌了，該打哪張？點選要打出的牌。', 'Your turn, you just drew (14 tiles). You are one discard away from a ready hand (tenpai). Which tile goes? Tap it.', 'あなたの番で、ツモったところ（14枚）。あと1枚捨てればテンパイです。どれを捨てますか？牌をタップ。'),
+      ok: LL('對！二索是孤張，和其他牌都連不起來。打掉後就聽牌了：只要摸到六筒或九筒（七八筒在等它們）就胡牌。', 'Right! The 2 of bamboo is a loose tile that connects to nothing. After discarding it you are ready (tenpai): any 6 or 9 of circles wins (your 7-8 are waiting for them).', '正解！二索は孤立牌で、どことも組めません。捨てればテンパイ：六筒か九筒（七八筒の待ち）であがりです。'),
       why: { _: LL('這張在組合裡有用，拆掉會離胡牌更遠。找找看哪張牌和其他牌都連不起來？', 'That tile is part of a set or pair; breaking it moves you further from winning. Which tile connects to nothing?', 'この牌はメンツ・雀頭の一部で、崩すとあがりから遠ざかります。どことも組めない牌はどれ？'),
         p7: LL('七筒八筒是兩張相連的牌，在等六筒或九筒，留著！', '7 and 8 of circles are neighbours waiting for a 6 or 9. Keep them!', '七筒八筒は連続していて、六筒か九筒を待っています。残しましょう！'),
         p8: LL('七筒八筒是兩張相連的牌，在等六筒或九筒，留著！', '7 and 8 of circles are neighbours waiting for a 6 or 9. Keep them!', '七筒八筒は連続していて、六筒か九筒を待っています。残しましょう！'),
-        z1: LL('紅中湊成刻子，還有 1 番，一定要留著！', 'Three Red Dragons form a triplet worth 1 fan. Definitely keep them!', '中の刻子は1翻です。必ず残しましょう！') } }
+        z1: LL('紅中湊成刻子，還有 1 番，一定要留著！', 'Three Red Dragons form a triplet worth 1 fan. Definitely keep them!', '中の刻子は1翻です。必ず残しましょう！') } },
+    { kind: 'claim', zl: LL('你摸到', 'You drew', 'ツモった牌'), disc: 'p9', hand: 'p2 p3 p4 p7 p8 m5 m5 s5 s6 s7 z1 z1 z1', use: ['p7', 'p8'], opts: ['dis', 'zimo'], ans: 'zimo', O,
+      q: LL('下一輪，你摸到一張九筒。你的手牌正在等六筒或九筒，現在該怎麼做？', 'Next round you draw a 9 of circles. Your hand was waiting for a 6 or a 9. What do you do now?', '次のターン、九筒をツモりました。手牌は六筒か九筒待ちです。どうしますか？'),
+      ok: LL('自摸！七八九筒湊成順子，4 組＋1 對完成。自己摸到最後一張叫自摸；全程沒吃碰，不求人 1 番，加上紅中刻子 1 番，共 2 番。', 'Zimo! 7-8-9 of circles completes the sequence: 4 sets + 1 pair. Drawing the winning tile yourself is a zimo; with no calls that is Concealed Self-Draw (1 fan), plus the Red Dragon triplet (1 fan): 2 fan in total.', 'ツモ！七八九筒で順子ができ、4メンツ＋雀頭が完成。自分で引いてあがるのがツモ。鳴きなしなので不求人が1翻、中の刻子が1翻で合計2翻です。'),
+      why: { dis: LL('這張九筒就是你在等的牌，打掉太可惜了，直接自摸胡牌！', 'That 9 is exactly the tile you were waiting for. Do not throw it away, declare the zimo!', 'この九筒こそ待っていた牌です。捨てずにツモあがりしましょう！') } }
   ];
 }
 function renderDrill() {
@@ -4553,7 +4557,7 @@ function renderDrill() {
   const q = D[DR.i], keys = q.hand.split(' '), pick = q.kind === 'discard';
   DR.ok = false; DR.wrong = false;
   const rows = [keys.slice(0, 7), keys.slice(7)].map((r, ri) => `<div class="tt-row">${r.map((k, ci) => tT(k, pick ? 'dpick' : '', `data-k="${k}" data-di="${pick ? ri * 7 + ci : ''}"`)).join('')}</div>`).join('');
-  const zone = pick ? '' : `<div class="tt-zone"><span class="zl">${LL(q.from + '打出', q.from + ' discards', q.from + 'の捨て牌')}</span>${tT(q.disc, 'hl')}</div>`;
+  const zone = pick ? '' : `<div class="tt-zone"><span class="zl">${q.zl || LL(q.from + '打出', q.from + ' discards', q.from + 'の捨て牌')}</span>${tT(q.disc, 'hl')}</div>`;
   d.innerHTML = `${XBTN()}<div class="tthead"><h2>${LL('練習', 'Practice', '練習')}</h2><span class="ttn">${DR.i + 1} / ${N}</span></div>`
     + `<div class="tts dr" id="ttStage">${zone}${rows}</div><p class="ttp" style="min-height:0"><b>${q.q}</b></p>`
     + (pick ? '' : `<div class="dropts">${q.opts.map(o => `<button type="button" class="btn" data-o="${o}">${q.O[o]}</button>`).join('')}</div>`)
