@@ -3297,9 +3297,9 @@ function tutSteps() {
       acts: [[300, 'add', '.g1', 'on'], [900, 'add', '.g2', 'on'], [1500, 'add', '.g3', 'on'], [1500, 'say', LL('幺九順', 'Kowloon Straight', '幺九順')],
         [2500, 'show', '.r2'], [2700, 'add', '.g4', 'on'], [3300, 'add', '.g5', 'on'], [3300, 'say', LL('幺九龍！', 'Kowloon Dragons!', '幺九龍！')], [3600, 'add', '.tile', 'hl']]
     },
-    finish('<b>每手換莊</b>，沒有風位與連莊；一圈 4 手、一局 12 手。起手就胡（天胡／地胡／人胡）直接 6 番。房間可選「兩番起胡」，電腦「大師」級就用這個規則。',
-      '<b>The deal passes every hand</b>, with no seat winds or repeat dealers; 4 hands make a round, 12 a set. Instant wins (Heaven / Earth / Man) are a flat 6 fan. Rooms can use a 2-fan minimum, and the Master bot plays by it.',
-      '<b>毎局親が移り</b>、風も連荘もありません。4局で1周、12局で1セット。天和・地和・人和は一律6翻。ルームでは「2翻縛り」も選べ、CPU「達人」はこのルールで打ちます。',
+    finish('<b>每手換莊</b>，沒有風位與連莊；一圈 4 手、一局 12 手。起手就胡（天胡／地胡／人胡）直接 6 番。房間可選「兩番起胡」，電腦「大師」級就用這個規則。做幾題練習，確認一下新規則吧。',
+      '<b>The deal passes every hand</b>, with no seat winds or repeat dealers; 4 hands make a round, 12 a set. Instant wins (Heaven / Earth / Man) are a flat 6 fan. Rooms can use a 2-fan minimum, and the Master bot plays by it. Try the practice questions to check the new rules.',
+      '<b>毎局親が移り</b>、風も連荘もありません。4局で1周、12局で1セット。天和・地和・人和は一律6翻。ルームでは「2翻縛り」も選べ、CPU「達人」はこのルールで打ちます。練習問題で新ルールを確認しましょう。',
       LL('其他不同點', 'A few more differences', 'そのほかの違い'),
       `<div class="tt-chips" style="flex-direction:column;align-items:center">${[LL('每手輪莊・無風位', 'Deal passes every hand · no seat winds', '毎局親が移る・風なし'), LL('一圈 4 手・一局 12 手', 'Round = 4 hands · Set = 12', '1周＝4局・1セット＝12局'), LL('天胡／地胡／人胡 = 6 番', 'Heaven / Earth / Man = 6 fan', '天和・地和・人和＝6翻'), LL('可選兩番起胡', 'Optional 2-fan minimum', '2翻縛りも選べる')].map(t => tChip('✓ ' + t)).join('')}</div>`,
       [[300, 'show+', '.tt-chip', 600]])
@@ -3412,8 +3412,41 @@ function tutSteps() {
 }
 
 /* ===== 新手練習：什麼時候吃、碰、槓、胡，以及該打哪張 ===== */
-const DR = { i: 0, score: 0, ok: false, wrong: false };
-function drillData() {
+const DR = { i: 0, score: 0, ok: false, wrong: false, set: 'new' };
+function drillData() { return DR.set === 'pro' ? drillDataPro() : drillDataNew(); }
+function drillDataPro() {
+  const O = { chow: LL('吃', 'Chow', 'チー'), pung: LL('碰', 'Pung', 'ポン'), win: LL('胡', 'Win', 'ロン'), pass: LL('過', 'Pass', 'パス'), dis: LL('打出這張', 'Discard it', 'そのまま捨てる'), big: LL('大槓', 'Grand kong', '大カン') };
+  const up = LL('上家', 'Upstream', '上家'), across = LL('對家', 'Across', '対面');
+  const R = [
+    { kind: 'claim', from: across, disc: 'p2', hand: 'p2 p2 p5 p9 m4 m6 m9 s3 s6 s8 z1 z2 z3', use: [], opts: ['pung', 'pass'], ans: 'pass', O,
+      q: LL('對家打出一張二筒，你手上有兩張二筒。可以碰嗎？', 'Across discards a 2 of circles and you hold two of them. Can you pung?', '対面が二筒を捨て、手にも二筒が2枚あります。ポンできますか？'),
+      ok: LL('對！小字 1、2、3 不能吃、碰、槓，只能自己摸齊。', 'Right! The small tiles 1, 2 and 3 can never be chowed, punged or konged. You can only draw them yourself.', '正解！小字1・2・3はチー・ポン・カンできません。自分で引くだけです。'),
+      why: { _: LL('不行！小字 1、2、3 不能碰。', 'No! Small tiles 1, 2 and 3 cannot be punged.', 'できません！小字1・2・3はポンできません。') } },
+    { kind: 'claim', from: up, disc: 'p3', hand: 'p4 p5 p9 m2 m6 m8 s2 s5 s7 z1 z2 z3 z3', use: [], opts: ['chow', 'pass'], ans: 'pass', O,
+      q: LL('上家打出一張三筒，你手上有四筒和五筒。可以吃嗎？', 'Upstream discards a 3 of circles and you hold a 4 and a 5 of circles. Can you chow?', '上家が三筒を捨て、手には四筒と五筒があります。チーできますか？'),
+      ok: LL('對！被吃的順子不能含 1–3 的牌。只有 456／567／678／789 能吃。', 'Right! A claimed chow cannot contain any of 1-3. Only 456 / 567 / 678 / 789 can be chowed.', '正解！チーする順子に1〜3を含めることはできません。チーできるのは456／567／678／789だけです。'),
+      why: { _: LL('不行！三筒是小字，含 1–3 的順子不能吃（三四五要自己摸齊）。', 'No! The 3 is a small tile, and a chow containing 1-3 cannot be claimed (3-4-5 must be self-drawn).', 'できません！三筒は小字で、1〜3を含む順子はチーできません（345は自分で引く必要があります）。') } },
+    { kind: 'claim', zl: LL('你摸到', 'You drew', 'ツモった牌'), disc: 'z1', hand: 'p2 p3 p4 p7 s5 s6 s7 m5 m5', meld: 'z1 z1 z1 z1', meldLb: LL('槓', 'Kong', 'カン'), use: [], opts: ['dis', 'big'], ans: 'big', O,
+      q: LL('你已經有一組紅中的槓（四張），現在自己又摸到第五張紅中！該怎麼做？', 'You already have a kong of Red Dragons (four tiles) and you just drew the fifth Red Dragon! What do you do?', '中のカン（4枚）がすでにあり、5枚目の中をツモりました！どうしますか？'),
+      ok: LL('對！三元牌每種有 5 張，第五張自己摸到可以補進槓：大槓（三元大槓），多 0.5 番。', 'Right! There are 5 of each dragon. Drawing the fifth yourself lets you add it to the kong: a grand kong (三元大槓), worth an extra half fan.', '正解！三元牌は各5枚。5枚目を自分で引けばカンに加えられます：大カン（三元大カン）で0.5翻が付きます。'),
+      why: { dis: LL('第五張紅中可以補進槓，別打掉！', 'The fifth Red Dragon can be added to your kong. Don’t throw it away!', '5枚目の中はカンに加えられます。捨てないで！') } },
+    { kind: 'claim', from: across, disc: 'p8', hand: 'p2 p3 p5 p7 m4 m6 m8 s3 s6 s8 z1 z2 z3', use: ['m8', 's8'], opts: ['chow', 'pung', 'pass'], ans: 'pung', O,
+      q: LL('對家打出一張八筒，你手上有八萬和八索（花色不同，數字一樣）。可以碰嗎？', 'Across discards an 8 of circles and you hold an 8 of characters and an 8 of bamboo (different suits, same number). Can you pung?', '対面が八筒を捨て、手には八萬と八索があります（種類は違うが数字は同じ）。ポンできますか？'),
+      ok: LL('對！大字 7、8、9 可以用不同花色的同數字來碰，叫彩碰。', 'Right! The big tiles 7, 8 and 9 can be punged with the same number in different suits: a mixed pung.', '正解！大字7・8・9は、違う種類の同じ数字でポンできます。これが彩ポンです。'),
+      why: { chow: LL('這不是順子，是三張同數字。', 'That is not a sequence but three of the same number.', '順子ではなく、同じ数字の3枚です。'), pass: LL('可以碰！七八九是大字，不同花色的同數字也能碰（彩碰）。', 'You can! For big tiles 7-8-9, the same number in other suits counts as a pung (mixed pung).', 'ポンできます！大字7〜9は違う種類の同じ数字でもポンできます（彩ポン）。') } },
+    { kind: 'claim', from: up, disc: 'p6', hand: 'p3 p5 p9 m2 m6 m9 s4 s7 s8 z1 z1 z2 z3', use: [], opts: ['chow', 'pass'], ans: 'pass', O,
+      q: LL('上家打出一張六筒，你手上有五筒和七索（花色不同）。可以吃嗎？', 'Upstream discards a 6 of circles and you hold a 5 of circles and a 7 of bamboo (different suits). Can you chow?', '上家が六筒を捨て、手には五筒と七索があります（種類が違う）。チーできますか？'),
+      ok: LL('對！沒有「彩吃」：順子一定要同花色，只有碰才有彩碰。', 'Right! There is no mixed chow: a sequence must be one suit. Only pungs can be mixed.', '正解！「彩チー」はありません。順子は同じ種類だけで、混ぜられるのはポンだけです。'),
+      why: { _: LL('不行！吃要同一花色的牌，沒有彩吃。', 'No! A chow needs tiles of one suit. There is no mixed chow.', 'できません！チーは同じ種類の牌だけで、彩チーはありません。') } },
+    { kind: 'claim', from: across, disc: 'p9', hand: 'p2 p3 p4 m5 m6 m7 s5 s6 s7 s9 z1 z1 z1', use: ['s9'], opts: ['chow', 'win', 'pass'], ans: 'win', O,
+      q: LL('對家打出一張九筒。你只差一對眼：手上有一張九索。看看你的手牌，這張牌能讓你怎樣？', 'Across discards a 9 of circles. You only need a pair, and you hold a 9 of bamboo. Look at your hand: what does this tile let you do?', '対面が九筒を捨てました。あと雀頭だけで、手には九索が1枚あります。この牌でどうできますか？'),
+      ok: LL('胡！九筒＋九索組成彩眼（大字不同花色的同數字可以當眼，只能榮胡），加上紅中刻子 1 番。', 'Win! The 9 of circles and 9 of bamboo form a mixed pair (big tiles of the same number can be the pair; ron only), and the Red Dragon triplet gives 1 fan.', 'あがり！九筒と九索で彩雀頭（大字の同じ数字は種類が違っても雀頭になります。ロンのみ）、中の刻子で1翻です。'),
+      why: { chow: LL('這張牌不是用來吃的：它和九索剛好組成彩眼，直接胡！', 'This tile is not for a chow: it pairs with your 9 of bamboo as a mixed pair, so just win!', 'この牌はチー用ではありません。九索と彩雀頭になるので、そのままあがり！'), pass: LL('這張就是你在等的牌：九筒＋九索是彩眼！', 'This is the tile you are waiting for: 9 of circles + 9 of bamboo is a mixed pair!', 'これは待っていた牌です。九筒＋九索は彩雀頭です！') },
+      groups: [{ i: [0, 1, 2], lb: LL('順子', 'Sequence', '順子') }, { i: [3, 4, 5], lb: LL('順子', 'Sequence', '順子') }, { i: [6, 7, 8], lb: LL('順子', 'Sequence', '順子') }, { i: [9], lb: LL('等牌', 'Waiting', '待ち') }, { i: [10, 11, 12], lb: LL('刻子', 'Triplet', '刻子') }] }
+  ];
+  return R;
+}
+function drillDataNew() {
   const O = { chow: LL('吃', 'Chow', 'チー'), zimo: LL('自摸', 'Zimo', 'ツモ'), dis: LL('打出這張', 'Discard it', 'そのまま捨てる'), pung: LL('碰', 'Pung', 'ポン'), kong: LL('槓', 'Kong', 'カン'), win: LL('胡', 'Win', 'ロン'), pass: LL('過', 'Pass', 'パス') };
   const up = LL('上家', 'Upstream', '上家'), across = LL('對家', 'Across', '対面'), down = LL('下家', 'Downstream', '下家');
   const R = [
@@ -3458,8 +3491,9 @@ function drillData() {
 function drillHand(q) {
   const keys = q.hand.split(' '), pick = q.kind === 'discard', hl = DR.hl || [];
   const tile = i => tT(keys[i], (pick ? 'dpick ' : '') + (hl.includes(i) ? 'hl' : ''), `data-k="${keys[i]}" data-di="${pick ? i : ''}"`);
+  const meld = q.meld ? `<div class="tt-row"><span class="tt-grp tight on">${q.meld.split(' ').map(k => tT(k)).join('')}<span class="lb">${q.meldLb}</span></span></div>` : '';
   if (DR.arr && q.groups) return `<div class="tt-row">${q.groups.map(g => `<span class="tt-grp tight ${g.lb ? 'on' : ''}">${g.i.map(tile).join('')}${g.lb ? `<span class="lb">${g.lb}</span>` : ''}</span>`).join('')}</div>`;
-  return [0, 7].map(s => `<div class="tt-row">${keys.slice(s, s + 7).map((k, j) => tile(s + j)).join('')}</div>`).join('');
+  return [0, 7].map(s => `<div class="tt-row">${keys.slice(s, s + 7).map((k, j) => tile(s + j)).join('')}</div>`).join('') + meld;
 }
 function renderDrill() {
   tutStop();
@@ -3543,7 +3577,7 @@ function renderTut() {
   const landing = !$('#landing').hidden;
   d.innerHTML = `${XBTN()}<div class="tthead"><h2>${s.t}</h2><span class="ttn">${TUT.i + 1} / ${S.length}</span></div>`
     + `<div class="tts ${s.cls || ''}" id="ttStage"><div class="tt-say"></div>${s.stage}</div><p class="ttp">${s.p}</p>`
-    + (s.end ? `<div class="ttend">${TUT.k === 'new' ? `<button class="btn primary" type="button" data-tgo="drill">${LL('練習一下', 'Practice', '練習する')}</button>` : ''}${landing ? `<button class="btn primary" type="button" data-tgo="play">${LL('開始電腦對戰', 'Play with bots', 'CPUと対戦')}</button>` : ''}<button class="btn" type="button" data-tgo="rules">${LL('看完整規則', 'Full rules', 'ルール全文')}</button></div>` : '')
+    + (s.end ? `<div class="ttend">${TUT.k === 'new' || TUT.k === 'pro' ? `<button class="btn primary" type="button" data-tgo="drill">${LL('練習一下', 'Practice', '練習する')}</button>` : ''}${landing ? `<button class="btn primary" type="button" data-tgo="play">${LL('開始電腦對戰', 'Play with bots', 'CPUと対戦')}</button>` : ''}<button class="btn" type="button" data-tgo="rules">${LL('看完整規則', 'Full rules', 'ルール全文')}</button></div>` : '')
     + `<div class="ttnav"><button class="btn" type="button" id="ttPrev" ${TUT.i ? '' : 'disabled'}>‹ ${LL('上一步', 'Back', '戻る')}</button><span class="dots">${S.map((_, k) => `<i data-i="${k}" class="${k === TUT.i ? 'on' : ''}"></i>`).join('')}</span>`
     + `<button class="btn" type="button" id="ttRe" title="${LL('重播', 'Replay', 'もう一度')}" aria-label="${LL('重播', 'Replay', 'もう一度')}">↻</button><button class="btn primary" type="button" id="ttNext">${last ? LL('完成', 'Done', '完了') : LL('下一步', 'Next', '次へ')} ${last ? '' : '›'}</button></div>`;
   tutPlay();
@@ -3557,7 +3591,7 @@ $('#tutDlg').addEventListener('click', e => {
   if (b.dataset.o) return drillPick('opt', b.dataset.o);
   if (b.id === 'drNext') { DR.i++; renderDrill(); return; }
   if (b.id === 'drArr') { DR.arr = !DR.arr; const q = drillData()[DR.i]; $('#drHand').innerHTML = drillHand(q); b.textContent = DR.arr ? LL('還原', 'Reset', '元に戻す') : LL('整理手牌', 'Arrange hand', '手牌を整理'); return; }
-  if (b.dataset.tgo === 'drill') { TUT.k = 'drill'; DR.i = 0; DR.score = 0; renderDrill(); return; }
+  if (b.dataset.tgo === 'drill') { if (TUT.k !== 'drill') DR.set = TUT.k; TUT.k = 'drill'; DR.i = 0; DR.score = 0; renderDrill(); return; }
   const n = tutSteps().length, d = $('#tutDlg');
   if (b.id === 'ttPrev') { TUT.i = Math.max(0, TUT.i - 1); renderTut(); }
   else if (b.id === 'ttNext') { if (TUT.i >= n - 1) d.close(); else { TUT.i++; renderTut(); } }
