@@ -506,6 +506,89 @@ body:has(#cheatDlg[open]) #cheatTab{right:min(340px,86vw);animation:none}
 #landing .foot a{color:var(--gold-t);text-decoration:underline;text-underline-offset:3px}
 #landing .foot{position:relative;font-size:calc(12px*var(--fs,1));color:var(--muted);text-align:center}
 .brand h1{cursor:pointer}
+/* ===== 動畫教學 ===== */
+#landing .tutrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;text-align:left}
+#landing .tutrow button,#rules .tutrow button{display:flex;flex-direction:column;gap:2px;align-items:flex-start;padding:10px 12px;border-radius:12px;text-align:left;font-size:calc(14px*var(--fs,1));font-weight:700;line-height:1.3;
+  color:var(--text);background:var(--table2);border:1px solid var(--line);cursor:pointer}
+#landing .tutrow button:hover,#rules .tutrow button:hover{border-color:var(--gold)}
+#landing .tutrow small,#rules .tutrow small{font:400 calc(11.5px*var(--fs,1))/1.35 var(--ui);color:var(--muted)}
+#rules .tutrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}
+@media (max-width:380px){#landing .tutrow,#rules .tutrow{grid-template-columns:1fr}}
+#tutDlg{max-width:min(560px,96vw);padding:16px 16px 14px}
+#tutDlg .tthead{display:flex;align-items:baseline;gap:10px;padding-right:38px;margin-bottom:8px}
+#tutDlg .tthead h2{margin:0;font-size:calc(19px*var(--fs,1))}
+#tutDlg .ttn{margin-left:auto;font-size:calc(12px*var(--fs,1));color:var(--muted);white-space:nowrap}
+#tutDlg .ttp{margin:10px 0 4px;font-size:calc(14.5px*var(--fs,1));line-height:1.6;min-height:4.8em}
+#tutDlg .ttp b{color:var(--ivt)}
+#tutDlg .ttnav{display:flex;align-items:center;gap:8px;margin-top:8px}
+#tutDlg .ttnav .dots{flex:1;display:flex;justify-content:center;gap:5px;flex-wrap:wrap}
+#tutDlg .ttnav .dots i{width:8px;height:8px;border-radius:50%;background:var(--line);cursor:pointer;transition:background .2s,transform .2s}
+#tutDlg .ttnav .dots i.on{background:var(--gold);transform:scale(1.25)}
+#tutDlg .ttnav .btn{padding:8px 14px}
+#tutDlg .ttnav .btn[disabled]{opacity:.35;pointer-events:none}
+#tutDlg .ttend{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 0}
+.tts{--tu:clamp(7px,2.1vw,12px);position:relative;min-height:clamp(240px,62vw,290px);border-radius:12px;background:var(--table2);border:1px solid var(--line);padding:40px 8px 10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow:hidden}
+.tts .tile{--u:var(--tu);margin-bottom:.4em;transition:transform .6s cubic-bezier(.3,.7,.3,1),opacity .45s,box-shadow .35s;transform:none}
+.tts .hid{opacity:0!important;transform:translateY(14px) scale(.9)!important}
+.tts .scat .tile{transform:translate(var(--x),var(--y)) rotate(var(--r))}
+.tts .tile.hl{box-shadow:0 0 0 .16em var(--gold),0 0 1.1em .1em rgba(var(--gold-rgb),.85),0 .26em 0 var(--jade-d)}
+.tts .tile.dim{opacity:.32}
+.tts .tile.ph{visibility:hidden}
+.tts .tile.sl{background:none;border:.12em dashed var(--muted);box-shadow:none;opacity:.7}
+.tts .tile.sl *{display:none}
+.tt-row{display:flex;gap:calc(var(--tu)*.3);align-items:flex-end;justify-content:center;flex-wrap:wrap}
+.tt-line{display:flex;align-items:center;gap:10px;width:100%;justify-content:flex-start;padding-left:4px;transition:opacity .45s,transform .45s}
+.tt-line .tl{flex:none;width:4.2em;overflow-wrap:anywhere;font-size:calc(12.5px*var(--fs,1));color:var(--gold-t);font-weight:700}
+:root[lang=en] .tt-line .tl{width:5.6em}
+.tt-line .tt-row{flex-wrap:nowrap;flex:none}
+.tt-line .x{color:var(--neg);font-size:calc(20px*var(--fs,1));font-weight:900;margin-left:4px;transition:opacity .4s}
+.tts .tt-line.hid{transform:translateX(-14px)!important}
+.tt-grp{position:relative;display:flex;gap:calc(var(--tu)*.12);padding:.25em calc(var(--tu)*.45) 0;border-radius:10px;border:1.5px dashed transparent;margin:0 calc(var(--tu)*.35) calc(var(--tu)*2.1);transition:border-color .45s,background .45s}
+.tt-grp .lb{position:absolute;left:50%;bottom:calc(var(--tu)*-1.9);transform:translateX(-50%);white-space:nowrap;font-size:calc(12px*var(--fs,1));font-weight:700;color:var(--gold-t);opacity:0;transition:opacity .4s}
+.tt-grp.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.12)}
+.tt-grp.on .lb{opacity:1}
+.tt-grp.cai.on{border-style:solid;box-shadow:0 0 14px rgba(var(--gold-rgb),.55)}
+.tt-grp.tight{margin-bottom:calc(var(--tu)*.9)}
+.tt-say{position:absolute;top:8px;left:0;right:0;margin:0 auto;width:fit-content;max-width:94%;padding:4px 12px;border-radius:99px;background:rgba(var(--gold-rgb),.2);border:1px solid var(--gold);
+  color:var(--text);font-size:calc(12.5px*var(--fs,1));font-weight:700;text-align:center;opacity:0;transition:opacity .35s;pointer-events:none;z-index:3}
+.tt-say.on{opacity:1}
+.tt-btnp{padding:5px 16px;border-radius:99px;background:var(--gold);color:#2a1d05;font-weight:900;font-size:calc(15px*var(--fs,1));box-shadow:0 2px 10px rgba(0,0,0,.35);transition:opacity .3s,transform .3s}
+:root[data-palette="neon"] .tt-btnp{color:#fff}
+.tt-banner{font:900 calc(26px*var(--fs,1)) var(--face);color:var(--gold-t);letter-spacing:.1em;text-shadow:0 2px 0 rgba(0,0,0,.25);transition:opacity .4s,transform .5s}
+.tts .tt-banner.hid{transform:scale(.6)!important}
+.tt-zone{position:relative;width:100%;min-height:calc(var(--tu)*5.2);border:1.5px dashed var(--line);border-radius:10px;display:flex;gap:calc(var(--tu)*.3);align-items:flex-end;justify-content:center;padding:calc(var(--tu)*.5) 6px 0}
+.tt-zone .zl{position:absolute;left:8px;top:2px;font-size:calc(10.5px*var(--fs,1));color:var(--muted)}
+.tt-bars{display:flex;align-items:flex-end;gap:calc(var(--tu)*.55);height:calc(var(--tu)*11)}
+.tt-bars .bc{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%}
+.tt-bars .bar{display:block;width:calc(var(--tu)*2.6);height:0;border-radius:4px 4px 0 0;background:linear-gradient(var(--gold),rgba(var(--gold-rgb),.45));transition:height .7s cubic-bezier(.3,.7,.3,1),box-shadow .3s}
+.tt-bars .bar.on{height:calc(var(--h)*var(--tu)*.9)}
+.tt-bars .bar.hl{box-shadow:0 0 14px var(--gold)}
+.tt-bars .cnt{font-size:calc(11.5px*var(--fs,1));color:var(--muted);font-weight:700;transition:opacity .4s}
+.tt-bars .num{font:900 calc(15px*var(--fs,1)) var(--face);color:var(--text)}
+.tt-bracket{display:flex;width:100%;justify-content:space-around;font-size:calc(11.5px*var(--fs,1));font-weight:700;color:var(--muted)}
+.tt-bracket span{border-top:2px solid var(--line);padding-top:3px;text-align:center;transition:opacity .4s,color .4s,border-color .4s}
+.tt-bracket span.on{color:var(--gold-t);border-color:var(--gold)}
+.tts .tt-pos.no{box-shadow:none}
+.tts .tile.no{opacity:.35;filter:grayscale(.6)}
+.tts .tile.ok{box-shadow:0 0 0 .14em var(--pos),0 .26em 0 var(--jade-d)}
+.tt-ladder{display:flex;flex-direction:column;gap:6px;width:100%}
+.tt-ladder .rg{display:flex;align-items:center;gap:8px;transition:opacity .45s,transform .45s}
+.tt-ladder .rg b{flex:none;min-width:3.4em;padding-left:8px;padding-right:8px;text-align:center;border-radius:99px;background:var(--gold);color:#2a1d05;font-size:calc(12.5px*var(--fs,1));padding:2px 0}
+:root[data-palette="neon"] .tt-ladder .rg b{color:#fff}
+.tt-ladder .rg span{font-size:calc(12.5px*var(--fs,1));line-height:1.4}
+.tts .tt-ladder .rg.hid{transform:translateX(-14px)!important}
+.tt-calc{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:6px 10px;font-weight:900;font-size:calc(16px*var(--fs,1))}
+.tt-calc em{font-style:normal;font-size:calc(11.5px*var(--fs,1));color:var(--muted);font-weight:500;margin-left:3px}
+.tt-calc .big{font:900 calc(34px*var(--fs,1)) var(--face);color:var(--gold-t)}
+.tts.sm{--tu:clamp(6.5px,2vw,9px)}
+.tts .gapl{margin-left:calc(var(--tu)*.9)}
+.tt-col{display:flex;flex-direction:column;align-items:center;gap:2px;transition:opacity .45s,transform .45s}
+.tt-col em{font-style:normal;font-size:calc(11.5px*var(--fs,1));color:var(--muted);font-weight:700}
+.tt-chip{display:inline-block;padding:3px 10px;border-radius:99px;border:1px solid var(--gold);background:rgba(var(--gold-rgb),.14);font-size:calc(12.5px*var(--fs,1));font-weight:700;transition:opacity .4s,transform .4s}
+.tts .tt-chip.hid{transform:translateY(8px)!important}
+.tt-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+@media (prefers-reduced-motion:reduce){.tts .tile,.tt-bars .bar,.tt-grp{transition:none}}
 html[lang=zh-Hans]{--ui:"Noto Sans SC","PingFang SC","Microsoft YaHei","Noto Sans TC",system-ui,sans-serif;--face:"Noto Serif SC","Songti SC","SimSun","Noto Serif TC",serif}
 html[lang=ja]{--ui:"Noto Sans JP","Hiragino Sans","Yu Gothic","Noto Sans TC",system-ui,sans-serif;--face:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","Noto Serif TC",serif}
 body:has(#landing:not([hidden])),body:has(#lobby:not([hidden])){overflow:hidden}
@@ -742,6 +825,7 @@ button.btn.hot:hover{background:var(--gold-hov)}
 <dialog id="result"></dialog>
 <button class="btn primary" id="resBack" type="button" hidden>回到結算</button>
 <dialog id="rules"></dialog>
+<dialog id="tutDlg"></dialog>
 <dialog id="setDlg"></dialog>
 <dialog id="fbDlg"></dialog>
 <dialog id="mixDlg"></dialog>
@@ -2238,7 +2322,7 @@ function applyLang() {
   $('#leftBtn').setAttribute('aria-label', L('向左移', 'Move left')); $('#rightBtn').setAttribute('aria-label', L('向右移', 'Move right'));
   $('#logSum').textContent = L('牌局記錄', 'Game log');
   $('#meName').textContent = NAMES[0];
-  $('#rules').innerHTML = XBTN() + (LANG === 'ja' ? jaRuby(RULES_HTML.ja) : RULES_HTML[LANG]).replace('</p>', '</p>' + (BASICS[LANG] || BASICS.zh)) + (LANG === 'zh' ? `<details class="eg basics"><summary>📖 用語對照（各地叫法）</summary>${termsTable()}</details>` : '');
+  $('#rules').innerHTML = XBTN() + (LANG === 'ja' ? jaRuby(RULES_HTML.ja) : RULES_HTML[LANG]).replace('</p>', '</p>' + tutBtns() + (BASICS[LANG] || BASICS.zh)) + (LANG === 'zh' ? `<details class="eg basics"><summary>📖 用語對照（各地叫法）</summary>${termsTable()}</details>` : '');
   if (G) {
     render(); renderLog();
     if (UI.statusFn) setStatus(UI.statusFn);
@@ -3057,6 +3141,7 @@ function renderLanding() {
         <button class="btn big" id="lnBots" type="button">${L('電腦對戰', 'Play with bots')}<small>${L('一人對三個電腦，即刻開局', 'You vs 3 bots, start right away')}</small></button>
         <p class="err" id="lnMsg" aria-live="polite">${ROOM.msg || ''}</p>
       </div>
+      ${tutBtns()}
       <div class="chips"><span>${L('吃碰槓', 'Chow · Pung · Kong')}</span><span>${L('彩碰', 'Mixed Pung')}</span><span>${L('幺九龍 · 六番封頂', 'Kowloon Dragons · 6 fan cap')}</span></div>
     </div>
     <div class="foot">${L('試玩版 · 規則仍在調整', 'Playtest · rules still changing')} · <a href="#" id="lnFb">${L('意見回饋', 'Feedback')}</a><br><small style="opacity:.7">${L('牌聲：雀ゴロ打牌音 ver.11（アンコロキング）', 'Tile sound: 雀ゴロ打牌音 ver.11 by Ancoro King')}</small></div>`;
@@ -3074,6 +3159,257 @@ $('#landing').addEventListener('click', e => {
 $('#landing').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'lnCode') joinRoom(); });
 $('.brand h1').addEventListener('click', () => { if (online() && !confirm(L('離開目前的房間？', 'Leave the current room?'))) return; if (online()) toSolo(); showLanding(); });
 { const q = new URLSearchParams(location.search).get('room'); if (q) { renderLanding(); $('#lnCode').value = q.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4); } }
+/* ===== 動畫教學：「完全沒玩過麻將」與「會打麻將」各一套；登陸頁和「?」規則視窗都能打開 ===== */
+const LL = (zh, en, ja) => LANG === 'en' ? en : LANG === 'ja' ? (ja || zh) : zh;
+const TUT = { k: 'new', i: 0, timers: [], raf: [] };
+let _tj = 0;
+// 教學裡的牌用「畫面數字」（k = 'p5' 就是畫面上的五筒），內部換成引擎編號
+const tT = (k, cls = '') => { _tj++; const s = k[0]; return `<span class="tile ${s === 'z' ? k : s} ${cls}" style="--x:${(_tj * 37) % 61 - 30}px;--y:${(_tj * 53) % 41 - 20}px;--r:${(_tj * 29) % 41 - 20}deg">${faceHTML(s, s === 'z' ? +k.slice(1) : 10 - +k.slice(1))}</span>`; };
+const tRow = (ks, cls = '', tc = '') => `<div class="tt-row ${cls}">${ks.split(' ').map(k => tT(k, tc)).join('')}</div>`;
+const tGrp = (lb, ks, cls = '', tc = '') => `<span class="tt-grp ${cls}">${ks.split(' ').map(k => tT(k, tc)).join('')}<span class="lb">${lb}</span></span>`;
+const tChip = (txt, cls = 'hid') => `<span class="tt-chip ${cls}">${txt}</span>`;
+const tBars = () => `<div class="tt-bars">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => `<div class="bc"><b class="cnt hid">${10 - d}</b><i class="bar b${d}" style="--h:${10 - d}"></i><span class="num">${d}</span></div>`).join('')}</div>`;
+
+function tutBtns() {
+  return `<div class="tutrow"><button type="button" data-tut="new">🀄 ${LL('完全沒玩過麻將', 'New to mahjong', '麻雀は初めて')}<small>${LL('動畫教學・約 2 分鐘', 'Animated tutorial · ~2 min', 'アニメで解説・約2分')}</small></button>`
+    + `<button type="button" data-tut="pro">🐉 ${LL('我會打麻將', 'I already play mahjong', '麻雀経験者')}<small>${LL('港式／日本／台灣玩家：看哪裡不同', 'HK · Japanese · Taiwanese: what is different', '香港・日本・台湾ルール経験者向け')}</small></button></div>`;
+}
+
+function tutSteps() {
+  _tj = 0;
+  const lSeq = LL('順子', 'Sequence', '順子'), lTri = LL('刻子', 'Triplet', '刻子'), lPair = LL('眼', 'Pair', '雀頭'), lDrag = LL('中・發・白', 'Dragons', '中・發・白');
+  const seat = pung => pung ? LL('下家', 'Downstream', '下家') : LL('上家', 'Upstream', '上家');
+  // 碰／吃的動畫：別人打出一張，你喊一聲，三張一起攤開
+  const callStep = pung => {
+    const disc = pung ? 's6' : 'p5', hand = pung ? [['p2'], ['p3'], ['s6', 'u1'], ['s6', 'u2'], ['m7'], ['z2']] : [['p4', 'u1'], ['p6', 'u2'], ['s8'], ['m2'], ['m3'], ['z3']];
+    return {
+      cls: '',
+      stage: `<div class="tt-zone"><span class="zl">${LL(seat(pung) + '打出', seat(pung) + ' discards', seat(pung) + 'の捨て牌')}</span>${tT(disc, 'hid disc')}</div>`
+        + `<div class="tt-btnp hid callbtn">${pung ? LL('碰！', 'Pung!', 'ポン！') : LL('吃！', 'Chow!', 'チー！')}</div>`
+        + `<div class="tt-row">${hand.map(([k, c]) => tT(k, c || '')).join('')}<span class="tt-grp meldbox tight gapl"><span class="tile ph m1"></span><span class="tile ph m2"></span><span class="tile ph m3"></span><span class="lb">${pung ? LL('碰', 'Pung', 'ポン') : LL('吃', 'Chow', 'チー')}</span></span></div>`,
+      acts: [[300, 'show', '.disc'], [500, 'say', pung ? LL('下家打出一張六索', 'Downstream discards a 6 of bamboo', '下家が六索を捨てた') : LL('上家打出一張五筒', 'Upstream discards a 5 of circles', '上家が五筒を捨てた')],
+        [1500, 'show', '.callbtn'], [1700, 'say', pung ? LL('我手上有兩張六索…', 'I hold two 6 of bamboo…', '六索を2枚持っている…') : LL('我手上有四筒和六筒…', 'I hold 4 and 6 of circles…', '四筒と六筒を持っている…')], [2000, 'add', '.u1,.u2,.disc', 'hl'],
+        [2700, 'fly', '.disc', pung ? '.m1' : '.m2'], [2900, 'fly', '.u1', pung ? '.m2' : '.m1'], [3100, 'fly', '.u2', '.m3'], [3900, 'add', '.meldbox', 'on'], [3900, 'rm', '.tile', 'hl'],
+        [3900, 'say', pung ? LL('碰！三張一樣，攤開在桌上', 'Pung! Three identical tiles, laid face-up', 'ポン！同じ牌3枚を公開') : LL('吃！五筒四筒六筒連成順子', 'Chow! 4-5-6 of circles, laid face-up', 'チー！四五六筒の順子を公開')]]
+    };
+  };
+  const finish = (zh, en, ja, t, stage, acts) => ({ end: true, t: t || LL('開始玩吧！', 'Let us play!', 'さあ、始めよう！'), p: LL(zh, en, ja), stage: stage || `<div class="tt-banner hid bn">幺九龍</div>${tRow('z1 z2 z3', '', 'hid')}`, acts: acts || [[300, 'show', '.bn'], [900, 'show+', '.tile', 250]] });
+
+  if (TUT.k === 'pro') return [
+    {
+      t: LL('先看大方向', 'The big picture', '全体像'),
+      p: LL('幺九龍是麻將的親戚：同樣是<b>吃、碰、槓</b>，湊 <b>4 組＋1 對</b>。但牌組完全不同：<b>沒有風牌、花牌</b>，只有三色數牌＋<b>中發白各 5 張</b>，共 150 張，普通麻將牌不能拿來玩。',
+        'Kowloon Dragons is a cousin of mahjong: <b>chow, pung, kong</b> and <b>4 sets + a pair</b>. The tile set is different: <b>no winds, no flowers</b>, just three suits plus <b>5 copies of each dragon</b>, 150 tiles in all. A standard mahjong set will not do.',
+        '幺九龍は麻雀の親戚で、<b>チー・ポン・カン</b>で<b>4メンツ＋雀頭</b>をつくります。ただし牌は別物：<b>風牌も花牌もなく</b>、3種の数牌と<b>中發白が各5枚</b>の計150枚。普通の麻雀牌では遊べません。'),
+      stage: `<div class="tt-row" style="gap:calc(var(--tu)*1.6)">${[['p5', LL('筒 ×45', 'Circles ×45', '筒 ×45')], ['s5', LL('索 ×45', 'Bamboo ×45', '索 ×45')], ['m5', LL('萬 ×45', 'Characters ×45', '萬 ×45')], ['z1', LL('龍 ×15', 'Dragons ×15', '字牌 ×15')]].map(([k, t]) => `<span class="tt-col hid">${tT(k)}<em>${t}</em></span>`).join('')}</div>`
+        + `<div class="tt-calc hid calc"><span class="big"><span data-to="150">0</span></span><em>${LL('張', 'tiles', '枚')}</em></div>`
+        + `<div class="tt-chips">${tChip(LL('風牌 ✗', 'Winds ✗', '風牌 ✗'), 'hid n1')}${tChip(LL('花牌 ✗', 'Flowers ✗', '花牌 ✗'), 'hid n2')}</div>`,
+      acts: [[300, 'show+', '.tt-col', 350], [1900, 'show', '.calc'], [1950, 'count', '[data-to]', 1000], [3000, 'show+', '.n1,.n2', 300]]
+    },
+    {
+      t: LL('數量反轉＋點數', 'Rarity and points', '枚数の逆転と点数'),
+      p: LL('數字 n 的牌有 <b>10 − n 張</b>：一有 9 張，九只有 1 張。<b>點數＝牌面數字</b>，所以大字（7–9）又少又值錢，小字（1–3）又多又不值錢。每手的得分跟手牌點數掛鉤。',
+        'A tile numbered n has <b>10 − n copies</b>: nine 1s but a single 9. <b>Points = the face number</b>, so big tiles (7–9) are rare and valuable and small tiles (1–3) are plentiful and cheap. Your hand&#39;s tile points feed straight into the score.',
+        '数字nの牌は<b>10−n枚</b>：一は9枚、九は1枚。<b>点数は数字そのまま</b>なので、大字（7〜9）は少なく高価、小字（1〜3）は多く安価。手牌の点数がそのまま得点に反映されます。'),
+      stage: tBars() + `<div class="tt-bracket"><span class="bs" style="flex:3">${LL('小字 1–3', 'Small 1–3', '小字 1〜3')}</span><span style="flex:3">4–6</span><span class="bb" style="flex:3">${LL('大字 7–9', 'Big 7–9', '大字 7〜9')}</span></div>`,
+      acts: [[300, 'add+', '.bar', 'on', 100], [300, 'show+', '.cnt', 100], [1500, 'add', '.b1', 'hl'], [1500, 'say', LL('一：9 張・1 點', '1: nine copies, 1 point', '一：9枚・1点')],
+        [2800, 'rm', '.bar', 'hl'], [2800, 'add', '.b9', 'hl'], [2800, 'say', LL('九：只有 1 張・9 點', '9: one copy, 9 points', '九：1枚・9点')],
+        [4100, 'rm', '.bar', 'hl'], [4100, 'add', '.bs', 'on'], [4100, 'say', LL('小字：又多又便宜', 'Small: plentiful and cheap', '小字：多くて安い')], [5300, 'rm', '.bs', 'on'], [5300, 'add', '.bb', 'on'], [5300, 'say', LL('大字：稀少、值錢', 'Big: rare and valuable', '大字：少なくて高い')]]
+    },
+    {
+      t: LL('鳴牌限制', 'Calling rules', '鳴きのルール'),
+      p: LL('<b>小字 1–3 不能吃、碰、槓</b>，只能自己摸齊。<b>4–9 可碰，4–6 可槓</b>（7–9 只有 3 張以下）。<b>只能吃上家</b>，且被吃的順子不能含 1–3，所以只有 456／567／678／789 能吃。',
+        '<b>Small tiles 1–3 can never be chowed, punged or konged</b>: you must draw them yourself. <b>4–9 can be punged, 4–6 konged</b> (7–9 have three copies or fewer). <b>Chow only from upstream</b>, and a claimed chow cannot contain 1–3, so only 456 / 567 / 678 / 789 qualify.',
+        '<b>小字1〜3はチー・ポン・カンできません</b>（自分で引くだけ）。<b>4〜9はポン、4〜6はカン</b>可（7〜9は3枚以下）。<b>チーは上家だけ</b>で、1〜3を含む順子は不可。チーできるのは456／567／678／789だけです。'),
+      stage: `<div class="tt-row">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => tT('p' + d, 't' + d)).join('')}</div>`,
+      acts: [[400, 'add', '.t1,.t2,.t3', 'no'], [400, 'say', LL('1–3：不能鳴，只能自己摸', '1–3: never called, draw them yourself', '1〜3：鳴けない・自分で引くだけ')],
+        [2000, 'add', '.t4,.t5,.t6,.t7,.t8,.t9', 'ok'], [2000, 'say', LL('4–9：可以碰', '4–9: can be punged', '4〜9：ポン可')],
+        [3400, 'rm', '.tile', 'ok'], [3400, 'add', '.t4,.t5,.t6', 'hl'], [3400, 'say', LL('4–6：可以槓', '4–6: can be konged', '4〜6：カン可')],
+        [4800, 'rm', '.tile', 'hl'], [4800, 'add', '.t4,.t5,.t6', 'hl'], [4800, 'say', LL('吃：456', 'Chow: 456', 'チー：456')],
+        [5700, 'rm', '.tile', 'hl'], [5700, 'add', '.t5,.t6,.t7', 'hl'], [5700, 'say', LL('吃：567', 'Chow: 567', 'チー：567')],
+        [6600, 'rm', '.tile', 'hl'], [6600, 'add', '.t6,.t7,.t8', 'hl'], [6600, 'say', LL('吃：678', 'Chow: 678', 'チー：678')],
+        [7500, 'rm', '.tile', 'hl'], [7500, 'add', '.t7,.t8,.t9', 'hl'], [7500, 'say', LL('吃：789 ── 只有這四組', 'Chow: 789, only these four', 'チー：789 ── この4つだけ')]]
+    },
+    {
+      t: LL('彩碰・彩刻・彩眼', 'Mixed pung, triplet and pair', '彩ポン・彩刻子・彩雀頭'),
+      p: LL('<b>大字 7、8、9</b> 可以用<b>不同花色</b>的同數字湊組：三張是<b>彩碰</b>（可以向人碰），全在手上叫<b>彩刻</b>；兩張可以當眼，叫<b>彩眼</b>。沒有彩吃，順子一定要同花色。',
+        'For the <b>big tiles 7, 8 and 9</b>, the same number in <b>different suits</b> can form a group: three are a <b>Mixed Pung</b> (callable), held in hand a <b>Mixed Triplet</b>; two can be the pair, a <b>Mixed Pair</b>. There is no mixed chow: sequences are single-suit.',
+        '<b>大字7・8・9</b>は<b>違う種類</b>の同じ数字で組をつくれます：3枚は<b>彩ポン</b>（鳴けます）、手の中なら<b>彩刻子</b>、2枚は<b>彩雀頭</b>。彩チーはなく、順子は同じ種類だけです。'),
+      stage: `<div class="tt-row"><span class="wrap scat">${tGrp(LL('彩碰', 'Mixed Pung', '彩ポン'), 'p8 s8 m8', 'cai g1')}</span><span class="wrap scat">${tGrp(LL('彩眼', 'Mixed Pair', '彩雀頭'), 'p9 s9', 'cai g2')}</span></div>`,
+      acts: [[300, 'say', LL('七八九：不同花色也能湊', '7-8-9: different suits can group', '七八九：違う種類でも組める')], [1000, 'rm', '.wrap', 'scat'], [2000, 'add', '.g1', 'on'], [2000, 'say', LL('彩碰：同數字、不同花色', 'Mixed Pung: same number, different suits', '彩ポン：同じ数字・違う種類')], [3300, 'add', '.g2', 'on'], [3300, 'say', LL('兩張也可以當眼', 'Two can also be the pair', '2枚で雀頭にもなれる')]]
+    },
+    {
+      t: LL('番數與計分', 'Fan and scoring', '翻数と計算'),
+      p: LL('<b>一番起胡</b>：要有至少一個真正的番才能胡，<b>碎番</b>（槓、門清、自摸…）只能錦上添花。<b>六番封頂</b>，得分＝（手牌點數＋加分）× 番數。',
+        '<b>1 fan to win</b>: you need at least one real fan; the <b>half fans</b> (kong, concealed, self-draw…) only add on top. <b>Capped at 6 fan</b>. Score = (tile points + bonus) × fan.',
+        '<b>1翻縛り</b>：本物の役が最低1つ必要で、<b>0.5翻</b>（カン・門前・ツモなど）は上乗せだけ。<b>6翻で上限</b>。得点＝（手牌の点数＋ボーナス）×翻数。'),
+      stage: `<div class="tt-ladder">${[
+        [LL('1番', '1 fan', '1翻'), ['三元刻', '平胡', '對對胡', '不求人', '三暗刻'].map(yn).join(' · ')],
+        [LL('2番', '2 fan', '2翻'), ['混一色', '彩一色', '斷小字無三元', '七對子'].map(yn).join(' · ')],
+        [LL('3番', '3 fan', '3翻'), ['小三元', '全小字', '幺九順'].map(yn).join(' · ')],
+        [LL('4番', '4 fan', '4翻'), ['清一色', '四暗刻', '大三元'].map(yn).join(' · ')],
+        [LL('6番 封頂', '6 · cap', '6翻 上限'), ['幺九龍', '槓三元', '天胡'].map(yn).join(' · ')],
+        ['½', LL('槓・門清・自摸…（要先有 1 番）', 'Kong · Concealed · Self-draw… (need 1 fan first)', 'カン・門前・ツモ…（先に1翻必要）')]
+      ].map(([n, t]) => `<div class="rg hid"><b>${n}</b><span>${t}</span></div>`).join('')}</div>`,
+      acts: [[300, 'show+', '.rg', 500]]
+    },
+    {
+      t: LL('幺九順・幺九龍', 'Kowloon Straight and Dragons', '幺九順・幺九龍'),
+      p: LL('同花色 <b>123＋456＋789</b> 是<b>幺九順</b>（3 番，+30 分）；再加上<b>紅中、發財、白板各一張</b>，和一對與其中一張相同的牌，就是<b>幺九龍</b>（6 番，+90；全暗 +120）。',
+        'The same suit&#39;s <b>123 + 456 + 789</b> is a <b>Kowloon Straight</b> (3 fan, +30). Add <b>one of each dragon</b> plus a pair matching a tile you already hold, and it is <b>Kowloon Dragons</b> (6 fan, +90; fully concealed +120).',
+        '同じ種類の<b>123＋456＋789</b>が<b>幺九順</b>（3翻・+30点）。さらに<b>中・發・白を1枚ずつ</b>と、すでに持っている牌と同じ牌のペアを加えると<b>幺九龍</b>（6翻・+90点、門前なら+120点）です。'),
+      stage: `<div class="tt-row">${tGrp('123', 'm1 m2 m3', 'g1')}${tGrp('456', 'm4 m5 m6', 'g2')}${tGrp('789', 'm7 m8 m9', 'g3')}</div>`
+        + `<div class="tt-row">${tGrp(lDrag, 'z1 z2 z3', 'g4', 'hid r2')}${tGrp(LL('一對', 'Pair', 'ペア'), 'm5 m5', 'g5', 'hid r2')}</div>`,
+      acts: [[300, 'add', '.g1', 'on'], [900, 'add', '.g2', 'on'], [1500, 'add', '.g3', 'on'], [1500, 'say', LL('幺九順', 'Kowloon Straight', '幺九順')],
+        [2500, 'show', '.r2'], [2700, 'add', '.g4', 'on'], [3300, 'add', '.g5', 'on'], [3300, 'say', LL('幺九龍！', 'Kowloon Dragons!', '幺九龍！')], [3600, 'add', '.tile', 'hl']]
+    },
+    finish('<b>每手換莊</b>，沒有風位與連莊；一圈 4 手、一局 12 手。起手就胡（天胡／地胡／人胡）直接 6 番。房間可選「兩番起胡」，電腦「大師」級就用這個規則。',
+      '<b>The deal passes every hand</b>, with no seat winds or repeat dealers; 4 hands make a round, 12 a set. Instant wins (Heaven / Earth / Man) are a flat 6 fan. Rooms can use a 2-fan minimum, and the Master bot plays by it.',
+      '<b>毎局親が移り</b>、風も連荘もありません。4局で1周、12局で1セット。天和・地和・人和は一律6翻。ルームでは「2翻縛り」も選べ、CPU「達人」はこのルールで打ちます。',
+      LL('其他不同點', 'A few more differences', 'そのほかの違い'),
+      `<div class="tt-chips" style="flex-direction:column;align-items:center">${[LL('每手輪莊・無風位', 'Deal passes every hand · no seat winds', '毎局親が移る・風なし'), LL('一圈 4 手・一局 12 手', 'Round = 4 hands · Set = 12', '1周＝4局・1セット＝12局'), LL('天胡／地胡／人胡 = 6 番', 'Heaven / Earth / Man = 6 fan', '天和・地和・人和＝6翻'), LL('可選兩番起胡', 'Optional 2-fan minimum', '2翻縛りも選べる')].map(t => tChip('✓ ' + t)).join('')}</div>`,
+      [[300, 'show+', '.tt-chip', 600]])
+  ];
+
+  return [
+    {
+      t: LL('認識牌', 'Meet the tiles', '牌を知ろう'),
+      p: LL('牌有三種花色：<b>筒</b>（圓圈）、<b>索</b>（竹）、<b>萬</b>（萬字），每種有 1 到 9。另外有三種字牌：<b>紅中、發財、白板</b>。全副一共 150 張。',
+        'There are three suits: <b>Circles</b>, <b>Bamboo</b> and <b>Characters</b>, numbered 1 to 9. Plus three dragons: <b>Red, Green and White</b>. 150 tiles in total.',
+        '牌は3種類：<b>筒</b>（まる）、<b>索</b>（竹）、<b>萬</b>（萬の字）で、それぞれ1〜9。ほかに字牌が3種：<b>中・發・白</b>。全部で150枚です。'),
+      cls: 'sm',
+      stage: tRow('p1 p2 p3 p4 p5 p6 p7 p8 p9', 'r1', 'hid') + tRow('s1 s2 s3 s4 s5 s6 s7 s8 s9', 'r2', 'hid') + tRow('m1 m2 m3 m4 m5 m6 m7 m8 m9', 'r3', 'hid') + tRow('z1 z2 z3', 'r4', 'hid'),
+      acts: [[300, 'show+', '.r1 .tile', 70], [1100, 'show+', '.r2 .tile', 70], [1900, 'show+', '.r3 .tile', 70], [2700, 'show+', '.r4 .tile', 150], [3400, 'say', LL('三種花色＋三種字牌', '3 suits + 3 dragons', '数牌3種＋字牌3種')]]
+    },
+    {
+      t: LL('越大越稀少', 'Bigger is rarer', '大きい数ほど少ない'),
+      p: LL('每種花色裡，<b>數字越大，牌越少</b>：一有 9 張，九只有 1 張。而每張牌的<b>點數就是牌面數字</b>，所以九最少、也最值錢。',
+        'In every suit, <b>the bigger the number, the fewer copies</b>: nine copies of 1, but only one 9. A tile&#39;s <b>points equal its number</b>, so 9 is the rarest and the most valuable.',
+        '各種類で<b>数字が大きいほど枚数が少なく</b>、一は9枚、九は1枚だけ。牌の<b>点数は数字そのまま</b>なので、九が一番レアで高得点です。'),
+      stage: tBars(),
+      acts: [[300, 'add+', '.bar', 'on', 100], [300, 'show+', '.cnt', 100], [1500, 'add', '.b1', 'hl'], [1500, 'say', LL('一：9 張・1 點', '1: nine copies, 1 point', '一：9枚・1点')],
+        [2900, 'rm', '.bar', 'hl'], [2900, 'add', '.b9', 'hl'], [2900, 'say', LL('九：只有 1 張・9 點', '9: one copy, 9 points', '九：1枚・9点')]]
+    },
+    {
+      t: LL('目標：4 組＋1 對', 'Goal: 4 sets + 1 pair', '目標：4組＋1対'),
+      p: LL('手上 14 張牌，湊成 <b>4 組</b>加上 <b>1 對（眼）</b>就胡牌。一組可以是三張連續的<b>順子</b>，或三張相同的<b>刻子</b>。',
+        'Arrange your 14 tiles into <b>4 sets</b> plus <b>1 pair</b> and you win. A set is either a <b>sequence</b> (three in a row) or a <b>triplet</b> (three identical tiles).',
+        '14枚の手牌を<b>4つのメンツ</b>と<b>1つの雀頭（ペア）</b>にそろえるとあがり。メンツは連続3枚の<b>順子</b>か、同じ牌3枚の<b>刻子</b>です。'),
+      stage: `<div class="wrap scat"><div class="tt-row">${tGrp(lSeq, 'p4 p5 p6', 'g1')}${tGrp(lSeq, 's2 s3 s4', 'g2')}${tGrp(lTri, 'm5 m5 m5', 'g3')}</div><div class="tt-row">${tGrp(lTri, 'z1 z1 z1', 'g4')}${tGrp(lPair, 's7 s7', 'g5')}</div></div>`,
+      acts: [[300, 'say', LL('散亂的 14 張牌…', '14 loose tiles…', 'バラバラの14枚…')], [1200, 'rm', '.wrap', 'scat'], [2300, 'add', '.g1', 'on'], [2700, 'add', '.g2', 'on'], [3100, 'add', '.g3', 'on'], [3500, 'add', '.g4', 'on'], [3900, 'add', '.g5', 'on'],
+        [2300, 'say', LL('排好：4 組＋1 對', 'Sorted: 4 sets + 1 pair', '並べ替え：4組＋1対')], [4400, 'say', LL('＝ 胡牌！', '= a winning hand!', '＝あがり！')]]
+    },
+    {
+      t: LL('三種組合', 'The building blocks', '3つの形'),
+      p: LL('<b>順子</b>＝同花色連續三張；<b>刻子</b>＝三張一樣；<b>槓</b>＝四張一樣（再補摸一張）；<b>眼</b>＝兩張一樣。花色不同或不連續都不算。紅中、發財、白板只能做刻子或眼。',
+        '<b>Sequence</b> = three consecutive numbers in one suit. <b>Triplet</b> = three identical tiles. <b>Kong</b> = four identical tiles (then draw a bonus tile). <b>Pair</b> = two identical tiles. Mixed suits or gaps do not count. Dragons can only be triplets or the pair.',
+        '<b>順子</b>＝同じ種類の連続3枚。<b>刻子</b>＝同じ牌3枚。<b>カン</b>＝同じ牌4枚（もう1枚引く）。<b>雀頭</b>＝同じ牌2枚。種類が違ったり飛んでいると不成立。中・發・白は刻子か雀頭だけ。'),
+      cls: 'sm',
+      stage: [[lSeq, 'p3 p4 p5'], [lTri, 's6 s6 s6'], [LL('槓', 'Kong', 'カン'), 'm4 m4 m4 m4'], [lPair, 'z2 z2']].map(([l, ks], i) => `<div class="tt-line hid l${i + 1}"><span class="tl">${l}</span>${tRow(ks)}</div>`).join('')
+        + `<div class="tt-line hid l5"><span class="tl">✗</span>${tRow('p3 p4 p6')}<span class="x">✗</span><span style="width:12px"></span>${tRow('p3 s4 p5')}<span class="x">✗</span></div>`,
+      acts: [[300, 'show', '.l1'], [1000, 'show', '.l2'], [1700, 'show', '.l3'], [2400, 'show', '.l4'], [3300, 'show', '.l5'], [3400, 'say', LL('不連續、花色不同：不算', 'Gaps or mixed suits: not a set', '飛んでいる・種類が違う：不成立')]]
+    },
+    {
+      t: LL('一回合：摸一打一', 'Your turn: draw one, discard one', '1ターン：1枚引いて1枚捨てる'),
+      p: LL('輪到你時，先從牌牆<b>摸一張</b>（13 變 14 張），再<b>打出一張</b>（回到 13 張）。打出的牌放在桌面中間。打哪張，是整個遊戲的重點。',
+        'On your turn, <b>draw a tile</b> from the wall (13 → 14), then <b>discard one</b> (back to 13). Discards go face-up in the middle of the table. Choosing what to discard is the heart of the game.',
+        '自分の番に山から<b>1枚ツモ</b>（13→14枚）して、<b>1枚捨て</b>（13枚に戻る）ます。捨て牌は卓の中央に並びます。何を捨てるかがゲームの核心です。'),
+      stage: `<div class="tt-zone"><span class="zl">${LL('棄牌', 'Discards', '捨て牌')}</span>${tT('m8')}${tT('s1')}<span class="tile ph slot"></span></div>`
+        + `<div class="tt-row">${tT('p2')}${tT('p3')}${tT('s5')}${tT('s6')}${tT('m3', 'dis')}${tT('z2')}${tT('p8')}${tT('p4', 'hid draw gapl')}</div>`,
+      acts: [[400, 'say', LL('先摸一張（13 → 14）', 'Draw one (13 → 14)', 'まず1枚ツモ（13→14）')], [600, 'show', '.draw'], [2100, 'say', LL('再打出一張（14 → 13）', 'Then discard one (14 → 13)', '1枚捨てる（14→13）')], [2200, 'add', '.dis', 'hl'], [3000, 'fly', '.dis', '.slot'], [3800, 'rm', '.dis', 'hl']]
+    },
+    { t: LL('碰：拿別人的牌', 'Pung: take a discard', 'ポン：捨て牌をもらう'),
+      p: LL('別人打出的牌，如果你手上有兩張一樣的，可以喊<b>碰</b>，拿來湊成刻子，攤開在桌上。<b>槓</b>同理：手上有三張，再拿第四張，並補摸一張。',
+        'If someone discards a tile and you hold two identical ones, you can call <b>Pung</b> and take it to make a triplet, laid face-up. <b>Kong</b> works the same way: hold three, take the fourth, then draw a bonus tile.',
+        '他の人が捨てた牌と同じ牌を2枚持っていたら<b>ポン</b>で刻子にできます（公開されます）。<b>カン</b>も同様に、3枚持っていて4枚目をもらい、もう1枚引きます。'),
+      ...callStep(true) },
+    { t: LL('吃：只能吃上家', 'Chow: only from upstream', 'チー：上家からだけ'),
+      p: LL('你<b>上家</b>（出牌順序在你前面的人）打出的牌，如果能和手上的牌湊成順子，可以喊<b>吃</b>。吃只限上家；碰、槓則任何人的牌都可以，而且比吃優先。',
+        'A tile discarded by the player right before you (<b>upstream</b>) can be taken to complete a sequence: that is <b>Chow</b>. Only that player&#39;s discards can be chowed; Pung and Kong work on anyone&#39;s, and they take priority over a Chow.',
+        'あなたの直前の人（<b>上家</b>）が捨てた牌で順子が作れるときは<b>チー</b>できます。チーは上家の牌だけ、ポン・カンは誰の牌でも可で、チーより優先されます。'),
+      ...callStep(false) },
+    {
+      t: LL('胡牌！', 'Winning!', 'あがり！'),
+      p: LL('湊齊 4 組＋1 對就胡。<b>自摸</b>＝自己摸到最後那張；<b>榮胡</b>＝別人打出你要的那張，你喊胡（由出銃的人付較多分）。',
+        'Complete 4 sets + 1 pair and you win. <b>Zimo</b> = you draw the winning tile yourself. <b>Ron</b> = someone discards the tile you need and you call the win (the discarder pays more).',
+        '4メンツ＋雀頭がそろったらあがり。<b>ツモ</b>＝自分で最後の1枚を引く、<b>ロン</b>＝他の人が捨てた牌であがる（捨てた人が多く払う）。'),
+      stage: `<div class="tt-row">${tGrp(lSeq, 'p4 p5 p6', 'on')}${tGrp(lSeq, 's2 s3 s4', 'on')}${tGrp(lTri, 'm5 m5 m5', 'on')}</div>`
+        + `<div class="tt-row">${tGrp(lTri, 'z1 z1 z1', 'on')}<span class="tt-grp pairg">${tT('s7')}<span class="tile sl pslot"></span><span class="lb">${lPair}</span></span></div>`
+        + `<div class="tt-row">${tT('s7', 'hid draw')}<span class="tt-banner hid bn">${LL('自摸！', 'Zimo!', 'ツモ！')}</span></div>`,
+      acts: [[300, 'say', LL('只差一張七索就胡了', 'One 7 of bamboo away from winning', 'あと七索1枚であがり')], [1100, 'show', '.draw'], [2100, 'fly', '.draw', '.pslot'], [3000, 'add', '.pairg', 'on'], [3100, 'show', '.bn'], [3100, 'say', LL('湊齊了！', 'Complete!', '完成！')]]
+    },
+    {
+      t: LL('要有「番」才能胡', 'You need fan to win', '役（番）が必要'),
+      p: LL('光湊齊還不夠，至少要有 <b>1 番</b>的條件才能胡。得分＝<b>手牌點數 × 番數</b>。例：紅中刻子（1 番）＋不求人（門清自摸，1 番）＝ 2 番，手牌點數 53，得 53 × 2 = <b>106 分</b>。其他番種可在規則裡查看。',
+        'A complete hand is not enough: you need at least <b>1 fan</b> (scoring condition). Score = <b>tile points × fan</b>. Example: a Red Dragon triplet (1 fan) + Concealed Self-Draw (1 fan) = 2 fan; the hand&#39;s tile points are 53, so 53 × 2 = <b>106 points</b>. The rules list every fan.',
+        '形がそろうだけでは足りず、最低 <b>1翻</b> の条件が必要です。得点＝<b>手牌の点数 × 翻数</b>。例：中の刻子（1翻）＋不求人（門前ツモ、1翻）＝2翻、手牌の点数が53なら 53 × 2 = <b>106点</b>。他の役はルールで確認できます。'),
+      stage: `<div class="tt-chips">${tChip(yn('三元刻') + ' <b>+' + LL('1番', '1 fan', '1翻') + '</b>', 'hid c1')}${tChip(yn('不求人') + ' <b>+' + LL('1番', '1 fan', '1翻') + '</b>', 'hid c2')}</div>`
+        + `<div class="tt-calc hid calc"><span><span data-to="53">0</span><em>${LL('手牌點數', 'tile points', '牌の点数')}</em></span><span>×</span><span><span data-to="2">0</span><em>${LL('番', 'fan', '翻')}</em></span><span>=</span><span class="big"><span data-to="106">0</span></span></div>`,
+      acts: [[300, 'show', '.c1'], [1000, 'show', '.c2'], [1900, 'show', '.calc'], [2000, 'count', '[data-to]', 1200]]
+    },
+    finish('最好的學法就是打一手。電腦對手可以先選「新手」；遇到不懂的，隨時按右上角「?」查規則。',
+      'The best way to learn is to play a hand. Start with the Easy bots, and tap “?” at any time to look up the rules.',
+      'いちばんの上達法は一局打ってみること。まずは「初級」CPUで。わからなくなったらいつでも「?」でルールを確認できます。')
+  ];
+}
+
+function tutStop() { TUT.timers.forEach(clearTimeout); TUT.timers = []; TUT.raf.forEach(cancelAnimationFrame); TUT.raf = []; }
+function tutFly(st, a, b) {
+  const e = st.querySelector(a), t = st.querySelector(b); if (!e || !t) return;
+  const er = e.getBoundingClientRect(), tr = t.getBoundingClientRect();
+  e._tx = (e._tx || 0) + tr.left + tr.width / 2 - er.left - er.width / 2; e._ty = (e._ty || 0) + tr.top + tr.height / 2 - er.top - er.height / 2;
+  e.style.transform = `translate(${e._tx}px,${e._ty}px)`;
+}
+function tutCount(e, ms, instant) {
+  const to = +e.dataset.to; if (instant) { e.textContent = to; return; }
+  const t0 = performance.now(), f = now => { const k = Math.min(1, (now - t0) / ms); e.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) TUT.raf.push(requestAnimationFrame(f)); };
+  TUT.raf.push(requestAnimationFrame(f));
+}
+function tutPlay() {
+  tutStop();
+  const st = $('#ttStage'); if (!st) return;
+  const S = tutSteps()[TUT.i], q = [], P = (t, f) => q.push([t, f]), all = sel => [...st.querySelectorAll(sel)];
+  const rm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  (S.acts || []).forEach(([t, op, a, b, c]) => {
+    if (op === 'say') P(t, () => { const x = st.querySelector('.tt-say'); x.textContent = a; x.classList.toggle('on', !!a); });
+    else if (op === 'show+') all(a).forEach((e, i) => P(t + i * b, () => e.classList.remove('hid')));
+    else if (op === 'add+') all(a).forEach((e, i) => P(t + i * c, () => e.classList.add(b)));
+    else if (op === 'show') P(t, () => all(a).forEach(e => e.classList.remove('hid')));
+    else if (op === 'add') P(t, () => all(a).forEach(e => e.classList.add(...b.split(' '))));
+    else if (op === 'rm') P(t, () => all(a).forEach(e => e.classList.remove(...b.split(' '))));
+    else if (op === 'fly') P(t, () => tutFly(st, a, b));
+    else if (op === 'count') P(t, () => all(a).forEach(e => tutCount(e, b, rm)));
+  });
+  q.sort((x, y) => x[0] - y[0]);
+  q.forEach(([t, f]) => { if (rm) f(); else TUT.timers.push(setTimeout(f, t)); });
+}
+function renderTut() {
+  const d = $('#tutDlg'), S = tutSteps(), s = S[TUT.i], last = TUT.i === S.length - 1;
+  const landing = !$('#landing').hidden;
+  d.innerHTML = `${XBTN()}<div class="tthead"><h2>${s.t}</h2><span class="ttn">${TUT.i + 1} / ${S.length}</span></div>`
+    + `<div class="tts ${s.cls || ''}" id="ttStage"><div class="tt-say"></div>${s.stage}</div><p class="ttp">${s.p}</p>`
+    + (s.end ? `<div class="ttend">${landing ? `<button class="btn primary" type="button" data-tgo="play">${LL('開始電腦對戰', 'Play with bots', 'CPUと対戦')}</button>` : ''}<button class="btn" type="button" data-tgo="rules">${LL('看完整規則', 'Full rules', 'ルール全文')}</button></div>` : '')
+    + `<div class="ttnav"><button class="btn" type="button" id="ttPrev" ${TUT.i ? '' : 'disabled'}>‹ ${LL('上一步', 'Back', '戻る')}</button><span class="dots">${S.map((_, k) => `<i data-i="${k}" class="${k === TUT.i ? 'on' : ''}"></i>`).join('')}</span>`
+    + `<button class="btn" type="button" id="ttRe" title="${LL('重播', 'Replay', 'もう一度')}" aria-label="${LL('重播', 'Replay', 'もう一度')}">↻</button><button class="btn primary" type="button" id="ttNext">${last ? LL('完成', 'Done', '完了') : LL('下一步', 'Next', '次へ')} ${last ? '' : '›'}</button></div>`;
+  tutPlay();
+}
+function openTut(k) { TUT.k = k; TUT.i = 0; renderTut(); const d = $('#tutDlg'); if (!d.open) d.showModal(); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-tut]'); if (b) openTut(b.dataset.tut); });
+$('#tutDlg').addEventListener('close', tutStop);
+$('#tutDlg').addEventListener('click', e => {
+  const b = e.target.closest('button,[data-i]'); if (!b) return;
+  const n = tutSteps().length, d = $('#tutDlg');
+  if (b.id === 'ttPrev') { TUT.i = Math.max(0, TUT.i - 1); renderTut(); }
+  else if (b.id === 'ttNext') { if (TUT.i >= n - 1) d.close(); else { TUT.i++; renderTut(); } }
+  else if (b.id === 'ttRe') renderTut();
+  else if (b.dataset.i != null) { TUT.i = +b.dataset.i; renderTut(); }
+  else if (b.dataset.tgo === 'play') { d.close(); if (!$('#landing').hidden && !ROOM.zooming) openBotSetup(); }
+  else if (b.dataset.tgo === 'rules') { d.close(); if (!$('#rules').open) $('#rules').showModal(); }
+});
+$('#tutDlg').addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' && TUT.i < tutSteps().length - 1) { TUT.i++; renderTut(); } else if (e.key === 'ArrowLeft' && TUT.i > 0) { TUT.i--; renderTut(); }
+});
+
 /* 手機：重繪時（對手出牌、佔位文字變化）讓手牌留在螢幕同一個位置，頁面不再跳動 */
 {
   const _render = render;
@@ -3083,7 +3419,7 @@ $('.brand h1').addEventListener('click', () => { if (online() && !confirm(L('離
     if (y0 != null) { const dy = h.getBoundingClientRect().top - y0; if (Math.abs(dy) > 0.5) window.scrollBy(0, dy); }
   };
 }
-{ const _al = applyLang; applyLang = function () { _al(); applyScript(); }; }
+{ const _al = applyLang; applyLang = function () { _al(); applyScript(); if ($('#tutDlg').open) renderTut(); }; }
 
 /* ===== 音量測試頁（網址加 ?soundtest）：逐個播放、量出每種聲音的實際大小，並可即時調整比例 ===== */
 if (/[?&]soundtest\b/.test(location.search)) (function () {
